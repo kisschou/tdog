@@ -1,0 +1,11 @@
+### IDEA ###
+.idea/*
+
+### mac ###
+*/.DS_Store
+
+### go ###
+go.sum
+
+### log ###
+logs/*
