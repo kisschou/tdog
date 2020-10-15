@@ -121,6 +121,15 @@ func (u *Util) InMap(key string, dataMap map[string]interface{}) bool {
 	return false
 }
 
+func (u *Util) InMapStringSlice(key string, dataMap map[string][]string) bool {
+	if _, ok := dataMap[key]; ok {
+		if len(dataMap[key]) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func (u *Util) InStringSlice(key string, dataStringSlice []string) bool {
 	for _, v := range dataStringSlice {
 		if v == key {
