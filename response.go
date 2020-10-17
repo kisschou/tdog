@@ -17,7 +17,7 @@ type (
 
 func (r *Response) New(c *Context) {
 	r.context = c
-	c.BaseController.Res = r
+	// c.BaseController.Res = r
 }
 
 func (r *Response) JSON(code int, obj interface{}) {

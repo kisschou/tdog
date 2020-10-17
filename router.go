@@ -1,19 +1,30 @@
 package tdog
 
 import (
-	"net/http"
-	"path"
-	"strconv"
-	"strings"
+	"encoding/json"
+	"encoding/xml"
+	"log"
+	"math"
 
 	"github.com/julienschmidt/httprouter"
+
+	"net/http"
+	"path"
+)
+
+const (
+	// AbortIndex .
+	AbortIndex = math.MaxInt8 / 2
 )
 
 type (
 	// HandlerFunc .
-	HandlerFunc func()
+	HandlerFunc func(*Context)
 
-	// ErrorMsg
+	// H .
+	// H map[string]interface{}
+
+	// ErrorMsg .
 	ErrorMsg struct {
 		Message string      `json:"msg"`
 		Meta    interface{} `json:"meta"`
@@ -21,243 +32,150 @@ type (
 
 	// Context .
 	Context struct {
-		Req            *http.Request
-		Writer         http.ResponseWriter
-		Errors         []ErrorMsg
-		Params         httprouter.Params
-		handler        HandlerFunc
-		engine         *HttpEngine
-		BaseController *Controller
+		Req      *http.Request
+		Writer   http.ResponseWriter
+		Keys     map[string]interface{}
+		Errors   []ErrorMsg
+		Params   httprouter.Params
+		handlers []HandlerFunc
+		engine   *Engine
+		index    int8
 	}
 
 	// RouterGroup .
 	RouterGroup struct {
-		Handler        HandlerFunc
-		prefix         string
-		parent         *RouterGroup
-		engine         *HttpEngine
-		BaseController *Controller
+		Handlers []HandlerFunc
+		prefix   string
+		parent   *RouterGroup
+		engine   *Engine
 	}
 
-	// HttpEngine .
-	HttpEngine struct {
+	// Engine .
+	Engine struct {
 		*RouterGroup
 		router *httprouter.Router
 	}
 )
 
-// New HttpEngine
-func NewEngine() *HttpEngine {
-	engine := &HttpEngine{}
-	engine.RouterGroup = &RouterGroup{nil, "", nil, engine, nil}
+// New Engine
+func New() *Engine {
+	engine := &Engine{}
+	engine.RouterGroup = &RouterGroup{nil, "", nil, engine}
 	engine.router = httprouter.New()
-
-	// 静态资源
-	engine.router.ServeFiles("/public/static/*filepath", http.Dir("public/static/"))
-
 	return engine
 }
 
-// ServeHTTP makes the router implement the http.Handler interface.
-func (engine *HttpEngine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// OPTIONS请求直接返回
-	if req.Method == "OPTIONS" {
-		// 跨域
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
-		return
-	}
+// Default Returns a Engine instance with the Logger and Recovery already attached.
+func Default() *Engine {
+	engine := New()
+	// engine.Use(Recovery(), Logger())
+	return engine
+}
 
+// ServeFiles  router.ServeFiles("/src/*filepath", http.Dir("/var/www"))
+func (engine *Engine) ServeFiles(path string, root http.FileSystem) {
+	engine.router.ServeFiles(path, root)
+}
+
+// ServeHTTP makes the router implement the http.Handler interface.
+func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	engine.router.ServeHTTP(w, req)
 }
 
 // Run .
-func (engine *HttpEngine) Run() {
-	ConfigLib := new(Config)
-	http.ListenAndServe(":"+ConfigLib.Get("app_port").String(), engine)
+func (engine *Engine) Run(addr string) {
+	http.ListenAndServe(addr, engine)
 }
 
 /************************************/
 /********** ROUTES GROUPING *********/
 /************************************/
 
-func (group *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handler HandlerFunc) *Context {
-	if _, ok := req.Header["Content-Type"]; ok {
-		if strings.Contains(req.Header["Content-Type"][0], "x-www-form-urlencoded") {
-			req.ParseForm()
-		}
-
-		if strings.Contains(req.Header["Content-Type"][0], "form-data") {
-			req.ParseMultipartForm(32 << 20)
-		}
-	}
-
-	// 跨域
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
-
+func (group *RouterGroup) createContext(w http.ResponseWriter, req *http.Request, params httprouter.Params, handlers []HandlerFunc) *Context {
 	return &Context{
-		Writer:         w,
-		Req:            req,
-		engine:         group.engine,
-		Params:         params,
-		handler:        handler,
-		BaseController: group.BaseController,
+		Writer:   w,
+		Req:      req,
+		index:    -1,
+		engine:   group.engine,
+		Params:   params,
+		handlers: handlers,
 	}
 }
 
+// Use .
+func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
+	group.Handlers = append(group.Handlers, middlewares...)
+}
+
 // Group .
-func (group *RouterGroup) Group(component string, baseController *Controller) *RouterGroup {
+func (group *RouterGroup) Group(component string, handlers ...HandlerFunc) *RouterGroup {
 	prefix := path.Join(group.prefix, component)
 	return &RouterGroup{
-		Handler:        nil,
-		parent:         group,
-		prefix:         prefix,
-		engine:         group.engine,
-		BaseController: baseController,
+		Handlers: group.combineHandlers(handlers),
+		parent:   group,
+		prefix:   prefix,
+		engine:   group.engine,
 	}
 }
 
 // Handle .
-func (group *RouterGroup) Handle(method, p string, handler HandlerFunc) {
+func (group *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	p = path.Join(group.prefix, p)
+	handlers = group.combineHandlers(handlers)
 	group.engine.router.Handle(method, p, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		group.createContext(w, req, params, handler).Next()
+		group.createContext(w, req, params, handlers).Next()
 	})
 }
 
 // POST is a shortcut for router.Handle("POST", path, handle)
-func (group *RouterGroup) POST(path string, handler HandlerFunc, baseController ...*Controller) {
-	if len(baseController) > 0 {
-		group.BaseController = baseController[0]
-	}
-	group.Handle("POST", path, handler)
+func (group *RouterGroup) POST(path string, handlers ...HandlerFunc) {
+	group.Handle("POST", path, handlers)
 }
 
 // GET is a shortcut for router.Handle("GET", path, handle)
-func (group *RouterGroup) GET(path string, handler HandlerFunc, baseController ...*Controller) {
-	if len(baseController) > 0 {
-		group.BaseController = baseController[0]
-	}
-	group.Handle("GET", path, handler)
+func (group *RouterGroup) GET(path string, handlers ...HandlerFunc) {
+	group.Handle("GET", path, handlers)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handle)
-func (group *RouterGroup) DELETE(path string, handler HandlerFunc, baseController ...*Controller) {
-	if len(baseController) > 0 {
-		group.BaseController = baseController[0]
-	}
-	group.Handle("DELETE", path, handler)
+func (group *RouterGroup) DELETE(path string, handlers ...HandlerFunc) {
+	group.Handle("DELETE", path, handlers)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handle)
-func (group *RouterGroup) PATCH(path string, handler HandlerFunc, baseController ...*Controller) {
-	if len(baseController) > 0 {
-		group.BaseController = baseController[0]
-	}
-	group.Handle("PATCH", path, handler)
+func (group *RouterGroup) PATCH(path string, handlers ...HandlerFunc) {
+	group.Handle("PATCH", path, handlers)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handle)
-func (group *RouterGroup) PUT(path string, handler HandlerFunc, baseController ...*Controller) {
-	if len(baseController) > 0 {
-		group.BaseController = baseController[0]
-	}
-	group.Handle("PUT", path, handler)
+func (group *RouterGroup) PUT(path string, handlers ...HandlerFunc) {
+	group.Handle("PUT", path, handlers)
 }
 
-// OPTIONS
-func (group *RouterGroup) OPTIONS(path string, handler HandlerFunc, baseController ...*Controller) {
-	if len(baseController) > 0 {
-		group.BaseController = baseController[0]
-	}
-	group.Handle("OPTIONS", path, handler)
+func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc {
+	s := len(group.Handlers) + len(handlers)
+	h := make([]HandlerFunc, 0, s)
+	h = append(h, group.Handlers...)
+	h = append(h, handlers...)
+	return h
 }
 
 // Next .
 func (c *Context) Next() {
-	req := new(Request)
-	req.New(c)
-	res := new(Response)
-	res.New(c)
-
-	/**
-	 * 验签
-	 * 用户请求接口时候自动判断执行验签
-	 **/
-	ConfigLib := new(Config)
-	// 跳过验签路由列表
-	ignoreRouter := ConfigLib.Get("ignore_auth").StringSlice()
-	isAuth := ConfigLib.Get("is_auth").Bool()
-	for _, v := range ignoreRouter {
-		if v == c.Req.RequestURI {
-			isAuth = false
-			break
-		}
+	c.index++
+	s := int8(len(c.handlers))
+	for ; c.index < s; c.index++ {
+		c.handlers[c.index](c)
 	}
-	// 跳过登入校验的路由列表
-	ignoreLoginRouter := ConfigLib.Get("ignore_login").StringSlice()
-	isLogin := ConfigLib.Get("is_login").Bool()
-	for _, v := range ignoreLoginRouter {
-		if v == c.Req.RequestURI {
-			isLogin = false
-			break
-		}
-	}
-
-	// 开始鉴权
-	if isAuth {
-		authorization := ""
-		if _, ok := c.BaseController.Req.Header["Authorization"]; ok {
-			if len(c.BaseController.Req.Header["Authorization"]) > 0 {
-				authorization = c.BaseController.Req.Header["Authorization"][0]
-			}
-		}
-
-		if len(authorization) < 1 {
-			c.BaseController.Res.JSON(http.StatusUnauthorized, H{
-				"code": "ERROR_UNAUTHOZED",
-			})
-			return
-		}
-
-		JwtCore := new(Jwt)
-		if !JwtCore.Check(authorization) {
-			c.BaseController.Res.JSON(http.StatusUnauthorized, H{
-				"code": "ERROR_UNAUTHOZED",
-			})
-			return
-		}
-
-		// 开始登录校验
-		if isLogin {
-			var userId int64
-			var err error
-			if JwtCore.Get(authorization, "user_id") != nil {
-				userId, err = strconv.ParseInt(JwtCore.Get(authorization, "user_id").(string), 10, 64)
-				if err != nil {
-					c.BaseController.Res.JSON(http.StatusInternalServerError, H{
-						"code": "ERROR_UNLOGIN",
-					})
-					return
-				}
-			} else {
-				c.BaseController.Res.JSON(http.StatusInternalServerError, H{
-					"code": "ERROR_UNLOGIN",
-				})
-				return
-			}
-			c.BaseController.UserId = userId
-		}
-	}
-
-	c.handler()
 }
 
+// Abort .
 func (c *Context) Abort(code int) {
 	c.Writer.WriteHeader(code)
+	c.index = AbortIndex
 }
 
+// Fail .
 func (c *Context) Fail(code int, err error) {
 	c.Error(err, "Operation aborted")
 	c.Abort(code)
@@ -268,4 +186,97 @@ func (c *Context) Error(err error, meta interface{}) {
 		Message: err.Error(),
 		Meta:    meta,
 	})
+}
+
+/************************************/
+/******** METADATA MANAGEMENT********/
+/************************************/
+
+// Set Sets a new pair key/value just for the specefied context.
+// It also lazy initializes the hashmap
+func (c *Context) Set(key string, item interface{}) {
+	if c.Keys == nil {
+		c.Keys = make(map[string]interface{})
+	}
+	c.Keys[key] = item
+}
+
+// Get Returns the value for the given key.
+// It panics if the value doesn't exist.
+func (c *Context) Get(key string) interface{} {
+	var ok bool
+	var item interface{}
+	if c.Keys != nil {
+		item, ok = c.Keys[key]
+	} else {
+		item, ok = nil, false
+	}
+	if !ok || item == nil {
+		log.Panicf("Key %s doesn't exist", key)
+	}
+	return item
+}
+
+/************************************/
+/******** ENCOGING MANAGEMENT********/
+/************************************/
+
+// EnsureBody Like ParseBody() but this method also writes a 400 error if the json is not valid.
+func (c *Context) EnsureBody(item interface{}) bool {
+	if err := c.ParseBody(item); err != nil {
+		c.Fail(400, err)
+		return false
+	}
+	return true
+}
+
+// ParseBody Parses the body content as a JSON input. It decodes the json payload into the struct specified as a pointer.
+func (c *Context) ParseBody(item interface{}) error {
+	decoder := json.NewDecoder(c.Req.Body)
+	if err := decoder.Decode(&item); err == nil {
+		return Validate(c, item)
+	} else {
+		return err
+	}
+}
+
+// JSON Serializes the given struct as a JSON into the response body in a fast and efficient way.
+// It also sets the Content-Type as "application/json"
+func (c *Context) JSON(code int, obj interface{}) {
+	if code >= 0 {
+		c.Writer.WriteHeader(code)
+	}
+	c.Writer.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(c.Writer)
+	if err := encoder.Encode(obj); err != nil {
+		c.Error(err, obj)
+		http.Error(c.Writer, err.Error(), 500)
+	}
+}
+
+// XML Serializes the given struct as a XML into the response body in a fast and efficient way.
+// It also sets the Content-Type as "application/xml"
+func (c *Context) XML(code int, obj interface{}) {
+	if code >= 0 {
+		c.Writer.WriteHeader(code)
+	}
+	c.Writer.Header().Set("Content-Type", "application/xml")
+	encoder := xml.NewEncoder(c.Writer)
+	if err := encoder.Encode(obj); err != nil {
+		c.Error(err, obj)
+		http.Error(c.Writer, err.Error(), 500)
+	}
+}
+
+// Writes the given string into the response body and sets the Content-Type to "text/plain"
+func (c *Context) String(code int, msg string) {
+	c.Writer.Header().Set("Content-Type", "text/plain")
+	c.Writer.WriteHeader(code)
+	c.Writer.Write([]byte(msg))
+}
+
+// Data Writes some data into the body stream and updates the HTTP code
+func (c *Context) Data(code int, data []byte) {
+	c.Writer.WriteHeader(code)
+	c.Writer.Write(data)
 }

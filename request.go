@@ -108,7 +108,7 @@ func (r *Request) New(c *Context) {
 	r = merge2Params(r)
 
 	// set to base controller.
-	c.BaseController.Req = r
+	// c.BaseController.Req = r
 }
 
 func checkReqMethod(r *Request, method string) *Request {
