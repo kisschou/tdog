@@ -1,6 +1,7 @@
 package tdog
 
 import (
+	"errors"
 	"math/rand"
 	"net"
 	"os"
@@ -214,4 +215,23 @@ func (u *Util) StructToMap(obj interface{}) map[string]interface{} {
 		mapVal[relType.Field(i).Name] = elem.Field(i).Interface()
 	}
 	return mapVal
+}
+
+// 环境检测
+func (u *Util) Monitor() (err error) {
+	return
+	// MySQL环境
+	MySqlTdog := new(MySql)
+	MySqlTdog.NewEngine()
+	if MySqlTdog.Engine == nil || !MySqlTdog.Ping() {
+		err = errors.New("ERROR: MySQL connect fail! Please start mysql server and retry!")
+		return
+	}
+	// Redis环境
+	RedisTdog := new(Redis)
+	if RedisTdog.Engine == nil || !RedisTdog.Ping() {
+		err = errors.New("ERROR: Redis connect fail! Please start redis server and retry!")
+		return
+	}
+	return
 }

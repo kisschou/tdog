@@ -2,9 +2,11 @@ package tdog
 
 import (
 	"encoding/json"
+	"fmt"
 	"mime/multipart"
 	"net"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -34,7 +36,7 @@ type (
 	}
 )
 
-func (r *Request) New(c *Context) {
+func (r *Request) New(c *Context) *Request {
 	var ghostMap map[string][]string
 	ghostMap = make(map[string][]string)
 	for k, v := range c.Req.Header {
@@ -109,6 +111,7 @@ func (r *Request) New(c *Context) {
 
 	// set to base controller.
 	// c.BaseController.Req = r
+	return r
 }
 
 func checkReqMethod(r *Request, method string) *Request {
@@ -149,9 +152,19 @@ func merge2Params(r *Request) *Request {
 	}
 	if len(r.Put) > 0 {
 		for k, v := range r.Put {
+			aaa := reflect.TypeOf(v).Kind().String()
+			fmt.Println(aaa)
 			if reflect.TypeOf(v).Kind().String() == "map" {
 				dataJson, _ := json.Marshal(v.(map[string]interface{}))
 				params[k] = []string{string(dataJson)}
+			} else if reflect.TypeOf(v).Kind().String() == "int64" {
+				params[k] = []string{strconv.FormatInt(v.(int64), 10)}
+			} else if reflect.TypeOf(v).Kind().String() == "int" {
+				params[k] = []string{strconv.Itoa(v.(int))}
+			} else if reflect.TypeOf(v).Kind().String() == "float32" {
+				params[k] = []string{strconv.FormatFloat(v.(float64), 'E', -1, 32)}
+			} else if reflect.TypeOf(v).Kind().String() == "float64" {
+				params[k] = []string{strconv.FormatFloat(v.(float64), 'E', -1, 64)}
 			} else {
 				params[k] = []string{v.(string)}
 			}

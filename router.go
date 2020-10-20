@@ -5,11 +5,10 @@ import (
 	"encoding/xml"
 	"log"
 	"math"
-
-	"github.com/julienschmidt/httprouter"
-
 	"net/http"
 	"path"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 const (
@@ -19,7 +18,7 @@ const (
 
 type (
 	// HandlerFunc .
-	HandlerFunc func(*Context)
+	HandlerFunc func(*HttpUtil)
 
 	// H .
 	// H map[string]interface{}
@@ -38,7 +37,7 @@ type (
 		Errors   []ErrorMsg
 		Params   httprouter.Params
 		handlers []HandlerFunc
-		engine   *Engine
+		engine   *HttpEngine
 		index    int8
 	}
 
@@ -47,44 +46,58 @@ type (
 		Handlers []HandlerFunc
 		prefix   string
 		parent   *RouterGroup
-		engine   *Engine
+		engine   *HttpEngine
 	}
 
-	// Engine .
-	Engine struct {
+	// HttpEngine .
+	HttpEngine struct {
 		*RouterGroup
 		router *httprouter.Router
 	}
+
+	// HttpUtil
+	HttpUtil struct {
+		Req *Request
+		Res *Response
+	}
 )
 
-// New Engine
-func New() *Engine {
-	engine := &Engine{}
+// New HttpEngine
+func New() *HttpEngine {
+	engine := &HttpEngine{}
 	engine.RouterGroup = &RouterGroup{nil, "", nil, engine}
 	engine.router = httprouter.New()
 	return engine
 }
 
 // Default Returns a Engine instance with the Logger and Recovery already attached.
-func Default() *Engine {
+func Default() *HttpEngine {
 	engine := New()
 	// engine.Use(Recovery(), Logger())
 	return engine
 }
 
 // ServeFiles  router.ServeFiles("/src/*filepath", http.Dir("/var/www"))
-func (engine *Engine) ServeFiles(path string, root http.FileSystem) {
+func (engine *HttpEngine) ServeFiles(path string, root http.FileSystem) {
 	engine.router.ServeFiles(path, root)
 }
 
 // ServeHTTP makes the router implement the http.Handler interface.
-func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (engine *HttpEngine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// 跨域问题
+	// 如果请求为OPTIONS(跨域请求)返回跨域授权
+	if req.Method == "OPTIONS" {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+		return
+	}
 	engine.router.ServeHTTP(w, req)
 }
 
 // Run .
-func (engine *Engine) Run(addr string) {
-	http.ListenAndServe(addr, engine)
+func (engine *HttpEngine) Run() {
+	ConfigTdog := new(Config)
+	http.ListenAndServe(":"+ConfigTdog.Get("app_port").String(), engine)
 }
 
 /************************************/
@@ -162,10 +175,16 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 
 // Next .
 func (c *Context) Next() {
+	RequestTdog := new(Request)
+	ResponseTdog := new(Response)
+
 	c.index++
 	s := int8(len(c.handlers))
 	for ; c.index < s; c.index++ {
-		c.handlers[c.index](c)
+		c.handlers[c.index](&HttpUtil{
+			RequestTdog.New(c),
+			ResponseTdog.New(c),
+		})
 	}
 }
 

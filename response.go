@@ -15,19 +15,16 @@ type (
 	}
 )
 
-func (r *Response) New(c *Context) {
+func (r *Response) New(c *Context) *Response {
 	r.context = c
 	// c.BaseController.Res = r
+	return r
 }
 
 func (r *Response) JSON(code int, obj interface{}) {
 	if code >= 0 {
 		r.context.Writer.WriteHeader(code)
 	}
-
-	// 跨域
-	r.context.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	r.context.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
 
 	r.context.Writer.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(r.context.Writer)
