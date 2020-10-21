@@ -2,7 +2,6 @@ package tdog
 
 import (
 	"encoding/json"
-	"fmt"
 	"mime/multipart"
 	"net"
 	"reflect"
@@ -152,8 +151,6 @@ func merge2Params(r *Request) *Request {
 	}
 	if len(r.Put) > 0 {
 		for k, v := range r.Put {
-			aaa := reflect.TypeOf(v).Kind().String()
-			fmt.Println(aaa)
 			if reflect.TypeOf(v).Kind().String() == "map" {
 				dataJson, _ := json.Marshal(v.(map[string]interface{}))
 				params[k] = []string{string(dataJson)}
