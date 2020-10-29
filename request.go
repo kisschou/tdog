@@ -87,8 +87,8 @@ func (r *Request) New(c *Context) *Request {
 		}
 	}
 
-	// Get请求藏在地址中的参数
-	if c.Req.Method == "GET" {
+	// Get|Put|Delete请求藏在地址中的参数
+	if c.Req.Method == "GET" || c.Req.Method == "PUT" || c.Req.Method == "DELETE" {
 		methodParams := make(map[string][]string)
 		for _, v := range c.Params {
 			methodParams[v.Key] = []string{v.Value}
@@ -159,9 +159,9 @@ func merge2Params(r *Request) *Request {
 			} else if reflect.TypeOf(v).Kind().String() == "int" {
 				params[k] = []string{strconv.Itoa(v.(int))}
 			} else if reflect.TypeOf(v).Kind().String() == "float32" {
-				params[k] = []string{strconv.FormatFloat(v.(float64), 'E', -1, 32)}
+				params[k] = []string{strconv.FormatFloat(v.(float64), 'f', -1, 32)}
 			} else if reflect.TypeOf(v).Kind().String() == "float64" {
-				params[k] = []string{strconv.FormatFloat(v.(float64), 'E', -1, 64)}
+				params[k] = []string{strconv.FormatFloat(v.(float64), 'f', -1, 64)}
 			} else {
 				params[k] = []string{v.(string)}
 			}
