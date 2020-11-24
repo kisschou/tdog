@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type (
@@ -38,7 +39,8 @@ type (
  * fmt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
  * fmt.Println(res)
  */
-func (hp *HttpRequest) FormRequest() (httpCode int, resData string, err error) {
+func (hp *HttpRequest) FormRequest() (httpCode int, resData string, elapsedTime int64, err error) {
+	startTime := time.Now().UnixNano()
 	client := &http.Client{}
 
 	reqDataJson, _ := json.Marshal(hp.Params)
@@ -46,6 +48,7 @@ func (hp *HttpRequest) FormRequest() (httpCode int, resData string, err error) {
 	req, err := http.NewRequest(hp.Method, hp.Url, bytes.NewBuffer(reqDataJson))
 	if err != nil {
 		httpCode = http.StatusInternalServerError
+		elapsedTime = time.Now().UnixNano() - startTime
 		return
 	}
 
@@ -59,9 +62,11 @@ func (hp *HttpRequest) FormRequest() (httpCode int, resData string, err error) {
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		httpCode = http.StatusInternalServerError
+		elapsedTime = time.Now().UnixNano() - startTime
 		return
 	}
 
+	elapsedTime = time.Now().UnixNano() - startTime
 	httpCode = res.StatusCode
 	resData = string(body)
 	return
@@ -100,14 +105,17 @@ func (hp *HttpRequest) FormRequest() (httpCode int, resData string, err error) {
  * mt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
  * fmt.Println(res)
  */
-func (hp *HttpRequest) BytesPost() (int, string, error) {
+func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
+	startTime := time.Now().UnixNano()
+	var elapsedTime int64
 	data, _ := json.Marshal(hp.Params)
 	body := bytes.NewReader(data)
 	req, err := http.NewRequest(hp.Method, hp.Url, body)
 	if err != nil {
 		logger := Logger{Level: 0, Key: "error"}
 		logger.New(err.Error())
-		return http.StatusInternalServerError, "", err
+		elapsedTime = time.Now().UnixNano() - startTime
+		return http.StatusInternalServerError, "", elapsedTime, err
 	}
 
 	for k, v := range hp.Header {
@@ -119,7 +127,8 @@ func (hp *HttpRequest) BytesPost() (int, string, error) {
 	if err != nil {
 		logger := Logger{Level: 0, Key: "error"}
 		logger.New(err.Error())
-		return http.StatusInternalServerError, "", err
+		elapsedTime = time.Now().UnixNano() - startTime
+		return http.StatusInternalServerError, "", elapsedTime, err
 	}
 	defer resp.Body.Close()
 	b, err := ioutil.ReadAll(resp.Body)
@@ -128,12 +137,13 @@ func (hp *HttpRequest) BytesPost() (int, string, error) {
 		logger.New(err.Error())
 	}
 
-	return resp.StatusCode, string(b), err
+	elapsedTime = time.Now().UnixNano() - startTime
+	return resp.StatusCode, string(b), elapsedTime, err
 }
 
 // 针对请求网关服务构建
 // 继承后只需要set结构体中的Params
-func (hp *HttpRequest) ServicePost() (bool, string) {
+func (hp *HttpRequest) ServicePost() (bool, string, int64) {
 	ConfigLib := new(Config)
 	// header
 	header := make(map[string]string)
@@ -143,13 +153,13 @@ func (hp *HttpRequest) ServicePost() (bool, string) {
 	hp.Method = "POST"
 	hp.Header = header
 	hp.Url = ConfigLib.Get("api_url.gateway_url").String() + "/feign/http"
-	httpCode, res, err := hp.BytesPost()
+	httpCode, res, elapsedTime, err := hp.BytesPost()
 	if httpCode != http.StatusOK || err != nil {
 		if err != nil {
 			logger := Logger{Level: 0, Key: "error"}
 			logger.New(err.Error())
 		}
-		return false, res
+		return false, res, elapsedTime
 	}
-	return true, res
+	return true, res, elapsedTime
 }
