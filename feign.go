@@ -1,92 +1,47 @@
 package tdog
 
-import (
-	"encoding/json"
-	"reflect"
-)
-
 type (
 	Feign struct {
-		Method    string
-		BaseUrl   string
-		ActionUrl string
-		Header    map[string]string
-		Body      map[string]interface{}
+		method string
+		url    string
+		header map[string]string
+		params map[string]interface{}
 	}
 )
 
 func NewFeign() *Feign {
-	feign := &Feign{}
+	feign := &Feign{"GET", "", nil, nil}
 	return feign
 }
 
-func (feign *Feign) Decoder(data string) *Feign {
-	dataMap := make(map[string]interface{})
-	err := json.Unmarshal([]byte(data), &dataMap)
-	if err != nil {
-		LoggerLib := new(Logger)
-		LoggerLib.Level = 0
-		LoggerLib.Key = "error"
-		LoggerLib.New(err.Error())
-	}
-
-	ConfigLib := new(Config)
-	CryptLib := new(Crypt)
-	UtilLib := new(Util)
-
-	if !UtilLib.InMap("api_key", dataMap) {
-		return feign
-	}
-
-	apiInfo := ConfigLib.Get("api_map." + dataMap["api_key"].(string)).StringSlice()
-
-	feign.Method = apiInfo[0]
-	feign.BaseUrl = apiInfo[1]
-	feign.ActionUrl = apiInfo[2]
-
-	headerMap := make(map[string]string)
-	if UtilLib.InMap("header", dataMap) {
-		if reflect.TypeOf(dataMap["header"]).Kind().String() == "map" {
-			for k, v := range dataMap["header"].(map[string]interface{}) {
-				headerMap[k] = v.(string)
-			}
-		} else {
-			CryptLib.Str = dataMap["header"].(string)
-			json.Unmarshal([]byte(CryptLib.UrlBase64Decode()), &headerMap)
-		}
-	}
-	feign.Header = headerMap
-	bodyMap := make(map[string]interface{})
-	if UtilLib.InMap("body", dataMap) {
-		if reflect.TypeOf(dataMap["body"]).Kind().String() == "map" {
-			bodyMap = dataMap["body"].(map[string]interface{})
-		} else {
-			CryptLib.Str = dataMap["body"].(string)
-			json.Unmarshal([]byte(CryptLib.UrlBase64Decode()), &bodyMap)
-		}
-	}
-	feign.Body = bodyMap
-
+func (feign *Feign) Url(url string) *Feign {
+	feign.url = url
 	return feign
 }
 
-func (feign *Feign) Target() (code int, res string) {
-	ConfigLib := new(Config)
+func (feign *Feign) Header(header map[string]string) *Feign {
+	feign.header = header
+	return feign
+}
+
+func (feign *Feign) Method(method string) *Feign {
+	feign.method = method
+	return feign
+}
+
+func (feign *Feign) Params(params map[string]interface{}) *Feign {
+	feign.params = params
+	return feign
+}
+
+func (feign *Feign) Target() (code int, res string, elapsedTime int64) {
+	var err error
 	HttpRequestLib := new(HttpRequest)
-
-	// 请求服务不存在
-	if !ConfigLib.Get("api_url." + feign.BaseUrl).IsExists() {
-		code = 0
-		res = "ERROR_FEIGN_SERVICE_MISSING"
-		return
-	}
-
-	url := ConfigLib.Get("api_url."+feign.BaseUrl).String() + feign.ActionUrl
-	HttpRequestLib.Method = feign.Method
-	HttpRequestLib.Header = feign.Header
-	HttpRequestLib.Url = url
-	HttpRequestLib.Params = feign.Body
-	code, res, err := HttpRequestLib.FormRequest()
+	HttpRequestLib.Method = feign.method
+	HttpRequestLib.Header = feign.header
+	HttpRequestLib.Url = feign.url
+	HttpRequestLib.Params = feign.params
+	code, res, elapsedTime, err = HttpRequestLib.FormRequest()
 	if err != nil {
 		code = 0
 		res = "ERROR_FEIGN_REQUEST_FAIL"
