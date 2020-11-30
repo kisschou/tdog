@@ -217,6 +217,32 @@ func (u *Util) StructToMap(obj interface{}) map[string]interface{} {
 	return mapVal
 }
 
+// url分解
+func (u *Util) UrlSplit(url string) (protocol, domain string, port int) {
+	// https://127.0.0.1:8001/
+	var err error
+	urlCompose := strings.Split(url, ":")
+	protocol = urlCompose[0]
+	domain = strings.Replace(urlCompose[1], "/", "", -1)
+	port = 80
+	if len(urlCompose) > 2 {
+		port, err = strconv.Atoi(strings.Replace(urlCompose[2], "/", "", -1))
+		if err != nil {
+			port = 80
+		}
+	}
+	return
+}
+
+// url整合
+func (u *Util) UrlJoint(protocol, domain string, port int) (url string) {
+	url = protocol + "://" + domain
+	if port != 80 {
+		url += ":" + strconv.Itoa(port)
+	}
+	return
+}
+
 // 环境检测
 func (u *Util) Monitor() (err error) {
 	return
