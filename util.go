@@ -1,9 +1,11 @@
 package tdog
 
 import (
+	"encoding/json"
 	"errors"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"reflect"
 	"regexp"
@@ -219,7 +221,6 @@ func (u *Util) StructToMap(obj interface{}) map[string]interface{} {
 
 // url分解
 func (u *Util) UrlSplit(url string) (protocol, domain string, port int) {
-	// https://127.0.0.1:8001/
 	var err error
 	urlCompose := strings.Split(url, ":")
 	protocol = urlCompose[0]
@@ -260,4 +261,55 @@ func (u *Util) Monitor() (err error) {
 		return
 	}
 	return
+}
+
+// 获取雪花id
+func (u *Util) GetSnowFlake() int64 {
+	SnowFlakeTdog := new(SnowFlake)
+	SnowFlakeTdog.MachineId = u.GetMachineId()
+	SnowFlakeTdog.SN = u.RandInt64(1000, 9999)
+	SnowFlakeTdog.LastTimeStamp = time.Now().UnixNano() / 1000000
+	return SnowFlakeTdog.New()
+}
+
+func (u *Util) Request(authorization, apiCode string, params map[string]interface{}) (data map[string]interface{}, err error) {
+	FeignTdog := new(Feign)
+	header := make(map[string]string)
+	header["Authorization"] = authorization
+	if len(params) > 0 {
+		header["Content-Type"] = "application/json"
+	}
+	reqParams := make(map[string]interface{})
+	reqParams["api_code"] = apiCode
+	reqParams["params"] = params
+	code, res, _ := FeignTdog.Url("http://127.0.0.1:8001/gateway/feign").Method("POST").Header(header).Params(reqParams).Target()
+	err = json.Unmarshal([]byte(res), &data)
+	if err != nil {
+		return
+	}
+	if code != 200 {
+		err = errors.New(data["message"].(string))
+		return
+	}
+	return
+}
+
+func (u *Util) GetUserId(authorization string) int64 {
+	var userId int64 = 0
+	FeignTdog := new(Feign)
+	header := make(map[string]string)
+	header["Authorization"] = authorization
+	code, res, _ := FeignTdog.Url("http://127.0.0.1:8001/gateway/auth/getKey/user_id").Method("GET").Header(header).Params(nil).Target()
+	if code == http.StatusOK {
+		dataMap := make(map[string]interface{})
+		err := json.Unmarshal([]byte(res), &dataMap)
+		if err != nil {
+			return 0
+		}
+		userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
+		if err != nil {
+			return 0
+		}
+	}
+	return userId
 }
