@@ -86,3 +86,7 @@ func (r *Response) Captcha(code string) {
 	r.context.Writer.Header().Set("Content-Type", "image/png")
 	NewImage(d, 100, 40).WriteTo(r.context.Writer)
 }
+
+func (r *Response) Redirect(uri string) {
+	http.Redirect(r.context.Writer, r.context.Req, uri, http.StatusTemporaryRedirect)
+}
