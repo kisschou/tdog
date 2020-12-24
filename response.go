@@ -28,16 +28,19 @@ func (r *Response) JSON(code int, obj interface{}) {
 
 	r.context.Writer.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(r.context.Writer)
+	newObj := make(map[string]interface{})
+	newObj = obj.(H)
 	if code != http.StatusOK {
 		ErrorCore := new(Error)
-		newObj := make(map[string]interface{})
-		newObj = obj.(H)
 		if _, ok := newObj["code"]; ok {
 			newObj["message"] = ErrorCore.GetError(newObj["code"].(string))
+			newObj["err_code"] = ErrorCore.GetErrorCode(newObj["code"].(string))
 			delete(newObj, "code")
 		}
-		obj = newObj
+	} else {
+		newObj["err_code"] = 0
 	}
+	obj = newObj
 	if err := encoder.Encode(obj); err != nil {
 		r.context.Error(err, obj)
 		http.Error(r.context.Writer, err.Error(), 500)
