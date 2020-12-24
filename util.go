@@ -306,7 +306,11 @@ func (u *Util) GetUserId(authorization string) int64 {
 		if err != nil {
 			return 0
 		}
-		userId = int64(dataMap["value"].(float64))
+		// userId = int64(dataMap["value"].(float64))
+		userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
+		if err != nil {
+			return 0
+		}
 	}
 	return userId
 }
