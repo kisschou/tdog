@@ -294,23 +294,27 @@ func (u *Util) Request(authorization, apiCode string, params map[string]interfac
 	return
 }
 
-func (u *Util) GetUserId(authorization string) int64 {
-	var userId int64 = 0
+func (u *Util) GetUserId(authorization string) (userId int64, err error) {
 	FeignTdog := new(Feign)
 	header := make(map[string]string)
 	header["Authorization"] = authorization
-	code, res, _ := FeignTdog.Url("http://127.0.0.1:8001/gateway/auth/getKey/user_id").Method("GET").Header(header).Params(nil).Target()
+	code, res, _ := FeignTdog.Url("http://127.0.0.1:8001/gateway/auth/getKey/user_id").Method("GET").Header(header).Target()
 	if code == http.StatusOK {
 		dataMap := make(map[string]interface{})
-		err := json.Unmarshal([]byte(res), &dataMap)
+		err = json.Unmarshal([]byte(res), &dataMap)
 		if err != nil {
-			return 0
+			err = errors.New("ERROR_UNLOGIN")
+			return
 		}
 		// userId = int64(dataMap["value"].(float64))
 		userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
 		if err != nil {
-			return 0
+			err = errors.New("ERROR_UNLOGIN")
+			return
 		}
+	} else {
+		err = errors.New("ERROR_UNLOGIN")
+		return
 	}
-	return userId
+	return
 }
