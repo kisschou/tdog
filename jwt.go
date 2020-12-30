@@ -139,6 +139,9 @@ func (jwt *Jwt) Refresh(authorization string) string {
 }
 
 func (jwt *Jwt) Get(data string, key string) (value interface{}) {
+	if !jwt.Check(data) {
+		return ""
+	}
 	jwt = jwt.Walk(data)
 	CryptLib := new(Crypt)
 	CryptLib.Str = jwt.payload
@@ -153,6 +156,9 @@ func (jwt *Jwt) Get(data string, key string) (value interface{}) {
 }
 
 func (jwt *Jwt) GetData(data string) map[string]interface{} {
+	if !jwt.Check(data) {
+		return nil
+	}
 	jwt = jwt.Walk(data)
 	CryptLib := new(Crypt)
 	CryptLib.Str = jwt.payload
