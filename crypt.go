@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	ParentCrc32 "hash/crc32"
+	"net/url"
 	"strconv"
 )
 
@@ -64,6 +65,18 @@ func (h *Crypt) UrlBase64Decode() string {
 		return ""
 	}
 	return string(data)
+}
+
+func (h *Crypt) Urlencode() string {
+	return url.QueryEscape(h.Str)
+}
+
+func (h *Crypt) Urldecode() string {
+	data, err := url.QueryUnescape(h.Str)
+	if err != nil {
+		return ""
+	}
+	return data
 }
 
 func (h *Crypt) BiuPwdNewBuilder(password string) (salt string, newPassword string) {
