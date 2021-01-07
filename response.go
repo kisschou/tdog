@@ -62,10 +62,6 @@ func (r *Response) XML(code int, obj interface{}) {
 func (r *Response) String(code int, msg string) {
 	r.context.Writer.Header().Set("Content-Type", "text/plain")
 	r.context.Writer.WriteHeader(code)
-	if code != http.StatusOK {
-		ErrorCore := new(Error)
-		msg = ErrorCore.GetError(msg)
-	}
 	r.context.Writer.Write([]byte(msg))
 }
 
