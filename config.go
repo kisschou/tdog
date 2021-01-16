@@ -15,8 +15,11 @@ type (
 )
 
 func beginConn(c *Config) {
-	path, _ := os.Getwd()
-	path += "/config"
+	path := os.Getenv("CONFIG_PATH")
+	if len(path) < 1 {
+		path, _ = os.Getwd()
+		path += "/config"
+	}
 	file := "app"
 	if c != nil {
 		file = c.File
