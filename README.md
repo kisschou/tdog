@@ -18,59 +18,30 @@
 ## 结构
 ```
 └── tdog                                // 核心功能实现
-    ├── core                            // 核心包
-    │   ├── controller.go               // 基础控制器类，希望每个控制器都引用他
-    │   ├── error.go                    // 错误处理
-    │   ├── feign.go                    // Feign请求转发处理脚本
-    │   ├── jwt.go                      // 一个垃圾到可能会被嘲讽的东西
-    │   ├── model.go                    // 基础模型类，希望每个模型都引用他
-    │   ├── request.go                  // 请求数据类，所谓的统一入口
-    │   ├── response.go                 // 返回数据类，所谓的统一出口
-    │   ├── router.go                   // 路由解析类，httprouter作用于此
-    │   ├── service.go                  // 基础服务类，希望每个服务都引用他
-    │   └── websocket.go                // WebSocket服务类
-    │   ├── captcha.go                  // 验证码图片生成
-    │   ├── config.go                   // 配置文件获取类，viper作用于此
-    │   ├── crypt.go                    // 加密方法都放在这里
-    │   ├── file.go                     // 上传文件接收存储等
-    │   ├── http_request.go             // 对外模拟请求方法
-    │   ├── logger.go                   // 日志类, logrus作用于此
-    │   ├── mysql.go                    // MySQL操作类, xorm作用于此
-    │   ├── redis.go                    // Redis操作类, go-redis作用于此
-    │   ├── snowflake.go                // 雪花算法
-    │   └── util.go                     // 基础方法都在这里
-    └──  tests                          // 单元测试
-        └── main.go
+    ├── controller.go               // 基础控制器类，希望每个控制器都引用他
+    ├── error.go                    // 错误处理
+    ├── feign.go                    // Feign请求转发处理脚本
+    ├── jwt.go                      // 一个垃圾到可能会被嘲讽的东西
+    ├── model.go                    // 基础模型类，希望每个模型都引用他
+    ├── request.go                  // 请求数据类，所谓的统一入口
+    ├── response.go                 // 返回数据类，所谓的统一出口
+    ├── router.go                   // 路由解析类，httprouter作用于此
+    ├── service.go                  // 基础服务类，希望每个服务都引用他
+    ├── websocket.go                // WebSocket服务类
+    ├── captcha.go                  // 验证码图片生成
+    ├── config.go                   // 配置文件获取类，viper作用于此
+    ├── crypt.go                    // 加密方法都放在这里
+    ├── file.go                     // 上传文件接收存储等
+    ├── http_request.go             // 对外模拟请求方法
+    ├── logger.go                   // 日志类, logrus作用于此
+    ├── mysql.go                    // MySQL操作类, xorm作用于此
+    ├── redis.go                    // Redis操作类, go-redis作用于此
+    ├── snowflake.go                // 雪花算法
+    └── util.go                     // 基础方法都在这里
 ```
 
 ## 使用说明
-```
-## 安装golang环境等问题不再重复叙述
-
-## clone项目
-shell> git clone https://github.com/kisschou/word-game-go.git
-shell> cd word-game-go
-
-## 运行项目
-shell> go run .
-## 后台运行
-shell> go run -d=true .
-
-## 项目打包
-## ...Linux or Mac OS:
-shell> go build .
-## 会在目录下生成一个名为wordgame的二进制文件
-## 运行:
-shell> ./wordgame
-## 后台运行
-shell> ./wordgame -d=true
-## ...Windows:
-shell> CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build .
-## 会生成一个名为 wordgame.exe 的可执行文件
-## 在Windows下双击即可运行
-
-```
-> 本项目在windows下运行会报config找不到的问题，这是因为Linux和Windows下路径分隔符"/"和"\\"的问题。
+在相关业务的项目中导入 `github.com/kisschou/tdog` 即可使用。当前为开发版本导入需在`go.mod`文件中加入 `replace github.com/kisschou/tdog => /path/to/github.com/kisschou/tdog`, 防止出现包导入失败的问题发生。
 
 #### 业务添加说明
 * 路由
@@ -198,72 +169,17 @@ func (demoModel *DemoModel) GetName(name) (retStr string) {
 }
 ```
 
-## Swagger
-> 这里使用的是`go-swagger`包
-
-#### 安装
+## 单元测试
+本项目中所有的`*_test.go`文件均为单元测试脚本, 可忽略。
 ```
-Windows:
-Command> go get -u github.com/go-swagger/go-swagger/cmd/swagger
-## 然后设置swagger目录到环境变量,如果swagger成功唤醒请忽略
+启动单元测试命令为:
+shell> go test
+单元测试命令可选参数:
+-cover: 测试覆盖率
+-coverprofile={:/path/to/file}: 将覆盖率相关的记录信息输出到一个文件.如: go test -cover -coverprofile=a.out 然后使用 go tool cover -html=a.out 命令在浏览器中查看完整报告
 
-Linux:
-shell> go get -u github.com/go-swagger/go-swagger/cmd/swagger
-shell> export PATH=$GOPATH/bin:$PATH
-
-MacOS:
-shell> brew tap go-swagger/go-swagger
-shell> brew install go-swagger
 ```
-> 也可以直接去[官方下载](https://github.com/go-swagger/go-swagger/releases)
 
-#### 使用
-```
-## 1. 在对外的路由指向的controller中用注释的方式标识接口信息
-// swagger:operation POST /member/login member login
-// ---
-// summary: 用户登录
-// description: 用户登录
-// parameters:
-// - name: Authorization
-//   in: header
-//   description: 授权信息
-//   type: string
-//   required: true
-// - name: username
-//   in: body
-//   description: 用户名
-//   type: string
-//   required: true
-// - name: password
-//   in: body
-//   description: 密码
-//   type: string
-//   required: true
-// responses:
-//   200: repoResp
-//   401: badReq
-
-#### 解释
-// swagger:operaion [POST:请求方式(可以是GET\PUT\DELETE...)] [url:请求地址] [标签] [用于此端点的请求]
-// 注: 最后两个理解为id和节点, 用于标注地址
-// --- 这个部分下面是YAML格式的swagger规范.确保您的缩进是一致的和正确的
-// summary: 标题
-// description: 描述
-// parametres:   下面是参数了
-// - name: 参数名
-    in: [header|body|query] 参数的位置
-    description: 描述
-    type: 类型
-    required: 是否必须
-// responses: 响应
-
-## 2. 根目录下运行, 会自动遍历go文件生成接口文件
-shell> swagger generate spec -o ./swagger.json
-
-## 3. 启动swagger服务
-shell> swagger serve -F=swagger ./swagger.json
-```
 
 ## 其他
 Kisschou&copy;2020.All Rights.
