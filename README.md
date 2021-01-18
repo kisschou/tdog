@@ -172,12 +172,27 @@ func (demoModel *DemoModel) GetName(name) (retStr string) {
 ## 单元测试
 本项目中所有的`*_test.go`文件均为单元测试脚本, 可忽略。
 ```
+自动生成测试文件命令:
+注: 得先使用 go get -u github.com/cweill/gotests/... 安装gotests
+shell> gotests [options] PATH ...
+可选参数:
+-all           generate go tests for all functions and methods
+-excl          regexp. generate go tests for functions and methods that don't match. Takes precedence over -only, -exported, and -all
+-exported      generate go tests for exported functions and methods. Takes precedence over -only and -all
+-i             print test inputs in error messages
+-only          regexp. generate go tests for functions and methods that match only.Takes precedence over -all
+-w             write output to (test) files instead of stdout
+-nosubtests    disable subtest generation. Only available for Go 1.7+
+-template_dir  optional. Path to a directory containing custom test code templates
+如:
+为源文件中所有的函数和方法生成test方法
+shell> gotests -all -w -i crypt.go
+
 启动单元测试命令为:
 shell> go test
 单元测试命令可选参数:
 -cover: 测试覆盖率
 -coverprofile={:/path/to/file}: 将覆盖率相关的记录信息输出到一个文件.如: go test -cover -coverprofile=a.out 然后使用 go tool cover -html=a.out 命令在浏览器中查看完整报告
-
 ```
 
 
