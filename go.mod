@@ -11,5 +11,6 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/viper v1.7.1
 	github.com/tealeg/xlsx v1.0.5
+	github.com/wenzhenxi/gorsa v0.0.0-20191231021121-58a13482fb09 // indirect
 	xorm.io/core v0.7.3
 )
