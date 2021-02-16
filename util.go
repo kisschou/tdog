@@ -295,10 +295,12 @@ func (u *Util) Request(authorization, apiCode string, params map[string]interfac
 }
 
 func (u *Util) GetUserId(authorization string) (userId int64, err error) {
+	ConfigTdog := new(Config)
+	apiPath := ConfigTdog.Get("api_path").String()
 	FeignTdog := new(Feign)
 	header := make(map[string]string)
 	header["Authorization"] = authorization
-	code, res, _ := FeignTdog.Url("http://127.0.0.1:8001/gateway/auth/getKey/user_id").Method("GET").Header(header).Target()
+	code, res, _ := FeignTdog.Url(apiPath + ":8001/gateway/auth/getKey/user_id").Method("GET").Header(header).Target()
 	if code == http.StatusOK {
 		dataMap := make(map[string]interface{})
 		err = json.Unmarshal([]byte(res), &dataMap)
