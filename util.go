@@ -308,11 +308,15 @@ func (u *Util) GetUserId(authorization string) (userId int64, err error) {
 			err = errors.New("ERROR_UNLOGIN")
 			return
 		}
-		// userId = int64(dataMap["value"].(float64))
-		userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
-		if err != nil {
-			err = errors.New("ERROR_UNLOGIN")
-			return
+		switch dataMap["value"].(type) {
+		case string:
+			userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
+			if err != nil {
+				err = errors.New("ERROR_UNLOGIN")
+				return
+			}
+		case float64:
+			userId = int64(dataMap["value"].(float64))
 		}
 	} else {
 		err = errors.New("ERROR_UNLOGIN")
