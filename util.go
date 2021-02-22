@@ -308,15 +308,45 @@ func (u *Util) GetUserId(authorization string) (userId int64, err error) {
 			err = errors.New("ERROR_UNLOGIN")
 			return
 		}
-		// userId = int64(dataMap["value"].(float64))
-		userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
-		if err != nil {
-			err = errors.New("ERROR_UNLOGIN")
-			return
+		switch dataMap["value"].(type) {
+		case float64:
+			userId = int64(dataMap["value"].(float64))
+		case string:
+			userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
+			if err != nil {
+				err = errors.New("ERROR_UNLOGIN")
+				return
+			}
 		}
 	} else {
 		err = errors.New("ERROR_UNLOGIN")
 		return
 	}
 	return
+}
+
+func (u *Util) MySQLColumnTypeConvert(columnType string) string {
+	convert := "string"
+	switch strings.ToUpper(columnType) {
+	case "CHAR", "VARCHAR":
+		convert = "string"
+		break
+
+	case "TINYBLOB", "TINYTEXT", "BLOB", "TEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT":
+		convert = "text"
+		break
+
+	case "TINYINT", "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT":
+		convert = "select"
+		break
+
+	case "FLOAT", "DOUBLE":
+		convert = "string"
+		break
+
+	case "DATE", "TIME", "YEAR", "DATETIME", "TIMESTAMP":
+		convert = "date"
+		break
+	}
+	return convert
 }
