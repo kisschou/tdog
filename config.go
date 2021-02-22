@@ -158,3 +158,10 @@ func (c *Config) StringSlice() (data []string) {
 	endConn()
 	return
 }
+
+func (c *Config) Int64() (data int64) {
+	beginConn(c)
+	data = viper.GetInt64(c.Key)
+	endConn()
+	return
+}
