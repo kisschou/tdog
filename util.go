@@ -265,11 +265,8 @@ func (u *Util) Monitor() (err error) {
 
 // 获取雪花id
 func (u *Util) GetSnowFlake() int64 {
-	SnowFlakeTdog := new(SnowFlake)
-	SnowFlakeTdog.MachineId = u.GetMachineId()
-	SnowFlakeTdog.SN = u.RandInt64(1000, 9999)
-	SnowFlakeTdog.LastTimeStamp = time.Now().UnixNano() / 1000000
-	return SnowFlakeTdog.New()
+	SnowflakeTdog, _ := NewSnowFlake(u.RandInt64(1, 1023))
+	return SnowflakeTdog.GetId()
 }
 
 func (u *Util) Request(authorization, apiCode string, params map[string]interface{}) (data map[string]interface{}, err error) {
