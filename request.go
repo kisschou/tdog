@@ -162,6 +162,13 @@ func merge2Params(r *Request) *Request {
 				params[k] = []string{strconv.FormatFloat(v.(float64), 'f', -1, 32)}
 			} else if reflect.TypeOf(v).Kind().String() == "float64" {
 				params[k] = []string{strconv.FormatFloat(v.(float64), 'f', -1, 64)}
+			} else if reflect.TypeOf(v).Kind().String() == "slice" {
+				data := make([]map[string]interface{}, 0)
+				for _, eachObj := range v.([]interface{}) {
+					data = append(data, eachObj.(map[string]interface{}))
+				}
+				dataJson, _ := json.Marshal(data)
+				params[k] = []string{string(dataJson)}
 			} else {
 				params[k] = []string{v.(string)}
 			}
