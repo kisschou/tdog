@@ -60,6 +60,9 @@ type (
 		Req *Request
 		Res *Response
 	}
+
+	// ResponseText
+	H map[string]interface{}
 )
 
 // New HttpEngine

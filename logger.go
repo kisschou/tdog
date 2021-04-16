@@ -32,6 +32,18 @@ func buildFileName(logger *Logger) (fileName string) {
 	return
 }
 
+func (log *Logger) Error(msg string) {
+	UtilTdog := new(*Util)
+	CryptTdog := new(*Crypt)
+	filePath, _ := os.Getwd()
+}
+
+func (log *Logger) Warning(msg string) {
+}
+
+func (log *Logger) Access(msg string) {
+}
+
 func toFile(logger *Logger, context string) {
 	logFilePath := buildFilePath(logger)
 	logFileName := buildFileName(logger)

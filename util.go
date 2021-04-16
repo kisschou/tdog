@@ -14,6 +14,12 @@ import (
 	"time"
 )
 
+/**
+ * 脚手架脚本
+ *
+ * Author: Kisschou
+ */
+
 type Util struct {
 }
 
