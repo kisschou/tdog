@@ -431,3 +431,61 @@ func (u *Util) UcFirst(s string) string {
 	}
 	return upperStr
 }
+
+/**
+ * 检测端口是否已经暂用
+ * @params int port 端口号
+ * @return bool
+ **/
+func (u *Util) checkPortAlived(port int) bool {
+	isAlived := false
+	var outBytes bytes.Buffer
+	cmd0 := exec.Command("netstat", "-ano")
+	cmd1 := exec.Command("grep", strconv.Itoa(port))
+	cmd1.Stdin, _ = cmd0.StdoutPipe()
+	cmd2 := exec.Command("grep", "LISTEN")
+	cmd2.Stdin, _ = cmd1.StdoutPipe()
+	cmd2.Stdout = &outBytes
+	_ = cmd2.Start()
+	_ = cmd1.Start()
+	_ = cmd0.Run()
+	_ = cmd1.Wait()
+	_ = cmd2.Wait()
+	res := outBytes.String()
+	if len(res) > 10 {
+		isAlived = true
+	}
+	return isAlived
+}
+
+/**
+ * 通过端口号获取pid
+ * 不是一定能获取到，如协程就获取不到
+ * @params int port 端口号
+ * @return int pid
+ **/
+func (u *Util) GetPidByPort(port int) int {
+	pid := -1
+	var outBytes bytes.Buffer
+	cmd0 := exec.Command("netstat", "-ano")
+	cmd1 := exec.Command("grep", strconv.Itoa(port))
+	cmd1.Stdin, _ = cmd0.StdoutPipe()
+	cmd2 := exec.Command("grep", "LISTENING")
+	cmd2.Stdin, _ = cmd1.StdoutPipe()
+	cmd2.Stdout = &outBytes
+	_ = cmd2.Start()
+	_ = cmd1.Start()
+	_ = cmd0.Run()
+	_ = cmd1.Wait()
+	_ = cmd2.Wait()
+	res := outBytes.String()
+	r := regexp.MustCompile(`\s\d+\s`).FindAllString(res, -1)
+	if len(r) > 0 {
+		var err error
+		pid, err = strconv.Atoi(strings.TrimSpace(r[1]))
+		if err != nil {
+			pid = -1
+		}
+	}
+	return pid
+}
