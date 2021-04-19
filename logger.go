@@ -1,4 +1,4 @@
-package tdog
+package main
 
 import (
 	"fmt"
@@ -6,14 +6,24 @@ import (
 	"os"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/go-redis/redis"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-type Logger struct {
-	Path  string
-	File  string
-	Level string
-}
+type (
+	Logger struct {
+		Path  string
+		File  string
+		Level string
+	}
+
+	// 为 logger 提供写入 redis 队列的 io 接口
+	redisWriter struct {
+		cli     *redis.Client
+		listKey string
+	}
+)
 
 func (log *Logger) BuildFilePath() *Logger {
 	var util *Util
@@ -30,17 +40,6 @@ func (log *Logger) BuildFileName(fileName string) *Logger {
 	return log
 }
 
-func (log *Logger) Start() {
-	UtilTdog := new(Util)
-	if !UtilTdog.checkPortAlived(7999) {
-		mux := http.NewServeMux()
-		mux.HandleFunc("/error", log.Error)
-		mux.HandleFunc("/warning", log.Warning)
-		mux.HandleFunc("/access", log.Access)
-		go http.ListenAndServe(":7999", mux)
-	}
-}
-
 func (log *Logger) Error(res http.ResponseWriter, req *http.Request) {
 	log.BuildFilePath().BuildFileName("error")
 }
@@ -53,48 +52,48 @@ func (log *Logger) Access(res http.ResponseWriter, req *http.Request) {
 	log.BuildFilePath().BuildFileName("access").Writer("")
 }
 
-func (log *Logger) Writer(context string) {
-	fileName := log.Path + log.File
-	src, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
-	if err != nil {
-		fmt.Println("write to log file FAIL: ", err)
-		os.Exit(0)
+func NewRedisWriter(key string, cli *redis.Client) *redisWriter {
+	return &redisWriter{
+		cli: cli, listKey: key,
 	}
+}
 
-	// 实例化
-	LogImpl := logrus.New()
-	// 设置输出
-	LogImpl.Out = src
-	// 设置输出日志中添加文件名和方法信息
-	LogImpl.SetReportCaller(true)
-	// 设置日志格式
-	LogImpl.SetFormatter(&logrus.TextFormatter{
-		TimestampFormat: "2006-01-02 15:04:05", // 时间格式化
+func (w *redisWriter) Write(p []byte) (int, error) {
+	n, err := w.cli.RPush(w.listKey, p).Result()
+	return int(n), err
+}
+
+func NewLogger(writer *redisWriter) *zap.Logger {
+	// 限制日志输出级别, >= DebugLevel 会打印所有级别的日志
+	// 生产环境中一般使用 >= ErrorLevel
+	lowPriority := zap.LevelEnablerFunc(func(lv zapcore.Level) bool {
+		return lv >= zapcore.DebugLevel
 	})
-	/**
-	 * 日志的级别（来自@dylanbeattie）
-	 * - Fatal：网站挂了，或者极度不正常
-	 * - Error：跟遇到的用户说对不起，可能有bug
-	 * - Warn：记录一下，某事又发生了
-	 * - Info：提示一切正常
-	 * - debug：没问题，就看看堆栈
-	 */
-	switch log.Level {
-	case "error":
-		LogImpl.SetLevel(logrus.ErrorLevel)
-		LogImpl.Error("%s", context)
-		break
-	case "warning":
-		LogImpl.SetLevel(logrus.WarnLevel)
-		LogImpl.Warn("%s", context)
-		break
-	case "access":
-		LogImpl.SetLevel(logrus.InfoLevel)
-		LogImpl.Info("%s", context)
-		break
-	default:
-		LogImpl.SetLevel(logrus.InfoLevel)
-		LogImpl.Infof("%s", context)
-		break
-	}
+
+	// 使用 JSON 格式日志
+	jsonEnc := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+	stdCore := zapcore.NewCore(jsonEnc, zapcore.Lock(os.Stdout), lowPriority)
+
+	// addSync 将 io.Writer 装饰为 WriteSyncer
+	// 故只需要一个实现 io.Writer 接口的对象即可
+	syncer := zapcore.AddSync(writer)
+	redisCore := zapcore.NewCore(jsonEnc, syncer, lowPriority)
+
+	// 集成多个 core
+	core := zapcore.NewTee(stdCore, redisCore)
+
+	// logger 输出到 console 且标识调用代码行
+	return zap.New(core).WithOptions(zap.AddCaller())
+}
+
+func main() {
+	cli := redis.NewClient(&redis.Options{
+		Addr: "127.0.0.1:6379",
+	})
+	writer := NewRedisWriter("log_list", cli)
+	logger := NewLogger(writer)
+
+	logger.Info("test logger info", zap.String("hello", "logger"))
+	logger.Error("test logger info", zap.String("hello", "logger"))
+	logger.Warn("test logger info", zap.String("hello", "logger"))
 }
