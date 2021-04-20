@@ -1,10 +1,7 @@
-package main
+package tdog
 
 import (
-	"fmt"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/go-redis/redis"
 	"go.uber.org/zap"
@@ -13,9 +10,6 @@ import (
 
 type (
 	Logger struct {
-		Path  string
-		File  string
-		Level string
 	}
 
 	// 为 logger 提供写入 redis 队列的 io 接口
@@ -25,34 +19,10 @@ type (
 	}
 )
 
-func (log *Logger) BuildFilePath() *Logger {
-	var util *Util
-	filePath, _ := os.Getwd()
-	filePath += "/runtime/" + time.Now().Format("2006-01-02") + "/"
-	util.DirExistsAndCreate(filePath)
-	log.Path = filePath
-	return log
-}
-
-func (log *Logger) BuildFileName(fileName string) *Logger {
-	log.Level = fileName
-	log.File = fileName + ".log"
-	return log
-}
-
-func (log *Logger) Error(res http.ResponseWriter, req *http.Request) {
-	log.BuildFilePath().BuildFileName("error")
-}
-
-func (log *Logger) Warning(res http.ResponseWriter, req *http.Request) {
-	log.BuildFilePath().BuildFileName("warning")
-}
-
-func (log *Logger) Access(res http.ResponseWriter, req *http.Request) {
-	log.BuildFilePath().BuildFileName("access").Writer("")
-}
-
-func NewRedisWriter(key string, cli *redis.Client) *redisWriter {
+func (log *Logger) NewRedisWriter(key string) *redisWriter {
+	cli := redis.NewClient(&redis.Options{
+		Addr: "127.0.0.1:6379",
+	})
 	return &redisWriter{
 		cli: cli, listKey: key,
 	}
@@ -63,7 +33,7 @@ func (w *redisWriter) Write(p []byte) (int, error) {
 	return int(n), err
 }
 
-func NewLogger(writer *redisWriter) *zap.Logger {
+func (log *Logger) NewLogger(writer *redisWriter) *zap.Logger {
 	// 限制日志输出级别, >= DebugLevel 会打印所有级别的日志
 	// 生产环境中一般使用 >= ErrorLevel
 	lowPriority := zap.LevelEnablerFunc(func(lv zapcore.Level) bool {
@@ -86,14 +56,14 @@ func NewLogger(writer *redisWriter) *zap.Logger {
 	return zap.New(core).WithOptions(zap.AddCaller())
 }
 
-func main() {
-	cli := redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:6379",
-	})
-	writer := NewRedisWriter("log_list", cli)
-	logger := NewLogger(writer)
+func (log *Logger) Error(message string) {
+	log.NewLogger(log.NewRedisWriter("log:list")).Error(message)
+}
 
-	logger.Info("test logger info", zap.String("hello", "logger"))
-	logger.Error("test logger info", zap.String("hello", "logger"))
-	logger.Warn("test logger info", zap.String("hello", "logger"))
+func (log *Logger) Warn(message string) {
+	log.NewLogger(log.NewRedisWriter("log:list")).Warn(message)
+}
+
+func (log *Logger) Info(message string) {
+	log.NewLogger(log.NewRedisWriter("log:list")).Info(message)
 }
