@@ -2,6 +2,8 @@ package tdog
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -36,7 +38,7 @@ type Snowflake struct {
 	Sequence int
 }
 
-//构造基础信息
+// 初始化雪花算法模块
 func NewSnowflake(workId, dataId, seq int) *Snowflake {
 	return &Snowflake{
 		WorkerId:     workId,
@@ -44,6 +46,7 @@ func NewSnowflake(workId, dataId, seq int) *Snowflake {
 		Sequence:     seq,
 	}
 }
+
 func getCurrentTime() int {
 	return int(time.Now().Unix())
 }
@@ -57,7 +60,7 @@ func tilNextMillis(lastStamp int) int {
 	}
 }
 
-func (sf *Snowflake) Get() (*int, error) {
+func (sf *Snowflake) Get() (int64, error) {
 	Lock.Lock()
 	defer Lock.Unlock()
 	workerIdShift := sequenceBits
@@ -66,7 +69,7 @@ func (sf *Snowflake) Get() (*int, error) {
 	sequenceMask := (1 << sequenceBits) - 1
 	timeStamp := getCurrentTime()
 	if timeStamp < LastTimestamp {
-		return nil, errors.New("系统时钟发生倒退，生成ID异常，请仔细检查。")
+		return 0, errors.New("系统时钟发生倒退，生成ID异常，请仔细检查。")
 	}
 	//如果两个时间相同，则自增一
 	if LastTimestamp == timeStamp {
@@ -81,5 +84,9 @@ func (sf *Snowflake) Get() (*int, error) {
 	//记录最后一次产生的时间戳
 	LastTimestamp = timeStamp
 	num := ((timeStamp - timeInitValue) << timestampLeftShift) | (sf.DatacenterId << datacenterIdShift) | (sf.WorkerId << workerIdShift) | sf.Sequence
-	return &num, nil
+	id, err := strconv.ParseInt(fmt.Sprintf("%d", &num), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
