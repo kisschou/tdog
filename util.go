@@ -1,12 +1,17 @@
 package tdog
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
+	"path"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -21,6 +26,30 @@ import (
  */
 
 type Util struct {
+}
+
+func NewUtil() *Util {
+	return &Util{}
+}
+
+func (u *Util) GetFilesBySuffix(filePath string, suffix string) (files []string, err error) {
+	rd, err := ioutil.ReadDir(filePath)
+	if err != nil {
+		NewLogger().Error(err.Error())
+		return
+	}
+
+	for _, fi := range rd {
+		if !fi.IsDir() {
+			fileSuffix := path.Ext(fi.Name())
+			fileName := strings.TrimSuffix(fi.Name(), fileSuffix)
+			fmt.Println(fi.Name(), fileSuffix, fileName)
+			if "."+suffix == fileSuffix {
+				files = append(files, fileName)
+			}
+		}
+	}
+	return
 }
 
 // 判断文件是否存在
@@ -54,8 +83,7 @@ func (u *Util) DirExistsAndCreate(path string) {
 	if !u.FileExists(path) {
 		err := os.MkdirAll(path, os.ModePerm)
 		if err != nil {
-			logger := Logger{Level: 0, Key: "error"}
-			logger.New(err.Error())
+			NewLogger().Error(err.Error())
 			os.Exit(0)
 		}
 	}
@@ -267,12 +295,6 @@ func (u *Util) Monitor() (err error) {
 		return
 	}
 	return
-}
-
-// 获取雪花id
-func (u *Util) GetSnowFlake() int64 {
-	SnowflakeTdog, _ := NewSnowFlake(u.RandInt64(1, 1023))
-	return SnowflakeTdog.GetId()
 }
 
 func (u *Util) Request(authorization, apiCode string, params map[string]interface{}) (data map[string]interface{}, err error) {
