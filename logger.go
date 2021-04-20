@@ -19,9 +19,9 @@ type (
 	}
 )
 
-func (log *Logger) NewRedisWriter(key string) *redisWriter {
+func newRedisWriter(key string) *redisWriter {
 	cli := redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:6379",
+		Addr: NewConfig().Get("cache.master.host").String() + ":" + NewConfig().Get("cache.master.port").String(),
 	})
 	return &redisWriter{
 		cli: cli, listKey: key,
@@ -33,7 +33,7 @@ func (w *redisWriter) Write(p []byte) (int, error) {
 	return int(n), err
 }
 
-func (log *Logger) NewLogger(writer *redisWriter) *zap.Logger {
+func newLogger(writer *redisWriter) *zap.Logger {
 	// 限制日志输出级别, >= DebugLevel 会打印所有级别的日志
 	// 生产环境中一般使用 >= ErrorLevel
 	lowPriority := zap.LevelEnablerFunc(func(lv zapcore.Level) bool {
@@ -56,14 +56,18 @@ func (log *Logger) NewLogger(writer *redisWriter) *zap.Logger {
 	return zap.New(core).WithOptions(zap.AddCaller())
 }
 
+func NewLogger() *Logger {
+	return &Logger{}
+}
+
 func (log *Logger) Error(message string) {
-	log.NewLogger(log.NewRedisWriter("log:list")).Error(message)
+	newLogger(newRedisWriter("log:list")).Error(message)
 }
 
 func (log *Logger) Warn(message string) {
-	log.NewLogger(log.NewRedisWriter("log:list")).Warn(message)
+	newLogger(newRedisWriter("log:list")).Warn(message)
 }
 
 func (log *Logger) Info(message string) {
-	log.NewLogger(log.NewRedisWriter("log:list")).Info(message)
+	newLogger(newRedisWriter("log:list")).Info(message)
 }
