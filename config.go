@@ -1,6 +1,8 @@
 package tdog
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -9,159 +11,186 @@ import (
 
 type (
 	Config struct {
-		File string
-		Key  string
+		filePath    string   // 配置文件路径
+		configFiles []string // 所有的配置文件
+		defaultFile string   // 默认配置文件
+		fileSuffix  string   // 文件后缀
+		searchKey   string   // 查询的key值
+		actionFile  string   // 当前查询的文件名
+		actionKey   string   // 当前查询的key
+	}
+
+	ConfigResult struct {
+		filePath   string // 配置文件路径
+		activeFile string // 命中文件
+		activeKey  string // 命中key
+		Message    string // 消息
 	}
 )
 
-func beginConn(c *Config) {
+func NewConfig() *Config {
+	config := &Config{
+		filePath:    "",
+		configFiles: nil,
+		defaultFile: getDefaultFile(),
+		fileSuffix:  getFileSuffix(),
+		searchKey:   "",
+		actionFile:  "",
+		actionKey:   "",
+	}
+	config.SetPath(getFilePath())
+	return config
+}
+
+func getFilePath() string {
 	path := os.Getenv("CONFIG_PATH")
 	if len(path) < 1 {
 		path, _ = os.Getwd()
 		path += "/config"
 	}
-	file := "app"
-	if c != nil {
-		file = c.File
-	}
-	if len(file) < 1 {
-		file = "app"
-	}
-
-	viper.SetConfigName(file)
-	viper.SetConfigType("toml")
-	viper.AddConfigPath(path)
-	err := viper.ReadInConfig()
-	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
-	}
+	return path
 }
 
-func action(sourceKey string) (file string, key string) {
-	conf := new(Config)
-	file = ""
-	key = ""
-
-	if len(sourceKey) < 1 {
-		return
-	}
-
-	beginConn(conf)
-	file = conf.File
-	key = sourceKey
-
-	if !viper.IsSet(key) {
-		newConf := new(Config)
-		match := strings.Split(key, ".")
-		if len(match) > 1 {
-			newConf.File = match[0]
-			file = match[0]
-			match = match[1:]
-		}
-		beginConn(newConf)
-		key = strings.Join(match, ".")
-		if !viper.IsSet(key) {
-			file = ""
-			key = ""
-		}
-	}
-
-	endConn()
-	return
+func getDefaultFile() string {
+	return "app"
 }
 
-func endConn() {
-	var c *Config
-	beginConn(c)
+func getFileSuffix() string {
+	return "toml"
 }
 
-func (c *Config) Get(sourceKey string) *Config {
-	file, key := action(sourceKey)
-	c.File = file
-	c.Key = key
-	endConn()
+func (c *Config) getFiles() {
+	if c.filePath == "" {
+		c.configFiles = nil
+	}
+	c.configFiles, _ = NewUtil().GetFilesBySuffix(c.filePath, c.fileSuffix)
+}
+
+func (c *Config) SetPath(path string) *Config {
+	c.filePath = path
+	c.getFiles()
 	return c
 }
 
-func (c *Config) IsExists() bool {
+func connect(c *Config) {
+	viper.SetConfigName(c.actionFile)
+	viper.SetConfigType(c.fileSuffix)
+	viper.AddConfigPath(c.filePath)
+	err := viper.ReadInConfig()
+	if err != nil {
+		NewLogger().Error(err.Error())
+	}
+}
+
+func (c *Config) find() (*ConfigResult, error) {
+	var err error
+	if len(c.actionFile) < 1 {
+		c.actionFile = c.defaultFile
+	}
+	if len(c.actionKey) < 1 {
+		c.actionKey = c.searchKey
+	}
+	for {
+		connect(c)
+		if !viper.IsSet(c.actionKey) {
+			match := strings.Split(c.actionKey, ".")
+			if len(match) > 1 {
+				c.actionFile = match[0]
+				if !NewUtil().InStringSlice(c.actionFile, c.configFiles) {
+					err = errors.New(fmt.Sprintf("[%s], 无法定位到配置, %s -> %s", c.searchKey, c.filePath, c.actionFile))
+					break
+				}
+				c.actionKey = strings.Join(match[1:], ".")
+				if !viper.IsSet(c.actionKey) {
+					err = errors.New(fmt.Sprintf("[%s], 未找到配置, %s -> %s -> %s", c.searchKey, c.filePath, c.actionFile, c.actionKey))
+					break
+				}
+			}
+		}
+	}
+	resultImpl := &ConfigResult{
+		filePath:   c.filePath,
+		activeFile: c.actionFile,
+		activeKey:  c.actionKey,
+		Message:    "",
+	}
+	return resultImpl, err
+}
+
+func (c *Config) Get(key string) *ConfigResult {
+	c.searchKey = key
+	resultImpl, err := c.find()
+	if err != nil {
+		resultImpl.Message = err.Error()
+		return resultImpl
+	}
+	return resultImpl
+}
+
+func (cr *ConfigResult) IsExists() bool {
 	isExists := false
-	beginConn(c)
-	if c.File == "" || c.Key == "" {
-		isExists = false
-	} else {
+	if len(cr.Message) < 1 {
 		isExists = true
 	}
-	endConn()
 	return isExists
 }
 
-func (c *Config) RawData() (data interface{}) {
-	beginConn(c)
-	data = viper.Get(c.Key)
-	endConn()
+func (c *ConfigResult) RawData() (data interface{}) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.Get(c.activeKey)
 	return
 }
 
-func (c *Config) String() (data string) {
-	beginConn(c)
-	data = viper.GetString(c.Key)
-	endConn()
+func (c *ConfigResult) String() (data string) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetString(c.activeKey)
 	return
 }
 
-func (c *Config) Int() (data int) {
-	beginConn(c)
-	data = viper.GetInt(c.Key)
-	endConn()
+func (c *ConfigResult) Int() (data int) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetInt(c.activeKey)
 	return
 }
 
-func (c *Config) Bool() (data bool) {
-	beginConn(c)
-	data = viper.GetBool(c.Key)
-	endConn()
+func (c *ConfigResult) Bool() (data bool) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetBool(c.activeKey)
 	return
 }
 
-func (c *Config) IntSlice() (data []int) {
-	beginConn(c)
-	data = viper.GetIntSlice(c.Key)
-	endConn()
+func (c *ConfigResult) IntSlice() (data []int) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetIntSlice(c.activeKey)
 	return
 }
 
-func (c *Config) StringMap() (data map[string]interface{}) {
-	beginConn(c)
-	data = viper.GetStringMap(c.Key)
-	endConn()
+func (c *ConfigResult) StringMap() (data map[string]interface{}) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetStringMap(c.activeKey)
 	return
 }
 
-func (c *Config) StringMapString() (data map[string]string) {
-	beginConn(c)
-	data = viper.GetStringMapString(c.Key)
-	endConn()
+func (c *ConfigResult) StringMapString() (data map[string]string) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetStringMapString(c.activeKey)
 	return
 }
 
-func (c *Config) StringMapStringSlice() (data map[string][]string) {
-	beginConn(c)
-	data = viper.GetStringMapStringSlice(c.Key)
-	endConn()
+func (c *ConfigResult) StringMapStringSlice() (data map[string][]string) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetStringMapStringSlice(c.activeKey)
 	return
 }
 
-func (c *Config) StringSlice() (data []string) {
-	beginConn(c)
-	data = viper.GetStringSlice(c.Key)
-	endConn()
+func (c *ConfigResult) StringSlice() (data []string) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetStringSlice(c.activeKey)
 	return
 }
 
-func (c *Config) Int64() (data int64) {
-	beginConn(c)
-	data = viper.GetInt64(c.Key)
-	endConn()
+func (c *ConfigResult) Int64() (data int64) {
+	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+	data = viper.GetInt64(c.activeKey)
 	return
 }
