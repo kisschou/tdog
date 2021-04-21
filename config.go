@@ -22,6 +22,7 @@ type (
 
 	ConfigResult struct {
 		filePath   string // 配置文件路径
+		searchKey  string // 查询的key值
 		activeFile string // 命中文件
 		activeKey  string // 命中key
 		Message    string // 消息
@@ -101,15 +102,17 @@ func (c *Config) find() (*ConfigResult, error) {
 					break
 				}
 				c.actionKey = strings.Join(match[1:], ".")
-				if !viper.IsSet(c.actionKey) {
-					err = errors.New(fmt.Sprintf("[%s], 未找到配置, %s -> %s -> %s", c.searchKey, c.filePath, c.actionFile, c.actionKey))
-					break
-				}
+			} else {
+				err = errors.New(fmt.Sprintf("[%s], 未找到配置, %s -> %s -> %s", c.searchKey, c.filePath, c.actionFile, c.actionKey))
+				break
 			}
+		} else {
+			break
 		}
 	}
 	resultImpl := &ConfigResult{
 		filePath:   c.filePath,
+		searchKey:  c.searchKey,
 		activeFile: c.actionFile,
 		activeKey:  c.actionKey,
 		Message:    "",
@@ -118,13 +121,31 @@ func (c *Config) find() (*ConfigResult, error) {
 }
 
 func (c *Config) Get(key string) *ConfigResult {
+	c.actionFile, c.actionKey, c.searchKey = "", "", key
 	c.searchKey = key
 	resultImpl, err := c.find()
 	if err != nil {
+		NewLogger().Warn(err.Error())
 		resultImpl.Message = err.Error()
 		return resultImpl
 	}
 	return resultImpl
+}
+
+func (c *Config) GetMulti(keys ...string) []*ConfigResult {
+	if len(keys) < 1 {
+		NewLogger().Warn("Config: 批量查询参数缺失.")
+		return nil
+	}
+	multiConfigResult := make([]*ConfigResult, 0)
+	for _, key := range keys {
+		multiConfigResult = append(multiConfigResult, c.Get(key))
+	}
+	return multiConfigResult
+}
+
+func (cr *ConfigResult) GetSearchKey() string {
+	return cr.searchKey
 }
 
 func (cr *ConfigResult) IsExists() bool {
@@ -141,55 +162,55 @@ func (c *ConfigResult) RawData() (data interface{}) {
 	return
 }
 
-func (c *ConfigResult) String() (data string) {
+func (c *ConfigResult) ToString() (data string) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetString(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) Int() (data int) {
+func (c *ConfigResult) ToInt() (data int) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetInt(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) Bool() (data bool) {
+func (c *ConfigResult) ToBool() (data bool) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetBool(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) IntSlice() (data []int) {
+func (c *ConfigResult) ToIntSlice() (data []int) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetIntSlice(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) StringMap() (data map[string]interface{}) {
+func (c *ConfigResult) ToStringMap() (data map[string]interface{}) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMap(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) StringMapString() (data map[string]string) {
+func (c *ConfigResult) ToStringMapString() (data map[string]string) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMapString(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) StringMapStringSlice() (data map[string][]string) {
+func (c *ConfigResult) ToStringMapStringSlice() (data map[string][]string) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMapStringSlice(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) StringSlice() (data []string) {
+func (c *ConfigResult) ToStringSlice() (data []string) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringSlice(c.activeKey)
 	return
 }
 
-func (c *ConfigResult) Int64() (data int64) {
+func (c *ConfigResult) ToInt64() (data int64) {
 	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetInt64(c.activeKey)
 	return
