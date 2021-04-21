@@ -8,6 +8,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+/**
+ * 日志基础模块
+ * 采用Uber开源的zap开发，采用redis消息队列, 替代业内ELK.
+ */
 type (
 	Logger struct {
 	}
@@ -56,18 +60,44 @@ func newLogger(writer *redisWriter) *zap.Logger {
 	return zap.New(core).WithOptions(zap.AddCaller())
 }
 
+/**
+ * 初始化日志模块
+ *
+ * @return *Logger
+ */
 func NewLogger() *Logger {
 	return &Logger{}
 }
 
+/**
+ * 输出错误日志
+ *
+ * @param string message 消息内容
+ *
+ * @return nil
+ */
 func (log *Logger) Error(message string) {
 	newLogger(newRedisWriter("log:list")).Error(message)
 }
 
+/**
+ * 输出警告日志
+ *
+ * @param string message 消息内容
+ *
+ * @return nil
+ */
 func (log *Logger) Warn(message string) {
 	newLogger(newRedisWriter("log:list")).Warn(message)
 }
 
+/**
+ * 输出消息日志
+ *
+ * @param string message 消息内容
+ *
+ * @return nil
+ */
 func (log *Logger) Info(message string) {
 	newLogger(newRedisWriter("log:list")).Info(message)
 }
