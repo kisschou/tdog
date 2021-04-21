@@ -8,12 +8,11 @@ type (
 )
 
 func (e *Error) GetError(errCode string) (errMsg string) {
-	ConfigLib := new(Config)
 	errMsg = errCode
-	if ConfigLib.Get("error." + errCode).IsExists() {
-		errMsg = ConfigLib.Get("error." + errCode).String()
+	if NewConfig().Get("error." + errCode).IsExists() {
+		errMsg = NewConfig().Get("error." + errCode).ToString()
 	} else {
-		errMsg = ConfigLib.Get("error.ERROR_UNKNOW").String()
+		errMsg = NewConfig().Get("error.ERROR_UNKNOW").ToString()
 	}
 	return
 }
@@ -21,9 +20,9 @@ func (e *Error) GetError(errCode string) (errMsg string) {
 func (e *Error) GetErrorCode(errCode string) (code int) {
 	ConfigLib := new(Config)
 	if ConfigLib.Get("error_map." + errCode).IsExists() {
-		code = ConfigLib.Get("error_map." + errCode).Int()
+		code = NewConfig().Get("error_map." + errCode).ToInt()
 	} else {
-		code = ConfigLib.Get("error_map.ERROR_UNKNOW").Int()
+		code = NewConfig().Get("error_map.ERROR_UNKNOW").ToInt()
 	}
 	return
 }

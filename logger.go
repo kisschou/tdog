@@ -21,7 +21,7 @@ type (
 
 func newRedisWriter(key string) *redisWriter {
 	cli := redis.NewClient(&redis.Options{
-		Addr: NewConfig().Get("cache.master.host").String() + ":" + NewConfig().Get("cache.master.port").String(),
+		Addr: NewConfig().Get("cache.master.host").ToString() + ":" + NewConfig().Get("cache.master.port").ToString(),
 	})
 	return &redisWriter{
 		cli: cli, listKey: key,

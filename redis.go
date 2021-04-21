@@ -9,10 +9,10 @@ type Redis struct {
 }
 
 func (redis *Redis) NewEngine() {
-	conf := new(Config)
-	host := conf.Get("cache.master.host").String()
-	port := conf.Get("cache.master.port").String()
-	pass := conf.Get("cache.master.pass").String()
+	ConfigTdog := NewConfig()
+	host := ConfigTdog.Get("cache.master.host").ToString()
+	port := ConfigTdog.Get("cache.master.port").ToString()
+	pass := ConfigTdog.Get("cache.master.pass").ToString()
 
 	redis.Engine = RedisModel.NewClient(&RedisModel.Options{
 		Addr:     host + ":" + port,
@@ -24,8 +24,7 @@ func (redis *Redis) NewEngine() {
 func (redis *Redis) Ping() bool {
 	_, err := redis.Engine.Ping().Result()
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		return false
 	}
 	return true

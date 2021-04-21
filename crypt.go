@@ -85,19 +85,16 @@ func (h *Crypt) Urldecode() string {
 }
 
 func (h *Crypt) BiuPwdNewBuilder(password string) (salt string, newPassword string) {
-	ConfigLib := new(Config)
-	UtilLib := new(Util)
-	salt = UtilLib.RandomStr(16)
+	salt = NewUtil().RandomStr(16)
 	h.Str = password
-	h.Str = h.Sha512() + ConfigLib.Get("hex_key").String() + salt
+	h.Str = h.Sha512() + NewConfig().Get("hex_key").ToString() + salt
 	newPassword = h.Sha512()
 	return
 }
 
 func (h *Crypt) BiuPwdBuilder(salt string, password string) (newPassword string) {
-	ConfigLib := new(Config)
 	h.Str = password
-	h.Str = h.Sha512() + ConfigLib.Get("hex_key").String() + salt
+	h.Str = h.Sha512() + NewConfig().Get("hex_key").ToString() + salt
 	newPassword = h.Sha512()
 	return
 }

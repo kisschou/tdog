@@ -112,8 +112,7 @@ func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
 	body := bytes.NewReader(data)
 	req, err := http.NewRequest(hp.Method, hp.Url, body)
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		elapsedTime = time.Now().UnixNano() - startTime
 		return http.StatusInternalServerError, "", elapsedTime, err
 	}
@@ -125,16 +124,14 @@ func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
 	var resp *http.Response
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		elapsedTime = time.Now().UnixNano() - startTime
 		return http.StatusInternalServerError, "", elapsedTime, err
 	}
 	defer resp.Body.Close()
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 	}
 
 	elapsedTime = time.Now().UnixNano() - startTime
@@ -144,7 +141,6 @@ func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
 // 针对请求网关服务构建
 // 继承后只需要set结构体中的Params
 func (hp *HttpRequest) ServicePost() (bool, string, int64) {
-	ConfigLib := new(Config)
 	// header
 	header := make(map[string]string)
 	header["Content-Type"] = "application/json"
@@ -152,12 +148,11 @@ func (hp *HttpRequest) ServicePost() (bool, string, int64) {
 
 	hp.Method = "POST"
 	hp.Header = header
-	hp.Url = ConfigLib.Get("api_url.gateway_url").String() + "/feign/http"
+	hp.Url = NewConfig().Get("api_url.gateway_url").ToString() + "/feign/http"
 	httpCode, res, elapsedTime, err := hp.BytesPost()
 	if httpCode != http.StatusOK || err != nil {
 		if err != nil {
-			logger := Logger{Level: 0, Key: "error"}
-			logger.New(err.Error())
+			NewLogger().Error(err.Error())
 		}
 		return false, res, elapsedTime
 	}

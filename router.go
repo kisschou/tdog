@@ -103,8 +103,7 @@ func (engine *HttpEngine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // Run .
 func (engine *HttpEngine) Run() {
-	ConfigTdog := new(Config)
-	http.ListenAndServe(":"+ConfigTdog.Get("app_port").String(), engine)
+	http.ListenAndServe(":"+NewConfig().Get("app_port").ToString(), engine)
 }
 
 /************************************/

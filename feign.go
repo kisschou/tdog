@@ -46,10 +46,7 @@ func (feign *Feign) Target() (code int, res string, elapsedTime int64) {
 		code = 0
 		res = "ERROR_FEIGN_REQUEST_FAIL"
 
-		LoggerLib := new(Logger)
-		LoggerLib.Level = 0
-		LoggerLib.Key = "error"
-		LoggerLib.New(err.Error())
+		NewLogger().Error(err.Error())
 		return
 	}
 	return

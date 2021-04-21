@@ -67,9 +67,8 @@ func (jwt *Jwt) New(data JwtPayload) string {
 	jwt.payload = CryptLib.Base64Encode()
 
 	// signature
-	conf := new(Config)
 	jsonData, _ = json.Marshal(payload)
-	CryptLib.Str = string(jsonData) + conf.Get("hex_key").String()
+	CryptLib.Str = string(jsonData) + NewConfig().Get("hex_key").ToString()
 	jwt.signature = CryptLib.Sha256()
 
 	return jwt.header + "." + jwt.payload + "." + jwt.signature
@@ -115,9 +114,8 @@ func (jwt *Jwt) Check(data string) bool {
 	}
 
 	// check signature.
-	conf := new(Config)
 	CryptLib.Str = jwt.payload
-	CryptLib.Str = CryptLib.Base64Decode() + conf.Get("hex_key").String()
+	CryptLib.Str = CryptLib.Base64Decode() + NewConfig().Get("hex_key").ToString()
 	if jwt.signature != CryptLib.Sha256() {
 		return false
 	}

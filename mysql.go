@@ -31,10 +31,9 @@ type (
 
 func (mysql *MySql) NewEngine() {
 	var err error
-	conf := new(Config)
 
 	// master-slave mode.
-	mysql.IsCluster = conf.Get("database.master_slave").Bool()
+	mysql.IsCluster = NewConfig().Get("database.master_slave").ToBool()
 	if mysql.IsCluster {
 		mysql.EngineGroup, err = cluster()
 	} else {
@@ -42,8 +41,7 @@ func (mysql *MySql) NewEngine() {
 	}
 
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		os.Exit(0)
 	}
 }
@@ -56,8 +54,7 @@ func cluster() (engineGroup *xorm.EngineGroup, err error) {
 	conns = append(conns, myCnf.dsn)
 
 	// append slave conf.
-	conf := new(Config)
-	slaveList := conf.Get("database.slave_list").StringSlice()
+	slaveList := NewConfig().Get("database.slave_list").ToStringSlice()
 	for _, slave := range slaveList {
 		myCnf = myCnf.Get(slave)
 		conns = append(conns, myCnf.dsn)
@@ -115,28 +112,26 @@ func singleton() (engine *xorm.Engine, err error) {
 
 func (mysql *MySql) Ping() bool {
 	if err := mysql.Engine.Ping(); err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		return false
 	}
 	return true
 }
 
 func (myCnf *MySqlConf) Get(hostType string) *MySqlConf {
-	conf := new(Config)
-	mysqlUser := conf.Get("database.master.user").String()
-	mysqlPass := conf.Get("database." + hostType + ".pass").String()
-	mysqlHost := conf.Get("database." + hostType + ".host").String()
-	mysqlPort := conf.Get("database." + hostType + ".port").String()
-	mysqlDb := conf.Get("database." + hostType + ".db").String()
-	mysqlCharset := conf.Get("database." + hostType + ".charset").String()
+	mysqlUser := NewConfig().Get("database.master.user").ToString()
+	mysqlPass := NewConfig().Get("database." + hostType + ".pass").ToString()
+	mysqlHost := NewConfig().Get("database." + hostType + ".host").ToString()
+	mysqlPort := NewConfig().Get("database." + hostType + ".port").ToString()
+	mysqlDb := NewConfig().Get("database." + hostType + ".db").ToString()
+	mysqlCharset := NewConfig().Get("database." + hostType + ".charset").ToString()
 	mysqlPrefix := ""
-	conf.Get("database." + hostType + ".prefix")
-	if conf.IsExists() {
-		mysqlPrefix = conf.String()
+	impl := NewConfig().Get("database." + hostType + ".prefix")
+	if impl.IsExists() {
+		mysqlPrefix = impl.ToString()
 	}
 	dsn := mysqlUser + ":" + mysqlPass + "@tcp(" + mysqlHost + ":" + mysqlPort + ")/" + mysqlDb + "?charset=" + mysqlCharset + "&parseTime=True&loc=Local"
-	debug := conf.Get("database.debug").Bool()
+	debug := NewConfig().Get("database.debug").ToBool()
 
 	return &MySqlConf{
 		engine:  "mysql",

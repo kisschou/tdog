@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -43,7 +42,6 @@ func (u *Util) GetFilesBySuffix(filePath string, suffix string) (files []string,
 		if !fi.IsDir() {
 			fileSuffix := path.Ext(fi.Name())
 			fileName := strings.TrimSuffix(fi.Name(), fileSuffix)
-			fmt.Println(fi.Name(), fileSuffix, fileName)
 			if "."+suffix == fileSuffix {
 				files = append(files, fileName)
 			}
@@ -320,8 +318,7 @@ func (u *Util) Request(authorization, apiCode string, params map[string]interfac
 }
 
 func (u *Util) GetUserId(authorization string) (userId int64, err error) {
-	ConfigTdog := new(Config)
-	apiPath := ConfigTdog.Get("api_path").String()
+	apiPath := NewConfig().Get("api_path").ToString()
 	FeignTdog := new(Feign)
 	header := make(map[string]string)
 	header["Authorization"] = authorization

@@ -52,16 +52,14 @@ func (file *File) GetSaveName() *File {
 func (file *File) GetFilePath() *File {
 	file.MIME = file.Header["Content-Type"][0]
 
-	ConfigLib := new(Config)
-	UtilLib := new(Util)
 	// 创建存储目录
-	filePath := ConfigLib.Get("file.file_save_path").String()
+	filePath := NewConfig().Get("file.file_save_path").ToString()
 	if filePath[len(filePath)-1:] != "/" {
 		filePath = filePath + "/"
 	}
 	file.FilePath = "data/upload/" + file.MIME + "/" + time.Now().Format("2006-01-02") + "/"
 	filePath += file.FilePath
-	UtilLib.DirExistsAndCreate(filePath)
+	NewUtil().DirExistsAndCreate(filePath)
 
 	file.FilePathAP = filePath
 	return file
@@ -107,8 +105,7 @@ func (file *File) GetFileType() *File {
 func (file *File) GetFileHash() *File {
 	f, err := os.Open(file.FilePathAP + file.Savename + "." + file.Ext)
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		return file
 	}
 	defer f.Close()
@@ -143,8 +140,7 @@ func (file *File) Save() map[string]interface{} {
 	// 创建存储文件
 	f, err := os.OpenFile(file.FilePathAP+file.Savename+"."+file.Ext, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		return nil
 	}
 	defer f.Close()
@@ -159,8 +155,7 @@ func (file *File) Save() map[string]interface{} {
 func (file *File) Del(delFile string) bool {
 	err := os.Remove(delFile)
 	if err != nil {
-		logger := Logger{Level: 0, Key: "error"}
-		logger.New(err.Error())
+		NewLogger().Error(err.Error())
 		return false
 	}
 	return true
