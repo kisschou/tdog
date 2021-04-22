@@ -16,17 +16,19 @@ import (
  * @Build: 2021-04-21
  */
 type (
-	Config struct {
+	config struct {
 		filePath    string   // 配置文件路径
 		configFiles []string // 所有的配置文件
 		defaultFile string   // 默认配置文件
 		fileSuffix  string   // 文件后缀
+		fixedFile   string   // 指定文件
+		keyPrefix   string   // key前缀
 		searchKey   string   // 查询的key值
 		actionFile  string   // 当前查询的文件名
 		actionKey   string   // 当前查询的key
 	}
 
-	ConfigResult struct {
+	configResult struct {
 		filePath   string // 配置文件路径
 		searchKey  string // 查询的key值
 		activeFile string // 命中文件
@@ -40,8 +42,8 @@ type (
  *
  * @return *Config
  */
-func NewConfig() *Config {
-	config := &Config{
+func NewConfig() *config {
+	configTdog := &config{
 		filePath:    "",
 		configFiles: nil,
 		defaultFile: getDefaultFile(),
@@ -50,8 +52,8 @@ func NewConfig() *Config {
 		actionFile:  "",
 		actionKey:   "",
 	}
-	config.SetPath(getFilePath())
-	return config
+	configTdog.SetPath(getFilePath())
+	return configTdog
 }
 
 /**
@@ -91,7 +93,7 @@ func getFileSuffix() string {
  *
  * @return nil
  */
-func (c *Config) getFiles() {
+func (c *config) getFiles() {
 	if c.filePath == "" {
 		c.configFiles = nil
 	}
@@ -105,9 +107,33 @@ func (c *Config) getFiles() {
  *
  * @return *Config
  */
-func (c *Config) SetPath(path string) *Config {
+func (c *config) SetPath(path string) *config {
 	c.filePath = path
 	c.getFiles()
+	return c
+}
+
+/**
+ * 指定检索的文件
+ *
+ * @param string name 文件名
+ *
+ * @return *Config
+ */
+func (c *config) SetFile(name string) *config {
+	c.fixedFile = name
+	return c
+}
+
+/**
+ * 指定检索的key前缀
+ *
+ * @param string prefix 前缀
+ *
+ * @return *Config
+ */
+func (c *config) SetPrefix(prefix string) *config {
+	c.keyPrefix = prefix
 	return c
 }
 
@@ -118,7 +144,7 @@ func (c *Config) SetPath(path string) *Config {
  *
  * @return nil
  */
-func connect(c *Config) {
+func connect(c *config) {
 	viper.SetConfigName(c.actionFile)
 	viper.SetConfigType(c.fileSuffix)
 	viper.AddConfigPath(c.filePath)
@@ -134,17 +160,27 @@ func connect(c *Config) {
  * @return *ConfigResult 检索结果结构体
  * @return error 错误信息
  */
-func (c *Config) find() (*ConfigResult, error) {
+func (c *config) find() (*configResult, error) {
 	var err error
 	if len(c.actionFile) < 1 {
 		c.actionFile = c.defaultFile
 	}
+	if len(c.fixedFile) > 0 {
+		c.actionFile = c.fixedFile
+	}
 	if len(c.actionKey) < 1 {
 		c.actionKey = c.searchKey
+	}
+	if len(c.keyPrefix) > 0 {
+		c.actionKey = c.keyPrefix + c.actionKey
 	}
 	for {
 		connect(c)
 		if !viper.IsSet(c.actionKey) {
+			if len(c.fixedFile) > 0 {
+				err = errors.New(fmt.Sprintf("[%s.%s%s], 未找到配置, %s -> %s -> %s", c.fixedFile, c.keyPrefix, c.searchKey, c.filePath, c.actionFile, c.keyPrefix+c.actionKey))
+				break
+			}
 			match := strings.Split(c.actionKey, ".")
 			if len(match) > 1 {
 				c.actionFile = match[0]
@@ -154,14 +190,14 @@ func (c *Config) find() (*ConfigResult, error) {
 				}
 				c.actionKey = strings.Join(match[1:], ".")
 			} else {
-				err = errors.New(fmt.Sprintf("[%s], 未找到配置, %s -> %s -> %s", c.searchKey, c.filePath, c.actionFile, c.actionKey))
+				err = errors.New(fmt.Sprintf("[%s], 未找到配置, %s -> %s -> %s", c.searchKey, c.filePath, c.actionFile, c.keyPrefix+c.actionKey))
 				break
 			}
 		} else {
 			break
 		}
 	}
-	resultImpl := &ConfigResult{
+	resultImpl := &configResult{
 		filePath:   c.filePath,
 		searchKey:  c.searchKey,
 		activeFile: c.actionFile,
@@ -178,7 +214,7 @@ func (c *Config) find() (*ConfigResult, error) {
  *
  * @return *ConfigResult 结果结构体
  */
-func (c *Config) Get(key string) *ConfigResult {
+func (c *config) Get(key string) *configResult {
 	c.actionFile, c.actionKey, c.searchKey = "", "", key
 	c.searchKey = key
 	resultImpl, err := c.find()
@@ -197,14 +233,15 @@ func (c *Config) Get(key string) *ConfigResult {
  *
  * @return []*ConfigResult 结果结构体切片
  */
-func (c *Config) GetMulti(keys ...string) []*ConfigResult {
+func (c *config) GetMulti(keys ...string) map[string]*configResult {
 	if len(keys) < 1 {
 		NewLogger().Warn("Config: 批量查询参数缺失.")
 		return nil
 	}
-	multiConfigResult := make([]*ConfigResult, 0)
+	multiConfigResult := make(map[string]*configResult, 0)
 	for _, key := range keys {
-		multiConfigResult = append(multiConfigResult, c.Get(key))
+		configResultImpl := c.Get(key)
+		multiConfigResult[configResultImpl.searchKey] = configResultImpl
 	}
 	return multiConfigResult
 }
@@ -214,7 +251,7 @@ func (c *Config) GetMulti(keys ...string) []*ConfigResult {
  *
  * @return string
  */
-func (cr *ConfigResult) GetSearchKey() string {
+func (cr *configResult) GetSearchKey() string {
 	return cr.searchKey
 }
 
@@ -223,7 +260,7 @@ func (cr *ConfigResult) GetSearchKey() string {
  *
  * @return bool
  */
-func (cr *ConfigResult) IsExists() bool {
+func (cr *configResult) IsExists() bool {
 	isExists := false
 	if len(cr.Message) < 1 {
 		isExists = true
@@ -236,8 +273,8 @@ func (cr *ConfigResult) IsExists() bool {
  *
  * @return interface{}
  */
-func (c *ConfigResult) RawData() (data interface{}) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) RawData() (data interface{}) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.Get(c.activeKey)
 	return
 }
@@ -247,8 +284,8 @@ func (c *ConfigResult) RawData() (data interface{}) {
  *
  * @return string
  */
-func (c *ConfigResult) ToString() (data string) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToString() (data string) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetString(c.activeKey)
 	return
 }
@@ -258,8 +295,8 @@ func (c *ConfigResult) ToString() (data string) {
  *
  * @return int
  */
-func (c *ConfigResult) ToInt() (data int) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToInt() (data int) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetInt(c.activeKey)
 	return
 }
@@ -269,8 +306,8 @@ func (c *ConfigResult) ToInt() (data int) {
  *
  * @return bool
  */
-func (c *ConfigResult) ToBool() (data bool) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToBool() (data bool) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetBool(c.activeKey)
 	return
 }
@@ -280,8 +317,8 @@ func (c *ConfigResult) ToBool() (data bool) {
  *
  * @return []int
  */
-func (c *ConfigResult) ToIntSlice() (data []int) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToIntSlice() (data []int) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetIntSlice(c.activeKey)
 	return
 }
@@ -291,8 +328,8 @@ func (c *ConfigResult) ToIntSlice() (data []int) {
  *
  * @return map[string]interface{}
  */
-func (c *ConfigResult) ToStringMap() (data map[string]interface{}) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToStringMap() (data map[string]interface{}) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMap(c.activeKey)
 	return
 }
@@ -302,8 +339,8 @@ func (c *ConfigResult) ToStringMap() (data map[string]interface{}) {
  *
  * @return map[string]string
  */
-func (c *ConfigResult) ToStringMapString() (data map[string]string) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToStringMapString() (data map[string]string) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMapString(c.activeKey)
 	return
 }
@@ -313,8 +350,8 @@ func (c *ConfigResult) ToStringMapString() (data map[string]string) {
  *
  * @return map[string][]string
  */
-func (c *ConfigResult) ToStringMapStringSlice() (data map[string][]string) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToStringMapStringSlice() (data map[string][]string) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMapStringSlice(c.activeKey)
 	return
 }
@@ -324,8 +361,8 @@ func (c *ConfigResult) ToStringMapStringSlice() (data map[string][]string) {
  *
  * @return []string
  */
-func (c *ConfigResult) ToStringSlice() (data []string) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToStringSlice() (data []string) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringSlice(c.activeKey)
 	return
 }
@@ -335,8 +372,8 @@ func (c *ConfigResult) ToStringSlice() (data []string) {
  *
  * @return int64
  */
-func (c *ConfigResult) ToInt64() (data int64) {
-	connect(&Config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
+func (c *configResult) ToInt64() (data int64) {
+	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetInt64(c.activeKey)
 	return
 }
