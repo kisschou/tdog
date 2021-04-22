@@ -18,8 +18,7 @@ func (e *Error) GetError(errCode string) (errMsg string) {
 }
 
 func (e *Error) GetErrorCode(errCode string) (code int) {
-	ConfigLib := new(Config)
-	if ConfigLib.Get("error_map." + errCode).IsExists() {
+	if NewConfig().Get("error_map." + errCode).IsExists() {
 		code = NewConfig().Get("error_map." + errCode).ToInt()
 	} else {
 		code = NewConfig().Get("error_map.ERROR_UNKNOW").ToInt()

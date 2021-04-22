@@ -280,9 +280,13 @@ func (u *Util) UrlJoint(protocol, domain string, port int) (url string) {
 func (u *Util) Monitor() (err error) {
 	return
 	// MySQL环境
-	MySqlTdog := new(MySql)
-	MySqlTdog.NewEngine()
-	if MySqlTdog.Engine == nil || !MySqlTdog.Ping() {
+	if NewMySQL().Engine == nil {
+		err = errors.New("ERROR: MySQL connect fail! Please start mysql server and retry!")
+		NewLogger().Error(err.Error())
+		return
+	}
+	if err = NewMySQL().Engine.Ping(); err != nil {
+		NewLogger().Error(err.Error())
 		err = errors.New("ERROR: MySQL connect fail! Please start mysql server and retry!")
 		return
 	}
