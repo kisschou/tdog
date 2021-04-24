@@ -291,8 +291,7 @@ func (u *Util) Monitor() (err error) {
 		return
 	}
 	// Redis环境
-	RedisTdog := new(Redis)
-	if RedisTdog.Engine == nil || !RedisTdog.Ping() {
+	if NewRedis().Engine == nil {
 		err = errors.New("ERROR: Redis connect fail! Please start redis server and retry!")
 		return
 	}
