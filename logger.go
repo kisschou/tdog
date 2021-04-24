@@ -3,7 +3,7 @@ package tdog
 import (
 	"os"
 
-	"github.com/go-redis/redis"
+	redisImpl "github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -18,22 +18,20 @@ type (
 
 	// 为 logger 提供写入 redis 队列的 io 接口
 	redisWriter struct {
-		cli     *redis.Client
+		cli     *redisImpl.Client
 		listKey string
 	}
 )
 
 func newRedisWriter(key string) *redisWriter {
-	cli := redis.NewClient(&redis.Options{
-		Addr: NewConfig().Get("cache.master.host").ToString() + ":" + NewConfig().Get("cache.master.port").ToString(),
-	})
+	cli := NewRedis().Engine
 	return &redisWriter{
 		cli: cli, listKey: key,
 	}
 }
 
 func (w *redisWriter) Write(p []byte) (int, error) {
-	n, err := w.cli.RPush(w.listKey, p).Result()
+	n, err := w.cli.RPush(Ctx, w.listKey, p).Result()
 	return int(n), err
 }
 
