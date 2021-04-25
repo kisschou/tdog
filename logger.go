@@ -1,3 +1,8 @@
+// Copyright 2012 Kisschou. All rights reserved.
+// Based on the path package, Copyright 2011 The Go Authors.
+// Use of this source code is governed by a MIT-style license that can be found
+// at https://github.com/kisschou/tdog/blob/master/LICENSE.
+
 package tdog
 
 import (
@@ -9,20 +14,23 @@ import (
 )
 
 /**
- * 日志基础模块
- * 采用Uber开源的zap开发，采用redis消息队列, 替代业内ELK.
+ * The module for Logger handler.
+ * Use Uber's cap and redis message queue.
+ * As a replacement of the ELK.
  */
 type (
-	Logger struct {
+	// logger struct
+	logger struct {
 	}
 
-	// 为 logger 提供写入 redis 队列的 io 接口
+	// the writer of writer
 	redisWriter struct {
 		cli     *redisImpl.Client
 		listKey string
 	}
 )
 
+// newRedisWriter init writer of redis
 func newRedisWriter(key string) *redisWriter {
 	cli := NewRedis().Engine
 	return &redisWriter{
@@ -30,11 +38,13 @@ func newRedisWriter(key string) *redisWriter {
 	}
 }
 
+// Write writes log to the redis
 func (w *redisWriter) Write(p []byte) (int, error) {
 	n, err := w.cli.RPush(Ctx, w.listKey, p).Result()
 	return int(n), err
 }
 
+// newLogger init zap's Logger module use redis's writer
 func newLogger(writer *redisWriter) *zap.Logger {
 	// 限制日志输出级别, >= DebugLevel 会打印所有级别的日志
 	// 生产环境中一般使用 >= ErrorLevel
@@ -42,7 +52,7 @@ func newLogger(writer *redisWriter) *zap.Logger {
 		return lv >= zapcore.DebugLevel
 	})
 
-	// 使用 JSON 格式日志
+	// use log message of json style
 	jsonEnc := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	stdCore := zapcore.NewCore(jsonEnc, zapcore.Lock(os.Stdout), lowPriority)
 
@@ -58,44 +68,25 @@ func newLogger(writer *redisWriter) *zap.Logger {
 	return zap.New(core).WithOptions(zap.AddCaller())
 }
 
-/**
- * 初始化日志模块
- *
- * @return *Logger
- */
-func NewLogger() *Logger {
-	return &Logger{}
+// NewLogger init logger module
+func NewLogger() *logger {
+	return &logger{}
 }
 
-/**
- * 输出错误日志
- *
- * @param string message 消息内容
- *
- * @return nil
- */
-func (log *Logger) Error(message string) {
+// Error writes error message to queue, extends *logger
+// given string message of error
+func (log *logger) Error(message string) {
 	newLogger(newRedisWriter("log:list")).Error(message)
 }
 
-/**
- * 输出警告日志
- *
- * @param string message 消息内容
- *
- * @return nil
- */
-func (log *Logger) Warn(message string) {
+// Error writes warning message to queue, extends *logger
+// given string message of warning
+func (log *logger) Warn(message string) {
 	newLogger(newRedisWriter("log:list")).Warn(message)
 }
 
-/**
- * 输出消息日志
- *
- * @param string message 消息内容
- *
- * @return nil
- */
-func (log *Logger) Info(message string) {
+// Error writes infomation message to queue, extends *logger
+// given string message of infomation
+func (log *logger) Info(message string) {
 	newLogger(newRedisWriter("log:list")).Info(message)
 }

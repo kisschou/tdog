@@ -1,3 +1,8 @@
+// Copyright 2012 Kisschou. All rights reserved.
+// Based on the path package, Copyright 2011 The Go Authors.
+// Use of this source code is governed by a MIT-style license that can be found
+// at https://github.com/kisschou/tdog/blob/master/LICENSE.
+
 package tdog
 
 import (
@@ -10,12 +15,13 @@ import (
 )
 
 /**
- * 配置文件获取模块
+ * The module for configuration handler.
  *
  * @Author: Kisschou
  * @Build: 2021-04-21
  */
 type (
+	// config configuration attributes
 	config struct {
 		filePath    string   // 配置文件路径
 		configFiles []string // 所有的配置文件
@@ -28,6 +34,7 @@ type (
 		actionKey   string   // 当前查询的key
 	}
 
+	// configResult result struct of configuration searched
 	configResult struct {
 		filePath   string // 配置文件路径
 		searchKey  string // 查询的key值
@@ -37,11 +44,7 @@ type (
 	}
 )
 
-/**
- * 初始化配置模块
- *
- * @return *Config
- */
+// NewConfig init config struct
 func NewConfig() *config {
 	configTdog := &config{
 		filePath:    "",
@@ -56,11 +59,7 @@ func NewConfig() *config {
 	return configTdog
 }
 
-/**
- * 获取默认文件检索位置
- *
- * @return string
- */
+// getFilePath returns defined configuration path when "CONFIG_PATH" isset in environment. default return /path/to/config
 func getFilePath() string {
 	path := os.Getenv("CONFIG_PATH")
 	if len(path) < 1 {
@@ -70,29 +69,17 @@ func getFilePath() string {
 	return path
 }
 
-/**
- * 获取默认配置文件
- *
- * @return string
- */
+// getFilePath returns default configuration file name
 func getDefaultFile() string {
 	return "app"
 }
 
-/**
- * 获取默认文件后缀
- *
- * @return string
- */
+// getFilePath returns default configuration file suffix
 func getFileSuffix() string {
 	return "toml"
 }
 
-/**
- * 获取路径下的所有指定格式的配置文件名
- *
- * @return nil
- */
+// getFilePath get all configuration file name from path
 func (c *config) getFiles() {
 	if c.filePath == "" {
 		c.configFiles = nil
@@ -100,50 +87,32 @@ func (c *config) getFiles() {
 	c.configFiles, _ = NewUtil().GetFilesBySuffix(c.filePath, c.fileSuffix)
 }
 
-/**
- * 指定配置检索路径
- *
- * @param string path 路径
- *
- * @return *Config
- */
+// SetPath assign configuration path
+// It will change configuration path for search in linker
+// given string path
+// returns config-handler
 func (c *config) SetPath(path string) *config {
 	c.filePath = path
 	c.getFiles()
 	return c
 }
 
-/**
- * 指定检索的文件
- *
- * @param string name 文件名
- *
- * @return *Config
- */
+// SetFile assign and fixed configuration file name given string file name returns config-handler
 func (c *config) SetFile(name string) *config {
 	c.fixedFile = name
 	return c
 }
 
-/**
- * 指定检索的key前缀
- *
- * @param string prefix 前缀
- *
- * @return *Config
- */
+// SetPrefix assign and fixed key's prefix name
+// It will make your search key be prefix + key
+// given string key's prefix
+// returns config-handler
 func (c *config) SetPrefix(prefix string) *config {
 	c.keyPrefix = prefix
 	return c
 }
 
-/**
- * 连接到指定配置文件
- *
- * @param *Config c 指定配置文件相关结构体
- *
- * @return nil
- */
+// connect Make viper load configuration given *config
 func connect(c *config) {
 	viper.SetConfigName(c.actionFile)
 	viper.SetConfigType(c.fileSuffix)
@@ -154,12 +123,7 @@ func connect(c *config) {
 	}
 }
 
-/**
- * 按照配置规则检索配置文件
- *
- * @return *ConfigResult 检索结果结构体
- * @return error 错误信息
- */
+// find search from configuration returns *configResult and error struct when it err
 func (c *config) find() (*configResult, error) {
 	var err error
 	if len(c.actionFile) < 1 {
@@ -207,13 +171,9 @@ func (c *config) find() (*configResult, error) {
 	return resultImpl, err
 }
 
-/**
- * 获取配置查询返回结果结构体
- *
- * @param string key 需要查询的key值
- *
- * @return *ConfigResult 结果结构体
- */
+// Get get result by key on configuration file, extends *config
+// given string the search you want
+// returns *ConfigResult
 func (c *config) Get(key string) *configResult {
 	c.actionFile, c.actionKey, c.searchKey = "", "", key
 	c.searchKey = key
@@ -226,13 +186,9 @@ func (c *config) Get(key string) *configResult {
 	return resultImpl
 }
 
-/**
- * 获取配置查询返回结果结构体
- *
- * @param ...string keys (可变参数)需要查询的key
- *
- * @return []*ConfigResult 结果结构体切片
- */
+// GetMulti query multiple results in batches
+// given ...string all the search keys you want
+// returns map[string]*ConfigResult means search key as key and *ConfigResult as value
 func (c *config) GetMulti(keys ...string) map[string]*configResult {
 	if len(keys) < 1 {
 		NewLogger().Warn("Config: 批量查询参数缺失.")
@@ -246,20 +202,12 @@ func (c *config) GetMulti(keys ...string) map[string]*configResult {
 	return multiConfigResult
 }
 
-/**
- * 获取结果对应的原始查询键
- *
- * @return string
- */
+// GetSearchKey get search key from search result, extends *configResult returns string search key
 func (cr *configResult) GetSearchKey() string {
 	return cr.searchKey
 }
 
-/**
- * 判断是否查询到结果
- *
- * @return bool
- */
+// IsExists check is got value, extends *configResult return bool true when exists
 func (cr *configResult) IsExists() bool {
 	isExists := false
 	if len(cr.Message) < 1 {
@@ -268,110 +216,81 @@ func (cr *configResult) IsExists() bool {
 	return isExists
 }
 
-/**
- * 使用interface{}类型获取数据结果
- *
- * @return interface{}
- */
+// RawData get the result of interface type, extends *configResult
+// returns interface
+// can get true result by use x.(type)
 func (c *configResult) RawData() (data interface{}) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.Get(c.activeKey)
 	return
 }
 
-/**
- * 使用String类型获取数据结果
- *
- * @return string
- */
+// ToString get the result of string type, if you sure about it, extends *configResult
+// returns string
 func (c *configResult) ToString() (data string) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetString(c.activeKey)
 	return
 }
 
-/**
- * 使用int类型获取数据结果
- *
- * @return int
- */
+// ToInt get the result of int type, if you sure about it, extends *configResult
+// returns int
 func (c *configResult) ToInt() (data int) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetInt(c.activeKey)
 	return
 }
 
-/**
- * 使用Bool类型获取数据结果
- *
- * @return bool
- */
+// ToBool get the result of bool type, if you sure about it, extends *configResult
+// returns bool
 func (c *configResult) ToBool() (data bool) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetBool(c.activeKey)
 	return
 }
 
-/**
- * 使用IntSlice类型获取数据结果
- *
- * @return []int
- */
+// ToIntSlice get the result of int slice type, if you sure about it, extends *configResult
+// returns []int
 func (c *configResult) ToIntSlice() (data []int) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetIntSlice(c.activeKey)
 	return
 }
 
-/**
- * 使用StringMap类型获取数据结果
- *
- * @return map[string]interface{}
- */
+// ToStringMap get the result of string map type, if you sure about it, extends *configResult
+// returns map[string]interface{}
 func (c *configResult) ToStringMap() (data map[string]interface{}) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMap(c.activeKey)
 	return
 }
 
-/**
- * 使用StringMapString类型获取数据结果
- *
- * @return map[string]string
- */
+// ToStringMapString get the result of string map string type, if you sure about it, extends *configResult
+// returns map[string]string
 func (c *configResult) ToStringMapString() (data map[string]string) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMapString(c.activeKey)
 	return
 }
 
-/**
- * 使用StringMapStringSlice类型获取数据结果
- *
- * @return map[string][]string
- */
+// ToStringMapStringSlice get the result of string map string slice type, if you sure about it, extends *configResult
+// returns map[string][]string
 func (c *configResult) ToStringMapStringSlice() (data map[string][]string) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringMapStringSlice(c.activeKey)
 	return
 }
 
-/**
- * 使用StringSlice类型获取数据结果
- *
- * @return []string
- */
+// ToStringSlice get the result of string slice type, if you sure about it, extends *configResult
+// returns []string
 func (c *configResult) ToStringSlice() (data []string) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetStringSlice(c.activeKey)
 	return
 }
 
-/**
- * 使用int64类型获取数据结果
- *
- * @return int64
- */
+// ToInt64 get the result of int64 type, if you sure about it, extends *configResult
+// returns int64
 func (c *configResult) ToInt64() (data int64) {
 	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
 	data = viper.GetInt64(c.activeKey)

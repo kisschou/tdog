@@ -1,3 +1,8 @@
+// Copyright 2012 Kisschou. All rights reserved.
+// Based on the path package, Copyright 2011 The Go Authors.
+// Use of this source code is governed by a MIT-style license that can be found
+// at https://github.com/kisschou/tdog/blob/master/LICENSE.
+
 package tdog
 
 import (
@@ -7,15 +12,15 @@ import (
 )
 
 /**
- * MySQL模块
+ * The module for MySQL handler.
  *
  * @Author: Kisschou
  * @Build: 2021-04-22
  */
 type (
 	mySql struct {
-		engineList map[string]*xorm.Engine // 引擎列表
-		Engine     *xorm.Engine            // 默认引擎
+		engineList map[string]*xorm.Engine // engine pool
+		Engine     *xorm.Engine            // current engine
 	}
 
 	mysqlConf struct {
@@ -28,30 +33,25 @@ type (
 		charset      string
 		prefix       string
 		dsn          string
-		debug        bool // 是否开启调试
+		debug        bool // is start debug
 		maxIdleConns int  // 连接池的空闲数大小
-		maxOpenConns int  // 最大连接数
+		maxOpenConns int  // max connections count
 	}
 )
 
-/**
- * 初始化MySQL模块
- *
- * @return *xorm.Engine
- */
+// NewMySQL init MySQL module
+// auto-load master configuration and make it actived
+// so...must write master configuration of mysql into configuration.
 func NewMySQL() *mySql {
 	sql := new(mySql)
 	sql.Engine = sql.Change("master")
 	return sql
 }
 
-/**
- * 引擎切换
- *
- * @param string name 切换的引擎名
- *
- * @return *xorm.Engine
- */
+// Change change current engine by name.
+// engine load configuration by name from configuration file when cannot found in engine pool.
+// given string engine's label name
+// returns *xorm.Engine
 func (sql *mySql) Change(name string) *xorm.Engine {
 	engine := sql.engineList[name]
 	if engine == nil {
@@ -78,19 +78,16 @@ func (sql *mySql) Change(name string) *xorm.Engine {
 	return engine
 }
 
-/**
- * 新增其他mysql引擎
- *
- * @param string name 引擎名
- * @param string host 连接地址
- * @param string user 账户
- * @param string pass 密码
- * @param string db 数据库名
- * @param string charset 字符集
- * @param string prefix 表前缀
- *
- * @return *xorm.Engine
- */
+// New add new engine by params.
+// given string name means label name
+// given string host means mysql's host
+// given string port means mysql's port
+// given string user means mysql's user
+// given string pass means mysql's password
+// given string db means mysql's db
+// given string db means mysql's charset
+// given string prefix means mysql's prefix
+// returns *xorm.Engine
 func (sql *mySql) New(name, host, port, user, pass, db, charset, prefix string) *xorm.Engine {
 	dsn := user + ":" + pass + "@tcp(" + host + ":" + port + ")/" + db + "?charset=" + charset + "&parseTime=True&loc=Local"
 	debug := NewConfig().Get("database.debug").ToBool()
@@ -112,13 +109,8 @@ func (sql *mySql) New(name, host, port, user, pass, db, charset, prefix string) 
 	return sql.Change(name)
 }
 
-/**
- * 从配置文件中加载指定的mysql配置
- *
- * @param string name 数据库配置类名
- *
- * @return *mysqlConf
- */
+// loadConf load configuration from configuration file.
+// write to new *mysqlConf and return it.
 func loadConf(name string) *mysqlConf {
 	configResults := NewConfig().SetFile("database").SetPrefix(name+".").GetMulti("host", "port", "user", "pass", "db", "charset", "prefix")
 	return &mysqlConf{

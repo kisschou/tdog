@@ -1,3 +1,8 @@
+// Copyright 2012 Kisschou. All rights reserved.
+// Based on the path package, Copyright 2011 The Go Authors.
+// Use of this source code is governed by a MIT-style license that can be found
+// at https://github.com/kisschou/tdog/blob/master/LICENSE.
+
 package tdog
 
 import (
@@ -8,35 +13,30 @@ import (
 var Ctx = context.Background()
 
 /**
- * Redis模块
+ * The module for redis handler.
  *
  * @Author: Kisschou
  * @Build: 2021-04-24
  */
 type redisModel struct {
-	engineList map[string]*redisImpl.Client // 引擎列表
-	Engine     *redisImpl.Client            // 默认引擎
-	db         int                          // 当前使用db
+	engineList map[string]*redisImpl.Client // Engine Pool
+	Engine     *redisImpl.Client            // Current Engine
+	db         int                          // Current Db
 }
 
-/**
- * 初始化Redis模块
- *
- * @return *redisModel
- */
+// NewRedis init redis module
+// auto-load master configuration and make it actived
+// so...must write master configuration of redis into configuration.
 func NewRedis() *redisModel {
 	redis := new(redisModel)
 	redis.Engine = redis.Change("master")
 	return redis
 }
 
-/**
- * 引擎切换
- *
- * @param string name 切换的引擎名
- *
- * @return *redis.Client
- */
+// Change change current engine by name.
+// engine load configuration by name from configuration file when cannot found in engine pool.
+// given string engine's label name
+// returns *redisImpl.Client
 func (r *redisModel) Change(name string) *redisImpl.Client {
 	var host, port, pass string
 	var poolSize int = 1
@@ -81,17 +81,13 @@ func (r *redisModel) Change(name string) *redisImpl.Client {
 	return engine
 }
 
-/**
- * 新增其他redis引擎
- *
- * @param string name 引擎名
- * @param string host 连接地址
- * @param string port 端口
- * @param string pass 密码
- * @param int poolSize 连接池大小
- *
- * @return *redis.Client
- */
+// New add new engine by params.
+// given string name means label name
+// given string host means redis's host
+// given string port means redis's port
+// given string pass means redis's password
+// given int poolSize means conn-pool's size
+// returns *redisImpl.Client
 func (r *redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client {
 	engine := redisImpl.NewClient(&redisImpl.Options{
 		Addr:     host + ":" + port,
@@ -112,13 +108,9 @@ func (r *redisModel) New(name, host, port, pass string, poolSize int) *redisImpl
 	return engine
 }
 
-/**
- * 库切换
- *
- * @param string name 切换的库
- *
- * @return *redis.Client
- */
+// Db change current db in current engine
+// given int indev means db's index
+// return *redisImpl.Client
 func (r *redisModel) Db(index int) *redisImpl.Client {
 	r.db = index
 	r.Engine = redisImpl.NewClient(&redisImpl.Options{DB: index})
