@@ -7,12 +7,10 @@ package tdog
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"math/rand"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -104,8 +102,6 @@ func (u *Util) DirExistsAndCreate(path string) {
 // @return string 结果
 func (u *Util) RandomStr(length int, randType ...int) string {
 	str := ""
-	bytes := []byte(str)
-	result := []byte{}
 	for _, v := range randType {
 		switch v {
 		case 1:
@@ -122,6 +118,9 @@ func (u *Util) RandomStr(length int, randType ...int) string {
 	if len(str) < 8 {
 		str = "0123456789"
 	}
+
+	bytes := []byte(str)
+	result := []byte{}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < length; i++ {
