@@ -1,3 +1,8 @@
+// Copyright 2012 Kisschou. All rights reserved.
+// Based on the path package, Copyright 2011 The Go Authors.
+// Use of this source code is governed by a MIT-style license that can be found
+// at https://github.com/kisschou/tdog/blob/master/LICENSE.
+
 package tdog
 
 import (
@@ -19,18 +24,24 @@ import (
 )
 
 /**
- * 脚手架脚本
+ * The module for uril handler.
  *
  * Author: Kisschou
+ * @Build: 2020-11-22
  */
-
 type Util struct {
 }
 
+// NewUtil init new util module.
 func NewUtil() *Util {
 	return &Util{}
 }
 
+// get list of file's name from path with suffix.
+// given string filePath means file path of scan
+// given string suffix means catch for same suffix
+// returns []string files list of file name, file name has no suffix
+// returns error err throw it if has errors
 func (u *Util) GetFilesBySuffix(filePath string, suffix string) (files []string, err error) {
 	rd, err := ioutil.ReadDir(filePath)
 	if err != nil {
@@ -50,7 +61,7 @@ func (u *Util) GetFilesBySuffix(filePath string, suffix string) (files []string,
 	return
 }
 
-// 判断文件是否存在
+// FileExists check file is exists. given string path returns true when exists
 func (u *Util) FileExists(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
@@ -62,7 +73,7 @@ func (u *Util) FileExists(path string) bool {
 	return true
 }
 
-// 判断是否是目录
+// IsDir check path is dir given string path returns true when it's
 func (u *Util) IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
@@ -71,12 +82,12 @@ func (u *Util) IsDir(path string) bool {
 	return s.IsDir()
 }
 
-// 判断是否是文件
+// IsFile check path is file given string path returns true when it's
 func (u *Util) IsFile(path string) bool {
 	return !u.IsDir(path)
 }
 
-// 判断文件夹是否存在,不存在就创建
+// DirExistsAndCreate 检测目录是否存在, 不存在就创建
 func (u *Util) DirExistsAndCreate(path string) {
 	if !u.FileExists(path) {
 		err := os.MkdirAll(path, os.ModePerm)
@@ -87,11 +98,31 @@ func (u *Util) DirExistsAndCreate(path string) {
 	}
 }
 
-// 生成指定数量随机字母加数字
-func (u *Util) RandomStr(length int) string {
-	str := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+// RandomStr 生成指定长度的字符串
+// @params int length 长度
+// @params ...int randType 默认值为纯数字1加入数字2加入小写字母3加入大写字母
+// @return string 结果
+func (u *Util) RandomStr(length int, randType ...int) string {
+	str := ""
 	bytes := []byte(str)
 	result := []byte{}
+	for _, v := range randType {
+		switch v {
+		case 1:
+			str += "0123456789"
+			break
+		case 2:
+			str += "abcdefghijklmnopqrstuvwxyz"
+			break
+		case 3:
+			str += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			break
+		}
+	}
+	if len(str) < 8 {
+		str = "0123456789"
+	}
+
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < length; i++ {
 		result = append(result, bytes[r.Intn(len(bytes))])
@@ -99,56 +130,22 @@ func (u *Util) RandomStr(length int) string {
 	return string(result)
 }
 
-// 生成指定数量随机数字
-func (u *Util) RandomNum(length int) string {
-	str := "0123456789"
-	bytes := []byte(str)
-	result := []byte{}
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < length; i++ {
-		result = append(result, bytes[r.Intn(len(bytes))])
+// RandInt64 生成指定范围的随机int64类型数据
+// @params int64 min 最小值
+// @params int64 max 最大值
+// @return int64 结果
+func (u *Util) RandInt64(min, max int64) int64 {
+	if min >= max || min == 0 || max == 0 {
+		return max
 	}
-	return string(result)
+	rand.Seed(time.Now().UnixNano())
+	return rand.Int63n(max-min) + min
 }
 
-func codeToKey(hashCode string) []byte {
-	cryptMap := "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	bytes := []byte(cryptMap)
-	result := []byte{}
-	var i int
-	startIndex := 0
-	endIndex := startIndex + 2
-	for i = 0; i < (len(hashCode)/2 + len(hashCode)%2); i++ {
-		if len(hashCode[startIndex:]) < 2 {
-			si, _ := strconv.Atoi(hashCode[startIndex:])
-			result = append(result, bytes[si])
-			break
-		}
-		s := hashCode[startIndex:endIndex]
-		si, _ := strconv.Atoi(s)
-		if si > 61 {
-			si, _ = strconv.Atoi(hashCode[startIndex : startIndex+1])
-			result = append(result, bytes[si])
-			res := codeToKey(hashCode[startIndex+1:])
-			result = append(result, res...)
-			break
-		} else {
-			result = append(result, bytes[si])
-		}
-		startIndex += 2
-		endIndex = startIndex + 2
-	}
-	return result
-}
-
-func (u *Util) ShorturlKey(baseUrl string) string {
-	CryptLib := new(Crypt)
-	CryptLib.Str = baseUrl
-	hashCode := CryptLib.Crc32()
-	return string(codeToKey(hashCode))
-}
-
-// 判断map中是否存在某个key
+// InMap 判断map中是否存在某个key
+// @params string key 键名
+// @params map[string]interface{} needle
+// @return bool true when exists
 func (u *Util) InMap(key string, dataMap map[string]interface{}) bool {
 	if _, ok := dataMap[key]; ok {
 		return true
@@ -156,6 +153,7 @@ func (u *Util) InMap(key string, dataMap map[string]interface{}) bool {
 	return false
 }
 
+// InMapStringSlice same of InMap, just diff style of needle
 func (u *Util) InMapStringSlice(key string, dataMap map[string][]string) bool {
 	if _, ok := dataMap[key]; ok {
 		if len(dataMap[key]) > 0 {
@@ -165,6 +163,7 @@ func (u *Util) InMapStringSlice(key string, dataMap map[string][]string) bool {
 	return false
 }
 
+// InStringSlice same of InMap, just diff style of needle
 func (u *Util) InStringSlice(key string, dataStringSlice []string) bool {
 	for _, v := range dataStringSlice {
 		if v == key {
@@ -174,34 +173,37 @@ func (u *Util) InStringSlice(key string, dataStringSlice []string) bool {
 	return false
 }
 
-// 检测字符串是邮件、手机号、字符串
-// 返回: 0字符串1邮件2手机号
+// CheckStrType 检测字符串是邮件、手机号、字符串
+// @return 0字符串1邮件2手机号
 func (u *Util) CheckStrType(str string) int {
-	if verifyEmailFormat(str) {
+	if u.VerifyEmail(str) {
 		return 1
 	}
 
-	if verifyPhoneFormat(str) {
+	if u.VerifyPhone(str) {
 		return 2
 	}
 
 	return 0
 }
 
-func verifyEmailFormat(email string) bool {
-	// pattern := `\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*`
+// VerifyEmailFormat 验证邮件格式是否正确
+// @return bool
+func (u *Util) VerifyEmail(email string) bool {
 	pattern := `^[0-9a-z][_.0-9a-z-]{0,31}@([0-9a-z][0-9a-z-]{0,30}[0-9a-z]\.){1,4}[a-z]{2,4}$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(email)
 }
 
-func verifyPhoneFormat(phone string) bool {
+// VerifyPhoneFormat 验证手机格式是否正确
+// @return bool
+func (u *Util) VerifyPhone(phone string) bool {
 	pattern := "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$"
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(phone)
 }
 
-// 获取设备id
+// GetMachineId 获取设备id
 // 通过网卡ipv4生成
 func (u *Util) GetMachineId() int64 {
 	addrs, err := net.InterfaceAddrs()
@@ -233,14 +235,7 @@ func (u *Util) GetMachineId() int64 {
 	return machineId
 }
 
-func (u *Util) RandInt64(min, max int64) int64 {
-	if min >= max || min == 0 || max == 0 {
-		return max
-	}
-	rand.Seed(time.Now().UnixNano())
-	return rand.Int63n(max-min) + min
-}
-
+// StructToMap 结构体转换成map
 func (u *Util) StructToMap(obj interface{}) map[string]interface{} {
 	mapVal := make(map[string]interface{})
 	elem := reflect.ValueOf(obj).Elem()
@@ -251,7 +246,11 @@ func (u *Util) StructToMap(obj interface{}) map[string]interface{} {
 	return mapVal
 }
 
-// url分解
+// UrlSplit url分解
+// @params string url 需要拆解的url
+// @return string protocol 协议
+// @return string domain 域名
+// @return int port 端口
 func (u *Util) UrlSplit(url string) (protocol, domain string, port int) {
 	var err error
 	urlCompose := strings.Split(url, ":")
@@ -267,7 +266,11 @@ func (u *Util) UrlSplit(url string) (protocol, domain string, port int) {
 	return
 }
 
-// url整合
+// UrlJoint url整合
+// @params string protocol 协议
+// @params string domain 域名
+// @params int port 端口
+// @return string url 需要拆解的url
 func (u *Util) UrlJoint(protocol, domain string, port int) (url string) {
 	url = protocol + "://" + domain
 	if port != 80 {
@@ -276,7 +279,7 @@ func (u *Util) UrlJoint(protocol, domain string, port int) (url string) {
 	return
 }
 
-// 环境检测
+// Monitor 环境检测
 func (u *Util) Monitor() (err error) {
 	return
 	// MySQL环境
@@ -293,58 +296,6 @@ func (u *Util) Monitor() (err error) {
 	// Redis环境
 	if NewRedis().Engine == nil {
 		err = errors.New("ERROR: Redis connect fail! Please start redis server and retry!")
-		return
-	}
-	return
-}
-
-func (u *Util) Request(authorization, apiCode string, params map[string]interface{}) (data map[string]interface{}, err error) {
-	FeignTdog := new(Feign)
-	header := make(map[string]string)
-	header["Authorization"] = authorization
-	if len(params) > 0 {
-		header["Content-Type"] = "application/json"
-	}
-	reqParams := make(map[string]interface{})
-	reqParams["api_code"] = apiCode
-	reqParams["params"] = params
-	code, res, _ := FeignTdog.Url("http://127.0.0.1:8001/gateway/feign").Method("POST").Header(header).Params(reqParams).Target()
-	err = json.Unmarshal([]byte(res), &data)
-	if err != nil {
-		return
-	}
-	if code != 200 {
-		err = errors.New(data["message"].(string))
-		return
-	}
-	return
-}
-
-func (u *Util) GetUserId(authorization string) (userId int64, err error) {
-	apiPath := NewConfig().Get("api_path").ToString()
-	FeignTdog := new(Feign)
-	header := make(map[string]string)
-	header["Authorization"] = authorization
-	code, res, _ := FeignTdog.Url(apiPath + ":8001/gateway/auth/getKey/user_id").Method("GET").Header(header).Target()
-	if code == http.StatusOK {
-		dataMap := make(map[string]interface{})
-		err = json.Unmarshal([]byte(res), &dataMap)
-		if err != nil {
-			err = errors.New("ERROR_UNLOGIN")
-			return
-		}
-		switch dataMap["value"].(type) {
-		case float64:
-			userId = int64(dataMap["value"].(float64))
-		case string:
-			userId, err = strconv.ParseInt(dataMap["value"].(string), 10, 64)
-			if err != nil {
-				err = errors.New("ERROR_UNLOGIN")
-				return
-			}
-		}
-	} else {
-		err = errors.New("ERROR_UNLOGIN")
 		return
 	}
 	return
@@ -376,11 +327,9 @@ func (u *Util) MySQLColumnTypeConvert(columnType string) string {
 	return convert
 }
 
-/**
- * 驼峰转蛇形 snake string
- * @param s 需要转换的字符串
- * @return string
- **/
+// SnakeString 驼峰转蛇形
+// @params string s 需要转换的字符串
+// @return string
 func (u *Util) SnakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
 	j := false
@@ -402,11 +351,9 @@ func (u *Util) SnakeString(s string) string {
 	return strings.ToLower(string(data[:]))
 }
 
-/**
- * 蛇形转驼峰
- * @param s要转换的字符串
- * @return string
- */
+// CamelString 蛇形转驼峰
+// @param s 要转换的字符串
+// @return string
 func (u *Util) CamelString(s string) string {
 	data := make([]byte, 0, len(s))
 	j := false
@@ -431,11 +378,9 @@ func (u *Util) CamelString(s string) string {
 	return string(data[:])
 }
 
-/**
- * 首字母转大写
- * @param s要转换的字符串
- * @return string
- **/
+// UcFirst 首字母转大写
+// @param s要转换的字符串
+// @return string
 func (u *Util) UcFirst(s string) string {
 	var upperStr string
 	vv := []rune(s)
@@ -454,11 +399,9 @@ func (u *Util) UcFirst(s string) string {
 	return upperStr
 }
 
-/**
- * 检测端口是否已经暂用
- * @params int port 端口号
- * @return bool
- **/
+// checkPortAlived 检测端口是否已经暂用
+// @params int port 端口号
+// @return bool
 func (u *Util) checkPortAlived(port int) bool {
 	isAlived := false
 	var outBytes bytes.Buffer
@@ -480,12 +423,10 @@ func (u *Util) checkPortAlived(port int) bool {
 	return isAlived
 }
 
-/**
- * 通过端口号获取pid
- * 不是一定能获取到，如协程就获取不到
- * @params int port 端口号
- * @return int pid
- **/
+// GetPidByPort 通过端口号获取pid
+// 不是一定能获取到，如协程就获取不到
+// @params int port 端口号
+// @return int pid
 func (u *Util) GetPidByPort(port int) int {
 	pid := -1
 	var outBytes bytes.Buffer
