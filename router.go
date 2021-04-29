@@ -55,13 +55,12 @@ type (
 		router *httprouter.Router
 	}
 
-	// HttpUtil
 	HttpUtil struct {
 		Req *Request
 		Res *Response
 	}
 
-	// ResponseText
+	// H ResponseText
 	H map[string]interface{}
 )
 
@@ -103,6 +102,7 @@ func (engine *HttpEngine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // Run .
 func (engine *HttpEngine) Run() {
+	log.Println("Start Listen :" + NewConfig().Get("app_port").ToString())
 	http.ListenAndServe(":"+NewConfig().Get("app_port").ToString(), engine)
 }
 
@@ -142,6 +142,7 @@ func (group *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	p = path.Join(group.prefix, p)
 	handlers = group.combineHandlers(handlers)
 	group.engine.router.Handle(method, p, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
+		log.Println(req.Method, req.URL)
 		group.createContext(w, req, params, handlers).Next()
 	})
 }
