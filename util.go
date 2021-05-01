@@ -278,28 +278,6 @@ func (u *Util) UrlJoint(protocol, domain string, port int) (url string) {
 	return
 }
 
-// Monitor 环境检测
-func (u *Util) Monitor() (err error) {
-	return
-	// MySQL环境
-	if NewMySQL().Engine == nil {
-		err = errors.New("ERROR: MySQL connect fail! Please start mysql server and retry!")
-		NewLogger().Error(err.Error())
-		return
-	}
-	if err = NewMySQL().Engine.Ping(); err != nil {
-		NewLogger().Error(err.Error())
-		err = errors.New("ERROR: MySQL connect fail! Please start mysql server and retry!")
-		return
-	}
-	// Redis环境
-	if NewRedis().Engine == nil {
-		err = errors.New("ERROR: Redis connect fail! Please start redis server and retry!")
-		return
-	}
-	return
-}
-
 func (u *Util) MySQLColumnTypeConvert(columnType string) string {
 	convert := "string"
 	switch strings.ToUpper(columnType) {
@@ -450,4 +428,60 @@ func (u *Util) GetPidByPort(port int) int {
 		}
 	}
 	return pid
+}
+
+// SetEnv 设置环境变量
+// @params interface{} key
+// 		当key为string时为键值
+// 		当key为map[string]string时为设定的kv数据
+// @params string value 设定值
+// @return error 错误信息
+func (u *Util) SetEnv(key interface{}, value string) error {
+	switch reflect.TypeOf(key).Kind().String() {
+	case "string":
+		return os.Setenv(key.(string), value)
+	case "map":
+		if reflect.TypeOf(key).String() == "map[string]string" {
+			var err error
+			for k, v := range key.(map[string]string) {
+				err = os.Setenv(k, v)
+			}
+			return err
+		}
+		break
+	}
+	return errors.New("nil pointer")
+}
+
+// GetEnv 获取环境变量
+//
+func (u *Util) GetEnv(keys ...string) map[string]string {
+	result := make(map[string]string)
+	for _, key := range keys {
+		result[key] = os.Getenv(key)
+	}
+	return result
+}
+
+// Monitor 环境检测
+// @return error err 错误信息
+func (u *Util) Monitor() (err error) {
+	return
+	// MySQL环境
+	if NewMySQL().Engine == nil {
+		err = errors.New("ERROR: MySQL connect fail! Please start mysql server and retry!")
+		NewLogger().Error(err.Error())
+		return
+	}
+	if err = NewMySQL().Engine.Ping(); err != nil {
+		NewLogger().Error(err.Error())
+		err = errors.New("ERROR: MySQL connect fail! Please start mysql server and retry!")
+		return
+	}
+	// Redis环境
+	if NewRedis().Engine == nil {
+		err = errors.New("ERROR: Redis connect fail! Please start redis server and retry!")
+		return
+	}
+	return
 }
