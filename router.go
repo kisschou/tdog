@@ -90,6 +90,7 @@ func (engine *HttpEngine) ServeFiles(path string, root http.FileSystem) {
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (engine *HttpEngine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	log.Println(req.Method, req.URL)
 	// 跨域问题
 	// 如果请求为OPTIONS(跨域请求)返回跨域授权
 	if req.Method == "OPTIONS" {
@@ -142,7 +143,6 @@ func (group *RouterGroup) Handle(method, p string, handlers []HandlerFunc) {
 	p = path.Join(group.prefix, p)
 	handlers = group.combineHandlers(handlers)
 	group.engine.router.Handle(method, p, func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		log.Println(req.Method, req.URL)
 		group.createContext(w, req, params, handlers).Next()
 	})
 }
