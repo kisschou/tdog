@@ -186,7 +186,7 @@ func (u *Util) CheckStrType(str string) int {
 	return 0
 }
 
-// VerifyEmailFormat 验证邮件格式是否正确
+// VerifyEmail 验证邮件格式是否正确
 // @return bool
 func (u *Util) VerifyEmail(email string) bool {
 	pattern := `^[0-9a-z][_.0-9a-z-]{0,31}@([0-9a-z][0-9a-z-]{0,30}[0-9a-z]\.){1,4}[a-z]{2,4}$`
@@ -194,7 +194,7 @@ func (u *Util) VerifyEmail(email string) bool {
 	return reg.MatchString(email)
 }
 
-// VerifyPhoneFormat 验证手机格式是否正确
+// VerifyPhone 验证手机格式是否正确
 // @return bool
 func (u *Util) VerifyPhone(phone string) bool {
 	pattern := "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$"
