@@ -30,11 +30,11 @@ type (
 )
 
 const (
-	FILE_TYPE_OTHER = iota
-	FILE_TYPE_PICTURE
-	FILE_TYPE_DOCUMENT
-	FILE_TYPE_MUSIC
-	FILE_TYPE_VIDEO
+	FileTypeOther = iota
+	FileTypePicture
+	FileTypeDocument
+	FileTypeMusic
+	FileTypeVideo
 )
 
 func (file *File) GetSaveName() *File {
@@ -70,19 +70,19 @@ func (file *File) GetFileType() *File {
 	mimeSplit := strings.Split(file.MIME, "/")
 	switch mimeSplit[0] {
 	case "image":
-		fileType = FILE_TYPE_PICTURE
+		fileType = FileTypePicture
 		break
 
 	case "video":
-		fileType = FILE_TYPE_VIDEO
+		fileType = FileTypeVideo
 		break
 
 	case "audio":
-		fileType = FILE_TYPE_MUSIC
+		fileType = FileTypeMusic
 		break
 
 	default:
-		fileType = FILE_TYPE_OTHER
+		fileType = FileTypeOther
 		break
 	}
 
@@ -95,7 +95,7 @@ func (file *File) GetFileType() *File {
 		"text/plain",
 	}
 	if UtilLib.InStringSlice(file.MIME, docMime) {
-		fileType = FILE_TYPE_DOCUMENT
+		fileType = FileTypeDocument
 	}
 
 	file.Type = fileType
@@ -105,7 +105,7 @@ func (file *File) GetFileType() *File {
 func (file *File) GetFileHash() *File {
 	f, err := os.Open(file.FilePathAP + file.Savename + "." + file.Ext)
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 		return file
 	}
 	defer f.Close()
@@ -140,7 +140,7 @@ func (file *File) Save() map[string]interface{} {
 	// 创建存储文件
 	f, err := os.OpenFile(file.FilePathAP+file.Savename+"."+file.Ext, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 		return nil
 	}
 	defer f.Close()
@@ -155,7 +155,7 @@ func (file *File) Save() map[string]interface{} {
 func (file *File) Del(delFile string) bool {
 	err := os.Remove(delFile)
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 		return false
 	}
 	return true

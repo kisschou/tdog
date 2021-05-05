@@ -9,19 +9,19 @@ import (
 )
 
 type (
-	// 用来表明签名的加密算法 token 类型等
+	// JwtHeader 用来表明签名的加密算法 token 类型等
 	JwtHeader struct {
 		Type      string // 类型
 		Algorithm string // 加密算法
 	}
 
-	// Payload 记录你需要的信息。 其中应该包含 Claims
+	// JwtPayload Payload 记录你需要的信息。 其中应该包含 Claims
 	JwtPayload map[string]interface{}
 
-	// 通过 header 生明的加密方法生成 签名
+	// JwtSignature 通过 header 生明的加密方法生成 签名
 	JwtSignature string
 
-	// jwt 数据
+	// Jwt jwt数据
 	Jwt struct {
 		header    string
 		payload   string
@@ -36,14 +36,12 @@ func (header *JwtHeader) New() *JwtHeader {
 	}
 }
 
-/**
- * USAGE:
- * jwt := new(core.Jwt)
- * data := make(map[string]interface{})
- * data["username"] = username
- * data["password"] = password
- * jwt.New(data)
- **/
+// New USAGE:
+// jwt := new(core.Jwt)
+// data := make(map[string]interface{})
+// data["username"] = username
+// data["password"] = password
+// jwt.New(data)
 func (jwt *Jwt) New(data JwtPayload) string {
 	CryptLib := new(Crypt)
 

@@ -119,7 +119,7 @@ func connect(c *config) {
 	viper.AddConfigPath(c.filePath)
 	err := viper.ReadInConfig()
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 	}
 }
 
@@ -179,7 +179,7 @@ func (c *config) Get(key string) *configResult {
 	c.searchKey = key
 	resultImpl, err := c.find()
 	if err != nil {
-		NewLogger().Warn(err.Error())
+		go NewLogger().Warn(err.Error())
 		resultImpl.Message = err.Error()
 		return resultImpl
 	}
@@ -191,7 +191,7 @@ func (c *config) Get(key string) *configResult {
 // returns map[string]*ConfigResult means search key as key and *ConfigResult as value
 func (c *config) GetMulti(keys ...string) map[string]*configResult {
 	if len(keys) < 1 {
-		NewLogger().Warn("Config: 批量查询参数缺失.")
+		go NewLogger().Warn("Config: 批量查询参数缺失.")
 		return nil
 	}
 	multiConfigResult := make(map[string]*configResult, 0)

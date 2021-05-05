@@ -46,7 +46,7 @@ func (feign *Feign) Target() (code int, res string, elapsedTime int64) {
 		code = 0
 		res = "ERROR_FEIGN_REQUEST_FAIL"
 
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 		return
 	}
 	return

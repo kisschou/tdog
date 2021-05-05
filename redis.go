@@ -58,7 +58,7 @@ func (r *redisModel) Change(name string) *redisImpl.Client {
 		}
 	}
 	if host == "" || port == "" {
-		NewLogger().Error("未找到该标签下的redis配置信息")
+		go NewLogger().Error("未找到该标签下的redis配置信息")
 		return nil
 	}
 	engine := redisImpl.NewClient(&redisImpl.Options{
@@ -68,7 +68,7 @@ func (r *redisModel) Change(name string) *redisImpl.Client {
 		PoolSize: poolSize,
 	})
 	if _, err := engine.Ping(Ctx).Result(); err != nil {
-		NewLogger().Error("(" + name + ")redis连接失败:" + err.Error())
+		go NewLogger().Error("(" + name + ")redis连接失败:" + err.Error())
 		return nil
 	}
 	// 加入连接池
@@ -96,7 +96,7 @@ func (r *redisModel) New(name, host, port, pass string, poolSize int) *redisImpl
 		PoolSize: poolSize,
 	})
 	if _, err := engine.Ping(Ctx).Result(); err != nil {
-		NewLogger().Error("(" + name + ")redis连接失败:" + err.Error())
+		go NewLogger().Error("(" + name + ")redis连接失败:" + err.Error())
 		return nil
 	}
 	// 加入连接池

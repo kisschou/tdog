@@ -59,7 +59,7 @@ func (sql *mySql) Change(name string) *xorm.Engine {
 		conf := loadConf(name)
 		engine, err = xorm.NewEngine(conf.engine, conf.dsn)
 		if err != nil {
-			NewLogger().Error(err.Error())
+			go NewLogger().Error(err.Error())
 			return nil
 		}
 
@@ -93,7 +93,7 @@ func (sql *mySql) New(name, host, port, user, pass, db, charset, prefix string) 
 	debug := NewConfig().Get("database.debug").ToBool()
 	engine, err := xorm.NewEngine("mysql", dsn)
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 		return nil
 	}
 

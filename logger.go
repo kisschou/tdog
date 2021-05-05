@@ -79,13 +79,13 @@ func (log *logger) Error(message string) {
 	newLogger(newRedisWriter("log:list")).Error(message)
 }
 
-// Error writes warning message to queue, extends *logger
+// Warn writes warning message to queue, extends *logger
 // given string message of warning
 func (log *logger) Warn(message string) {
 	newLogger(newRedisWriter("log:list")).Warn(message)
 }
 
-// Error writes infomation message to queue, extends *logger
+// Info writes infomation message to queue, extends *logger
 // given string message of infomation
 func (log *logger) Info(message string) {
 	newLogger(newRedisWriter("log:list")).Info(message)

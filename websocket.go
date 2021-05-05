@@ -19,6 +19,7 @@ var (
 	}
 )
 
+// Handler
 // http.HandleFunc("/ws", wsHandler)
 // http.ListenAndServe("0.0.0.0:7777", nil)
 func (ws *WebSocket) Handler(w http.ResponseWriter, r *http.Request) {

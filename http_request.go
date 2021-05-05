@@ -17,28 +17,27 @@ type (
 	}
 )
 
-/** 使用说明
- * header := make(map[string]string)
- * params := make(map[string]interface{})
- * // header
- * header["Authorization"] = resMap["authorization"].(string)
- * header["Content-Type"] = "application/json"
- * header["Connection"] = "keep-alive"
- * // params
- * params["username"] = "admin"
- * params["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
- * HttpRequestLib := new(lib.HttpRequest)
- * HttpRequestLib.Method = "POST"
- * HttpRequestLib.Header = header
- * HttpRequestLib.Url = "http://127.0.0.1:8000/member/login"
- * HttpRequestLib.Params = params
- * res, err := HttpRequestLib.FormRequest()
- * if err != nil {
- *    fmt.Println(err)
- * }
- * fmt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
- * fmt.Println(res)
- */
+// FormRequest 使用说明
+// header := make(map[string]string)
+// params := make(map[string]interface{})
+// // header
+// header["Authorization"] = resMap["authorization"].(string)
+// header["Content-Type"] = "application/json"
+// header["Connection"] = "keep-alive"
+// // params
+// params["username"] = "admin"
+// params["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
+// HttpRequestLib := new(lib.HttpRequest)
+// HttpRequestLib.Method = "POST"
+// HttpRequestLib.Header = header
+// HttpRequestLib.Url = "http://127.0.0.1:8000/member/login"
+// HttpRequestLib.Params = params
+// res, err := HttpRequestLib.FormRequest()
+// if err != nil {
+//    fmt.Println(err)
+// }
+// fmt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
+// fmt.Println(res)
 func (hp *HttpRequest) FormRequest() (httpCode int, resData string, elapsedTime int64, err error) {
 	startTime := time.Now().UnixNano()
 	client := &http.Client{}
@@ -72,39 +71,36 @@ func (hp *HttpRequest) FormRequest() (httpCode int, resData string, elapsedTime 
 	return
 }
 
-/*
- * // 发送二进制数据流
- * // header
- * header["Authorization"] = resMap["authorization"].(string)
- * header["Content-Type"] = "text/plain"
- * header["Connection"] = "Keep-Alive"
- * // params
- * params["method"] = "POST"
- * params["base_url"] = "user_url"
- * params["action_url"] = "/member/login"
- * params["header"] = ""
- * params["body"] = ""
- * sendHeader := make(map[string]string)
- * sendHeader["Authorization"] = resMap["authorization"].(string)
- * sendHeaderJson, _ := json.Marshal(sendHeader)
- * params["header"] = sendHeaderJson
- * sendBody := make(map[string]interface{})
- * sendBody["username"] = "admin"
- * sendBody["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
- * sendBodyJson, _ := json.Marshal(sendBody)
- * params["body"] = sendBodyJson
- *
- * HttpRequestLib.Method = "POST"
- * HttpRequestLib.Header = header
- * HttpRequestLib.Url = "http://127.0.0.1:8000/feign/http"
- * HttpRequestLib.Params = params
- * res, err = HttpRequestLib.BytesPost()
- * if err != nil {
- *	fmt.Println(err)
- * }
- * mt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
- * fmt.Println(res)
- */
+// BytesPost 发送二进制数据流
+// // header
+// header["Authorization"] = resMap["authorization"].(string)
+// header["Content-Type"] = "text/plain"
+// header["Connection"] = "Keep-Alive"
+// // params
+// params["method"] = "POST"
+// params["base_url"] = "user_url"
+// params["action_url"] = "/member/login"
+// params["header"] = ""
+// params["body"] = ""
+// sendHeader := make(map[string]string)
+// sendHeader["Authorization"] = resMap["authorization"].(string)
+// sendHeaderJson, _ := json.Marshal(sendHeader)
+// params["header"] = sendHeaderJson
+// sendBody := make(map[string]interface{})
+// sendBody["username"] = "admin"
+// sendBody["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
+// sendBodyJson, _ := json.Marshal(sendBody)
+// params["body"] = sendBodyJson
+// HttpRequestLib.Method = "POST"
+// HttpRequestLib.Header = header
+// HttpRequestLib.Url = "http://127.0.0.1:8000/feign/http"
+// HttpRequestLib.Params = params
+// res, err = HttpRequestLib.BytesPost()
+// if err != nil {
+//	fmt.Println(err)
+// }
+// mt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
+// fmt.Println(res)
 func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
 	startTime := time.Now().UnixNano()
 	var elapsedTime int64
@@ -112,7 +108,7 @@ func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
 	body := bytes.NewReader(data)
 	req, err := http.NewRequest(hp.Method, hp.Url, body)
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 		elapsedTime = time.Now().UnixNano() - startTime
 		return http.StatusInternalServerError, "", elapsedTime, err
 	}
@@ -124,21 +120,21 @@ func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
 	var resp *http.Response
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 		elapsedTime = time.Now().UnixNano() - startTime
 		return http.StatusInternalServerError, "", elapsedTime, err
 	}
 	defer resp.Body.Close()
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		NewLogger().Error(err.Error())
+		go NewLogger().Error(err.Error())
 	}
 
 	elapsedTime = time.Now().UnixNano() - startTime
 	return resp.StatusCode, string(b), elapsedTime, err
 }
 
-// 针对请求网关服务构建
+// ServicePost 针对请求网关服务构建
 // 继承后只需要set结构体中的Params
 func (hp *HttpRequest) ServicePost() (bool, string, int64) {
 	// header
@@ -152,7 +148,7 @@ func (hp *HttpRequest) ServicePost() (bool, string, int64) {
 	httpCode, res, elapsedTime, err := hp.BytesPost()
 	if httpCode != http.StatusOK || err != nil {
 		if err != nil {
-			NewLogger().Error(err.Error())
+			go NewLogger().Error(err.Error())
 		}
 		return false, res, elapsedTime
 	}
