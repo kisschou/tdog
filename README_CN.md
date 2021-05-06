@@ -2,33 +2,33 @@
 
 ![go](https://img.shields.io/github/go-mod/go-version/kisschou/tdog?color=green&style=flat-square) ![commit](https://img.shields.io/github/last-commit/kisschou/tdog) ![licence](https://img.shields.io/github/license/kisschou/tdog?color=green) ![tdog](https://img.shields.io/badge/kisschou-tdog-green)
 
-Just start in a smaile.
+仅仅是一个微笑的开始.
 
 
-## Introduction
+## 介绍
 
-Core for all my project of golang. It's sort of a framework, but I feel like it's actually a scaffolding.
+这是我所有的golang项目的核心包。也许这个项目可以算是一个框架，但是我更觉得它是一个脚手架。
 
-The Restful-Server section is referred to GIN. It's not powerful, but it's relatively complete.
+`Restful-Server` 模块是参考 `GIN` 做的. 也许它不是很强大, 但是也基本上可以算是完善。
 
 
-## Installation
+## 安装
 
-To install Tdog package, you need to install Go and set your Go workspace first.
+首先你必须安装golang和golang的开发环境。
 
-  1. Got it by go command:
+  1. 通过go的命令获取它:
   ```
     $ go get -u github.com/kisschou/tdog
   ```
-  2. Import it in your code:
+  2. 在你的项目中导入它:
   ```
     $ import "github.com/kisschou/tdog"
 
   ```
 
-## Quick start
+## 快速使用
 
-#### Use it for server:
+#### 用来起服务:
 
 ```
 $ cat example.go
@@ -56,7 +56,7 @@ func main() {
 }
 ```
 
-#### Use it for scaffolding:
+#### 当脚手架使用:
 
 ```go
 package main
@@ -74,25 +74,25 @@ func main() {
 }
 ```
 
-## Functions
+## 函数们
 
-Functions are at the heart of scaffolding.
+函数是身为脚手架的核心所在.
 
-#### MySQL Handler
+#### MySQL
 
-#### Redis Handler
+#### Redis
 
-#### Util Handler
+#### 基本函数
 
-#### Snowflake Handler
+#### Snowflake
 
-#### Excel Handler
+#### Excel
 
-#### Config Handler
+#### 配置文件
 
-#### Logger Handler
+#### 日志
 
 
-## Licence
+## 证书
 
 Copyright (c) 2020-present Kisschou.
