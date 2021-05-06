@@ -24,8 +24,7 @@
   ```
   2. 在你的项目中导入它:
   ```
-    $ import "github.com/kisschou/tdog"
-
+    import "github.com/kisschou/tdog"
   ```
 
 
