@@ -38,14 +38,12 @@ const (
 )
 
 func (file *File) GetSaveName() *File {
-	CryptLib := new(Crypt)
 	filename := ""
 	filenameSplit := strings.Split(file.Filename, ".")
 	file.Ext = filenameSplit[len(filenameSplit)-1]
 	filenameSplit = filenameSplit[:len(filenameSplit)-1]
 	filename = strings.Join(filenameSplit, "_")
-	CryptLib.Str = filename + strconv.FormatInt(time.Now().UnixNano(), 10)
-	file.Savename = CryptLib.Sha256()
+	file.Savename = NewCrypt(filename + strconv.FormatInt(time.Now().UnixNano(), 10)).Sha256()
 	return file
 }
 
