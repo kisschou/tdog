@@ -172,6 +172,17 @@ func (u *Util) InStringSlice(key string, dataStringSlice []string) bool {
 	return false
 }
 
+// StringSliceUnique 切片去重
+func (u *Util) StringSliceUnique(input []string) []string {
+	output := make([]string, 0)
+	for _, v := range input {
+		if !u.InStringSlice(v, output) {
+			output = append(output, v)
+		}
+	}
+	return output
+}
+
 // CheckStrType 检测字符串是邮件、手机号、字符串
 // @return 0字符串1邮件2手机号
 func (u *Util) CheckStrType(str string) int {
