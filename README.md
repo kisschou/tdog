@@ -24,8 +24,7 @@ To install Tdog package, you need to install Go and set your Go workspace first.
   ```
   2. Import it in your code:
   ```
-    $ import "github.com/kisschou/tdog"
-
+    import "github.com/kisschou/tdog"
   ```
 
 
