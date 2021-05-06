@@ -5,7 +5,9 @@
 Just start in a smaile.
 
 
-## Introduction
+## About
+
+[中文文档](./README_CN.md)
 
 Core for all my project of golang. It's sort of a framework, but I feel like it's actually a scaffolding.
 
@@ -25,6 +27,7 @@ To install Tdog package, you need to install Go and set your Go workspace first.
     $ import "github.com/kisschou/tdog"
 
   ```
+
 
 ## Quick start
 
@@ -74,6 +77,7 @@ func main() {
 }
 ```
 
+
 ## Functions
 
 Functions are at the heart of scaffolding.
@@ -91,6 +95,7 @@ Functions are at the heart of scaffolding.
 #### Config Handler
 
 #### Logger Handler
+
 
 
 ## Licence
