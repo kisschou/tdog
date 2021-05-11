@@ -29,6 +29,16 @@ type (
 	}
 )
 
+var (
+	docMime = []string{
+		"application/msword",
+		"application/vnd.ms-excel",
+		"application/pdf",
+		"application/vnd.ms-powerpoint",
+		"text/plain",
+	}
+)
+
 const (
 	FileTypeOther = iota
 	FileTypePicture
@@ -84,15 +94,7 @@ func (file *File) GetFileType() *File {
 		break
 	}
 
-	UtilLib := new(Util)
-	docMime := []string{
-		"application/msword",
-		"application/vnd.ms-excel",
-		"application/pdf",
-		"application/vnd.ms-powerpoint",
-		"text/plain",
-	}
-	if UtilLib.InStringSlice(file.MIME, docMime) {
+	if NewUtil().InArray("[]string", file.MIME, docMime) {
 		fileType = FileTypeDocument
 	}
 

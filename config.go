@@ -148,7 +148,7 @@ func (c *config) find() (*configResult, error) {
 			match := strings.Split(c.actionKey, ".")
 			if len(match) > 1 {
 				c.actionFile = match[0]
-				if !NewUtil().InStringSlice(c.actionFile, c.configFiles) {
+				if !NewUtil().InArray("[]string", c.actionFile, c.configFiles) {
 					err = errors.New(fmt.Sprintf("[%s], 无法定位到配置, %s -> %s", c.searchKey, c.filePath, c.actionFile))
 					break
 				}
