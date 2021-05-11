@@ -1,8 +1,6 @@
 package tdog
 
 import (
-	"encoding/json"
-	"encoding/xml"
 	"log"
 	"math"
 	"net/http"
@@ -241,68 +239,4 @@ func (c *Context) Get(key string) interface{} {
 		log.Panicf("Key %s doesn't exist", key)
 	}
 	return item
-}
-
-/************************************/
-/******** ENCOGING MANAGEMENT********/
-/************************************/
-
-// EnsureBody Like ParseBody() but this method also writes a 400 error if the json is not valid.
-func (c *Context) EnsureBody(item interface{}) bool {
-	if err := c.ParseBody(item); err != nil {
-		c.Fail(400, err)
-		return false
-	}
-	return true
-}
-
-// ParseBody Parses the body content as a JSON input. It decodes the json payload into the struct specified as a pointer.
-func (c *Context) ParseBody(item interface{}) error {
-	decoder := json.NewDecoder(c.Req.Body)
-	if err := decoder.Decode(&item); err == nil {
-		return Validate(c, item)
-	} else {
-		return err
-	}
-}
-
-// JSON Serializes the given struct as a JSON into the response body in a fast and efficient way.
-// It also sets the Content-Type as "application/json"
-func (c *Context) JSON(code int, obj interface{}) {
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
-	c.Writer.Header().Set("Content-Type", "application/json")
-	encoder := json.NewEncoder(c.Writer)
-	if err := encoder.Encode(obj); err != nil {
-		c.Error(err, obj)
-		http.Error(c.Writer, err.Error(), 500)
-	}
-}
-
-// XML Serializes the given struct as a XML into the response body in a fast and efficient way.
-// It also sets the Content-Type as "application/xml"
-func (c *Context) XML(code int, obj interface{}) {
-	if code >= 0 {
-		c.Writer.WriteHeader(code)
-	}
-	c.Writer.Header().Set("Content-Type", "application/xml")
-	encoder := xml.NewEncoder(c.Writer)
-	if err := encoder.Encode(obj); err != nil {
-		c.Error(err, obj)
-		http.Error(c.Writer, err.Error(), 500)
-	}
-}
-
-// Writes the given string into the response body and sets the Content-Type to "text/plain"
-func (c *Context) String(code int, msg string) {
-	c.Writer.Header().Set("Content-Type", "text/plain")
-	c.Writer.WriteHeader(code)
-	c.Writer.Write([]byte(msg))
-}
-
-// Data Writes some data into the body stream and updates the HTTP code
-func (c *Context) Data(code int, data []byte) {
-	c.Writer.WriteHeader(code)
-	c.Writer.Write(data)
 }
