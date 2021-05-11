@@ -444,6 +444,52 @@ func (u *util) ArrayMerge(dataType string, list ...interface{}) interface{} {
 	return nil
 }
 
+// Remove 切片删除指定index
+// @param dataType string 传入数据的类型,可选:
+//		[]string, []int, []int64, []interface{}
+// @param slice interface{} 待处理的切片
+// @param index int 准备去掉的index
+// @return interface{} 返回的类型和dataType是一致的，
+// 为nil表示错误，一般是传入了不同类型的数组造成的
+func (u *util) Remove(dataType string, slice interface{}, index int) interface{} {
+	defer Recover()
+	switch dataType {
+	case "[]string":
+		res := make([]string, 0)
+		for k, v := range slice.([]string) {
+			if k != index {
+				res[k] = v
+			}
+		}
+		return res
+	case "[]int":
+		res := make([]int, 0)
+		for k, v := range slice.([]int) {
+			if k != index {
+				res[k] = v
+			}
+		}
+		return res
+	case "[]int64":
+		res := make([]int64, 0)
+		for k, v := range slice.([]int64) {
+			if k != index {
+				res[k] = v
+			}
+		}
+		return res
+	case "[]interface{}":
+		res := make([]interface{}, 0)
+		for k, v := range slice.([]interface{}) {
+			if k != index {
+				res[k] = v
+			}
+		}
+		return res
+	}
+	return []string{}
+}
+
 // CheckStrType 检测字符串是邮件、手机号、字符串
 // @return 0字符串1邮件2手机号
 func (u *util) CheckStrType(str string) int {
