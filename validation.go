@@ -1,46 +1,47 @@
+// Copyright 2012 Kisschou. All rights reserved.
+// Based on the path package, Copyright 2011 The Go Authors.
+// Use of this source code is governed by a MIT-style license that can be found
+// at https://github.com/kisschou/tdog/blob/master/LICENSE.
+
 package tdog
 
-import (
-	"errors"
-	"reflect"
-	"strings"
+import ()
+
+/**
+ * The module for validate handler.
+ *
+ * Author: Kisschou
+ * @Build: 2021-05-11
+ */
+type (
+	// validate 自动验证模块
+	validate struct {
+		rule *Rule
+	}
+
+	// Rule 校验规则
+	Rule struct {
+	}
+
+	// report 校验结果报告
+	report struct {
+	}
 )
 
-// Validate .
-func Validate(c *Context, obj interface{}) error {
+// NewValidate init a new validate model
+func NewValidate() *validate {
+	return &validate{}
+}
 
-	var err error
-	typ := reflect.TypeOf(obj)
-	val := reflect.ValueOf(obj)
+// Rule Set a rule that you want to use in the next validation.
+// given rule extend Rule struct, returns validate struct.
+func (v *validate) Rule(rule *Rule) *validate {
+	v.rule = rule
+	return v
+}
 
-	if typ.Kind() == reflect.Ptr {
-		typ = typ.Elem()
-		val = val.Elem()
-	}
+func (v *validate) Check() {
+}
 
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		fieldValue := val.Field(i).Interface()
-		zero := reflect.Zero(field.Type).Interface()
-
-		// Validate nested and embedded structs (if pointer, only do so if not nil)
-		if field.Type.Kind() == reflect.Struct ||
-			(field.Type.Kind() == reflect.Ptr && !reflect.DeepEqual(zero, fieldValue)) {
-			err = Validate(c, fieldValue)
-		}
-
-		if strings.Index(field.Tag.Get("binding"), "required") > -1 {
-			if reflect.DeepEqual(zero, fieldValue) {
-				name := field.Name
-				if j := field.Tag.Get("json"); j != "" {
-					name = j
-				} else if f := field.Tag.Get("form"); f != "" {
-					name = f
-				}
-				err = errors.New("Required " + name)
-				c.Error(err, "json validation")
-			}
-		}
-	}
-	return err
+func (v *validate) UninterruptedCheck() {
 }
