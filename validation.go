@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 /**
@@ -31,6 +32,13 @@ type (
 		ParamType string   `json:"type"`     // 类型
 		IsMust    bool     `json:"is_must"`  // 是否必须
 		Rule      []string `json:"validate"` // 规则
+	}
+
+	// reportCenter 校验报告中心
+	reportCenter struct {
+		reports     []*report `json:"report_list"`  // 校验报告列表
+		createTime  string    `json:"build_time"`   // 报告生成时间
+		elapsedTime int64     `json:"elapsed_time"` // 执行耗时
 	}
 
 	// report 校验结果报告
@@ -285,7 +293,11 @@ func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 		// 必填校验
 		// 记录错误并跳出循环
 		output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "未包含"}
+		return
 	}
+
+	// 返回成功报告
+	output = &report{Name: rule.Name, Rule: rule.Rule, Result: true, Message: "Success"}
 	return
 }
 
@@ -314,7 +326,8 @@ func (v *validate) Check(needle map[string]string) (output *report, err error) {
 
 // UninterruptedCheck 无中断校验
 // 遇到失败的项, 只记录，等所有数据都校验后,统一返回.
-func (v *validate) UninterruptedCheck(needle map[string]string) (output []*report, err error) {
+// 返回报告中心结构体
+func (v *validate) UninterruptedCheck(needle map[string]string) (output *reportCenter, err error) {
 	if len(v.rules) < 1 {
 		err = errors.New("未指定校验规则")
 		return
@@ -323,13 +336,59 @@ func (v *validate) UninterruptedCheck(needle map[string]string) (output []*repor
 		err = errors.New("未发现需要校验的数据")
 		return
 	}
+	s := time.Now().Unix()
+	output = new(reportCenter)
+	reports := make([]*report, 0)
 	for _, validateInfo := range v.rules {
 		eachOutput := new(report)
 		eachOutput, err = checkIn(validateInfo, needle)
 		if err != nil {
 			return
 		}
-		output = append(output, eachOutput)
+		reports = append(reports, eachOutput)
 	}
+	output.reports = reports
+	output.createTime = time.Now().Format("2006-01-02 15:04:05")
+	output.elapsedTime = (time.Now().Unix() - s)
 	return
+}
+
+// ReportList get all report from report center.
+func (rc *reportCenter) ReportList() []*report {
+	return rc.reports
+}
+
+// ReportByIndex get the report by index. so given int index, returns *report.
+func (rc *reportCenter) ReportByIndex(index int) *report {
+	return rc.reports[index]
+}
+
+// ReportByName get the report by name. so must given string name, and will returns *report
+func (rc *reportCenter) ReportByName(name string) *report {
+	for _, reportImpl := range rc.reports {
+		if reportImpl.Name == name {
+			return reportImpl
+		}
+	}
+	return &report{Name: "", Rule: []string{}, Result: false, Message: "未找到名为`" + name + "`的报表."}
+}
+
+// BuildTime get build time from report center.
+func (rc *reportCenter) BuildTime() string {
+	return rc.createTime
+}
+
+// ElapsedTime get elapsed time from report center.
+func (rc *reportCenter) ElapsedTime() int64 {
+	return rc.elapsedTime
+}
+
+// ToJson convert to json and return.
+func (rc *reportCenter) ToJson() string {
+	data, err := json.Marshal(rc)
+	if err != nil {
+		go NewLogger().Error(err.Error())
+		return ""
+	}
+	return string(data)
 }
