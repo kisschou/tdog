@@ -520,6 +520,20 @@ func (u *util) VerifyPhone(phone string) bool {
 	return reg.MatchString(phone)
 }
 
+// VerifyDate 校验日期的合理性(YYYY-MM-DD)
+func (u *util) VerifyDate(input string) bool {
+	pattern := `^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(input)
+}
+
+// VerifyDateTime 校验日期时间的合理性(YYYY-MM-DD HH:mm:ss)
+func (u *util) VerifyDateTime(input string) bool {
+	pattern := `^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]) ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(input)
+}
+
 // GetMachineId 获取设备id
 // 通过网卡ipv4生成
 func (u *util) GetMachineId() int64 {
