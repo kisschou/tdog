@@ -13,10 +13,10 @@ type (
 	Request struct {
 		Host    string
 		IpAddr  string
-		Header  map[string][]string
-		Params  map[string][]string
-		Get     map[string][]string
-		Post    map[string][]string
+		Header  map[string]string
+		Params  map[string]string
+		Get     map[string]string
+		Post    map[string]string
 		Put     map[string]interface{}
 		File    *RequestFile
 		IsGet   bool
@@ -36,16 +36,16 @@ type (
 )
 
 func (r *Request) New(c *Context) *Request {
-	var ghostMap map[string][]string
-	ghostMap = make(map[string][]string)
+	var ghostMap map[string]string
+	ghostMap = make(map[string]string)
 	for k, v := range c.Req.Header {
-		ghostMap[k] = v
+		ghostMap[k] = v[0]
 	}
 	r.Header = ghostMap
 
-	ghostMap = make(map[string][]string)
+	ghostMap = make(map[string]string)
 	for k, v := range c.Req.URL.Query() {
-		ghostMap[k] = v
+		ghostMap[k] = v[0]
 	}
 	r.Get = ghostMap
 
@@ -59,9 +59,8 @@ func (r *Request) New(c *Context) *Request {
 		}
 
 		if strings.Contains(c.Req.Header["Content-Type"][0], "x-www-form-urlencoded") {
-			ghostMap = make(map[string][]string)
 			for k, v := range c.Req.PostForm {
-				ghostMap[k] = v
+				ghostMap[k] = v[0]
 			}
 			r.Post = ghostMap
 		}
@@ -79,9 +78,9 @@ func (r *Request) New(c *Context) *Request {
 				r.File = requestFile
 			}
 
-			ghostMap = make(map[string][]string)
+			ghostMap = make(map[string]string)
 			for k, v := range c.Req.PostForm {
-				ghostMap[k] = v
+				ghostMap[k] = v[0]
 			}
 			r.Post = ghostMap
 		}
@@ -89,11 +88,11 @@ func (r *Request) New(c *Context) *Request {
 
 	// Get|Put|Delete请求藏在地址中的参数
 	if c.Req.Method == "GET" || c.Req.Method == "PUT" || c.Req.Method == "DELETE" {
-		methodParams := make(map[string][]string)
+		methodParams := make(map[string]string)
 		for _, v := range c.Params {
-			methodParams[v.Key] = []string{v.Value}
+			methodParams[v.Key] = v.Value
 		}
-		r.Get = methodParams
+		r.Get = NewUtil().ArrayMerge("map[string]string", r.Get, methodParams).(map[string]string)
 	}
 
 	// 获取请求地址
@@ -138,39 +137,29 @@ func checkReqMethod(r *Request, method string) *Request {
 }
 
 func merge2Params(r *Request) *Request {
-	params := make(map[string][]string)
-	if len(r.Get) > 0 {
-		for k, v := range r.Get {
-			params[k] = v
-		}
-	}
-	if len(r.Post) > 0 {
-		for k, v := range r.Post {
-			params[k] = v
-		}
-	}
+	params := NewUtil().ArrayMerge("map[string]string", r.Get, r.Post).(map[string]string)
 	if len(r.Put) > 0 {
 		for k, v := range r.Put {
 			if reflect.TypeOf(v).Kind().String() == "map" {
 				dataJson, _ := json.Marshal(v.(map[string]interface{}))
-				params[k] = []string{string(dataJson)}
+				params[k] = string(dataJson)
 			} else if reflect.TypeOf(v).Kind().String() == "int64" {
-				params[k] = []string{strconv.FormatInt(v.(int64), 10)}
+				params[k] = strconv.FormatInt(v.(int64), 10)
 			} else if reflect.TypeOf(v).Kind().String() == "int" {
-				params[k] = []string{strconv.Itoa(v.(int))}
+				params[k] = strconv.Itoa(v.(int))
 			} else if reflect.TypeOf(v).Kind().String() == "float32" {
-				params[k] = []string{strconv.FormatFloat(v.(float64), 'f', -1, 32)}
+				params[k] = strconv.FormatFloat(v.(float64), 'f', -1, 32)
 			} else if reflect.TypeOf(v).Kind().String() == "float64" {
-				params[k] = []string{strconv.FormatFloat(v.(float64), 'f', -1, 64)}
+				params[k] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
 			} else if reflect.TypeOf(v).Kind().String() == "slice" {
 				data := make([]map[string]interface{}, 0)
 				for _, eachObj := range v.([]interface{}) {
 					data = append(data, eachObj.(map[string]interface{}))
 				}
 				dataJson, _ := json.Marshal(data)
-				params[k] = []string{string(dataJson)}
+				params[k] = string(dataJson)
 			} else {
-				params[k] = []string{v.(string)}
+				params[k] = v.(string)
 			}
 		}
 	}

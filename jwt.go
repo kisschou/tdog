@@ -43,7 +43,6 @@ func (header *JwtHeader) New() *JwtHeader {
 // data["password"] = password
 // jwt.New(data)
 func (jwt *Jwt) New(data JwtPayload) string {
-	CryptLib := new(Crypt)
 
 	// header
 	jwtHeader := make(map[string]string)
@@ -52,8 +51,7 @@ func (jwt *Jwt) New(data JwtPayload) string {
 	jwtHeader["type"] = header.Type
 	jwtHeader["alg"] = header.Algorithm
 	jsonData, _ := json.Marshal(jwtHeader)
-	CryptLib.Str = string(jsonData)
-	jwt.header = CryptLib.Base64Encode()
+	jwt.header = NewCrypt(string(jsonData)).Base64Encode()
 
 	// payload
 	payload := make(map[string]interface{})
@@ -61,13 +59,11 @@ func (jwt *Jwt) New(data JwtPayload) string {
 	payload["ita"] = time.Now().Unix()
 	payload["exp"] = 7200
 	jsonData, _ = json.Marshal(payload)
-	CryptLib.Str = string(jsonData)
-	jwt.payload = CryptLib.Base64Encode()
+	jwt.payload = NewCrypt(string(jsonData)).Base64Encode()
 
 	// signature
 	jsonData, _ = json.Marshal(payload)
-	CryptLib.Str = string(jsonData) + NewConfig().Get("hex_key").ToString()
-	jwt.signature = CryptLib.Sha256()
+	jwt.signature = NewCrypt(string(jsonData) + NewConfig().Get("hex_key").ToString()).Sha256()
 
 	return jwt.header + "." + jwt.payload + "." + jwt.signature
 }
@@ -88,22 +84,19 @@ func (jwt *Jwt) Check(data string) bool {
 	}
 
 	jwt = jwt.Walk(data)
-	CryptLib := new(Crypt)
 
 	// check header.
 	header := new(JwtHeader)
 	header = header.New()
-	CryptLib.Str = jwt.header
 	jwtHeader := make(map[string]string)
-	json.Unmarshal([]byte(CryptLib.Base64Decode()), &jwtHeader)
+	json.Unmarshal([]byte(NewCrypt(jwt.header).Base64Decode()), &jwtHeader)
 	if jwtHeader["type"] != header.Type || jwtHeader["alg"] != header.Algorithm {
 		return false
 	}
 
 	// check payload.
-	CryptLib.Str = jwt.payload
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(CryptLib.Base64Decode()), &jwtPayload)
+	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	ita, _ := strconv.Atoi(fmt.Sprintf("%1.0f", jwtPayload["ita"]))
 	exp, _ := strconv.Atoi(fmt.Sprintf("%1.0f", jwtPayload["exp"]))
 	ita = ita + exp
@@ -112,9 +105,7 @@ func (jwt *Jwt) Check(data string) bool {
 	}
 
 	// check signature.
-	CryptLib.Str = jwt.payload
-	CryptLib.Str = CryptLib.Base64Decode() + NewConfig().Get("hex_key").ToString()
-	if jwt.signature != CryptLib.Sha256() {
+	if jwt.signature != NewCrypt(NewCrypt(jwt.payload).Base64Decode()+NewConfig().Get("hex_key").ToString()).Sha256() {
 		return false
 	}
 
@@ -126,11 +117,9 @@ func (jwt *Jwt) Refresh(authorization string) string {
 		return authorization
 	}
 	jwt = jwt.Walk(authorization)
-	CryptLib := new(Crypt)
 	// check payload.
-	CryptLib.Str = jwt.payload
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(CryptLib.Base64Decode()), &jwtPayload)
+	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	return jwt.New(jwtPayload["data"].(map[string]interface{}))
 }
 
@@ -139,10 +128,8 @@ func (jwt *Jwt) Get(data string, key string) (value interface{}) {
 		return ""
 	}
 	jwt = jwt.Walk(data)
-	CryptLib := new(Crypt)
-	CryptLib.Str = jwt.payload
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(CryptLib.Base64Decode()), &jwtPayload)
+	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	list := jwtPayload["data"].(map[string]interface{})
 	if _, ok := list[key]; ok {
 		value = list[key]
@@ -156,9 +143,7 @@ func (jwt *Jwt) GetData(data string) map[string]interface{} {
 		return nil
 	}
 	jwt = jwt.Walk(data)
-	CryptLib := new(Crypt)
-	CryptLib.Str = jwt.payload
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(CryptLib.Base64Decode()), &jwtPayload)
+	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	return jwtPayload["data"].(map[string]interface{})
 }

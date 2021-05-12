@@ -8,6 +8,7 @@ package tdog
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -27,12 +28,12 @@ import (
  * Author: Kisschou
  * @Build: 2020-11-22
  */
-type Util struct {
+type util struct {
 }
 
 // NewUtil init new util module.
-func NewUtil() *Util {
-	return &Util{}
+func NewUtil() *util {
+	return &util{}
 }
 
 // get list of file's name from path with suffix.
@@ -40,7 +41,7 @@ func NewUtil() *Util {
 // given string suffix means catch for same suffix
 // returns []string files list of file name, file name has no suffix
 // returns error err throw it if has errors
-func (u *Util) GetFilesBySuffix(filePath string, suffix string) (files []string, err error) {
+func (u *util) GetFilesBySuffix(filePath string, suffix string) (files []string, err error) {
 	rd, err := ioutil.ReadDir(filePath)
 	if err != nil {
 		NewLogger().Error(err.Error())
@@ -60,7 +61,7 @@ func (u *Util) GetFilesBySuffix(filePath string, suffix string) (files []string,
 }
 
 // FileExists check file is exists. given string path returns true when exists
-func (u *Util) FileExists(path string) bool {
+func (u *util) FileExists(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsExist(err) {
@@ -72,7 +73,7 @@ func (u *Util) FileExists(path string) bool {
 }
 
 // IsDir check path is dir given string path returns true when it's
-func (u *Util) IsDir(path string) bool {
+func (u *util) IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
 		return false
@@ -81,12 +82,12 @@ func (u *Util) IsDir(path string) bool {
 }
 
 // IsFile check path is file given string path returns true when it's
-func (u *Util) IsFile(path string) bool {
+func (u *util) IsFile(path string) bool {
 	return !u.IsDir(path)
 }
 
 // DirExistsAndCreate 检测目录是否存在, 不存在就创建
-func (u *Util) DirExistsAndCreate(path string) {
+func (u *util) DirExistsAndCreate(path string) {
 	if !u.FileExists(path) {
 		err := os.MkdirAll(path, os.ModePerm)
 		if err != nil {
@@ -100,7 +101,7 @@ func (u *Util) DirExistsAndCreate(path string) {
 // @params int length 长度
 // @params ...int randType 默认值为纯数字1加入数字2加入小写字母3加入大写字母
 // @return string 结果
-func (u *Util) RandomStr(length int, randType ...int) string {
+func (u *util) RandomStr(length int, randType ...int) string {
 	str := ""
 	for _, v := range randType {
 		switch v {
@@ -133,7 +134,7 @@ func (u *Util) RandomStr(length int, randType ...int) string {
 // @params int64 min 最小值
 // @params int64 max 最大值
 // @return int64 结果
-func (u *Util) RandInt64(min, max int64) int64 {
+func (u *util) RandInt64(min, max int64) int64 {
 	if min >= max || min == 0 || max == 0 {
 		return max
 	}
@@ -141,51 +142,357 @@ func (u *Util) RandInt64(min, max int64) int64 {
 	return rand.Int63n(max-min) + min
 }
 
-// InMap 判断map中是否存在某个key
-// @params string key 键名
-// @params map[string]interface{} needle
-// @return bool true when exists
-func (u *Util) InMap(key string, dataMap map[string]interface{}) bool {
-	if _, ok := dataMap[key]; ok {
-		return true
+// InArray 判断数组中是否存在某个值
+// @param string dataType 标识needle的类型,可选:
+//		[]string, []int, []int64, map[string]string, map[string]int, map[string]int64
+// @param interface{} input 输入值,这个类型等于dataType的值类型相同
+// @param interface{} needle 检索的集合
+// @return bool
+func (u *util) InArray(dataType string, input, needle interface{}) bool {
+	defer Recover()
+
+	switch dataType {
+	case "[]string":
+		for _, v := range needle.([]string) {
+			if v == input.(string) {
+				return true
+			}
+		}
+		break
+
+	case "[]int":
+		for _, v := range needle.([]int) {
+			if v == input.(int) {
+				return true
+			}
+		}
+		break
+
+	case "[]int64":
+		for _, v := range needle.([]int64) {
+			if v == input.(int64) {
+				return true
+			}
+		}
+		break
+
+	case "map[string]string":
+		for _, v := range needle.(map[string]string) {
+			if v == input.(string) {
+				return true
+			}
+		}
+		break
+
+	case "map[string]int":
+		for _, v := range needle.(map[string]int) {
+			if v == input.(int) {
+				return true
+			}
+		}
+		break
+
+	case "map[string]int64":
+		for _, v := range needle.([]int64) {
+			if v == input.(int64) {
+				return true
+			}
+		}
+		break
+	}
+
+	return false
+}
+
+// Isset 判断数组中是否存在某个键
+// @param string dataType 标识needle的类型,可选:
+//		[]string, []int, []int64, []interface{}
+//		map[string]string, map[string]int, map[string]int64, map[string]interface{}
+// @param interface{} input 输入值,这个类型等于dataType的键类型相同
+// @param interface{} needle 检索的集合
+// @return bool
+func (u *util) Isset(dataType string, input, needle interface{}) bool {
+	defer Recover()
+
+	switch dataType {
+	case "[]string":
+		_ = needle.([]string)[input.(int)]
+		break
+
+	case "[]int":
+		_ = needle.([]int)[input.(int)]
+		break
+
+	case "[]int64":
+		_ = needle.([]int64)[input.(int)]
+		break
+
+	case "[]interface{}":
+		_ = needle.([]interface{})[input.(int)]
+
+	case "map[string]string":
+		_ = needle.(map[string]string)[input.(string)]
+		break
+
+	case "map[string]int":
+		_ = needle.(map[string]int)[input.(string)]
+		break
+
+	case "map[string]int64":
+		_ = needle.(map[string]int64)[input.(string)]
+		break
+
+	case "map[string]interface{}":
+		_ = needle.(map[string]interface{})[input.(string)]
+		break
+	}
+	return true
+}
+
+// Empty 判断数组指定key的值是否为空, 数字则大于0
+// @param string dataType 标识needle的类型,可选:
+//		[]string, []int, []int64,
+//		map[string]string, map[string]int, map[string]int64
+// @param interface{} input 输入值,这个类型等于dataType的键类型相同
+// @param interface{} needle 检索的集合
+// @return bool
+func (u *util) Empty(dataType string, input, needle interface{}) bool {
+	if !u.Isset(dataType, input, needle) {
+		return false
+	}
+	defer Recover()
+
+	switch dataType {
+	case "[]string":
+		return len(needle.([]string)[input.(int)]) < 1
+
+	case "[]int":
+		return needle.([]int)[input.(int)] < 1
+
+	case "[]int64":
+		return needle.([]int64)[input.(int)] < 1
+
+	case "map[string]string":
+		return len(needle.(map[string]string)[input.(string)]) < 1
+
+	case "map[string]int":
+		return needle.(map[string]int)[input.(string)] < 1
+
+	case "map[string]int64":
+		return needle.(map[string]int64)[input.(string)] < 1
 	}
 	return false
 }
 
-// InMapStringSlice same of InMap, just diff style of needle
-func (u *Util) InMapStringSlice(key string, dataMap map[string][]string) bool {
-	if _, ok := dataMap[key]; ok {
-		if len(dataMap[key]) > 0 {
-			return true
+// ArrayUnique 数组去掉重复键
+// 提交什么类型过来就会返回什么类型，只不过要自己处理
+// @param string dataType 标识input和返回值的类型,可选:
+//		[]string, []int, []int64, []interface{}, map[string]string,
+//		map[string]int, map[string]int64, map[string]interface{}
+// @param interface{} input 需要处理的数组
+// @return 处理完成的数组
+func (u *util) ArrayUnique(dataType string, input interface{}) interface{} {
+	defer Recover()
+
+	switch dataType {
+	case "[]string":
+		res := make([]string, 0)
+		for k, v := range input.([]string) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
 		}
+		return res
+
+	case "[]int":
+		res := make([]int, 0)
+		for k, v := range input.([]int) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "[]int64":
+		res := make([]int64, 0)
+		for k, v := range input.([]int64) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "[]interface{}":
+		res := make([]interface{}, 0)
+		for k, v := range input.([]interface{}) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "map[string]string":
+		res := make(map[string]string, 0)
+		for k, v := range input.(map[string]string) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "map[string]int":
+		res := make(map[string]int, 0)
+		for k, v := range input.(map[string]int) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "map[string]int64":
+		res := make(map[string]int64, 0)
+		for k, v := range input.(map[string]int64) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "map[string]interface{}":
+		res := make(map[string]interface{}, 0)
+		for k, v := range input.(map[string]interface{}) {
+			if !u.Isset(dataType, k, res) {
+				res[k] = v
+			}
+		}
+		return res
 	}
-	return false
+
+	return nil
 }
 
-// InStringSlice same of InMap, just diff style of needle
-func (u *Util) InStringSlice(key string, dataStringSlice []string) bool {
-	for _, v := range dataStringSlice {
-		if v == key {
-			return true
-		}
+// ArrayMerge 数组合并
+// 必须指定数据类型且所有数组必须同类型
+// @param dataType string 传入数据的类型,可选:
+//		[]string, []int, []interface{}, map[string]string, map[string]int, map[string]interface{}
+// @param list ...interface{} 同类型的列表
+// @return interface{} 返回的类型和dataType是一致的，
+// 为nil表示错误，一般是传入了不同类型的数组造成的
+func (u *util) ArrayMerge(dataType string, list ...interface{}) interface{} {
+	if len(list) < 2 {
+		return list[0]
 	}
-	return false
+
+	defer Recover()
+
+	switch dataType {
+	case "[]string":
+		res := make([]string, 0)
+		for _, info := range list {
+			for _, v := range info.([]string) {
+				res = append(res, v)
+			}
+		}
+		return res
+
+	case "[]int":
+		res := make([]int, 0)
+		for _, info := range list {
+			for _, v := range info.([]int) {
+				res = append(res, v)
+			}
+		}
+		return res
+
+	case "[]interface{}":
+		res := make([]interface{}, 0)
+		for _, info := range list {
+			for _, v := range info.([]interface{}) {
+				res = append(res, v)
+			}
+		}
+		return res
+
+	case "map[string]string":
+		res := make(map[string]string, 0)
+		for _, info := range list {
+			for k, v := range info.(map[string]string) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "map[string]int":
+		res := make(map[string]int, 0)
+		for _, info := range list {
+			for k, v := range info.(map[string]int) {
+				res[k] = v
+			}
+		}
+		return res
+
+	case "map[string]interface{}":
+		res := make(map[string]interface{}, 0)
+		for _, info := range list {
+			for k, v := range info.(map[string]interface{}) {
+				res[k] = v
+			}
+		}
+		return res
+	}
+
+	return nil
 }
 
-// StringSliceUnique 切片去重
-func (u *Util) StringSliceUnique(input []string) []string {
-	output := make([]string, 0)
-	for _, v := range input {
-		if !u.InStringSlice(v, output) {
-			output = append(output, v)
+// Remove 切片删除指定index
+// @param dataType string 传入数据的类型,可选:
+//		[]string, []int, []int64, []interface{}
+// @param slice interface{} 待处理的切片
+// @param index int 准备去掉的index
+// @return interface{} 返回的类型和dataType是一致的，
+// 为nil表示错误，一般是传入了不同类型的数组造成的
+func (u *util) Remove(dataType string, slice interface{}, index int) interface{} {
+	defer Recover()
+	switch dataType {
+	case "[]string":
+		res := make([]string, 0)
+		for k, v := range slice.([]string) {
+			if k != index {
+				res[k] = v
+			}
 		}
+		return res
+	case "[]int":
+		res := make([]int, 0)
+		for k, v := range slice.([]int) {
+			if k != index {
+				res[k] = v
+			}
+		}
+		return res
+	case "[]int64":
+		res := make([]int64, 0)
+		for k, v := range slice.([]int64) {
+			if k != index {
+				res[k] = v
+			}
+		}
+		return res
+	case "[]interface{}":
+		res := make([]interface{}, 0)
+		for k, v := range slice.([]interface{}) {
+			if k != index {
+				res[k] = v
+			}
+		}
+		return res
 	}
-	return output
+	return []string{}
 }
 
 // CheckStrType 检测字符串是邮件、手机号、字符串
 // @return 0字符串1邮件2手机号
-func (u *Util) CheckStrType(str string) int {
+func (u *util) CheckStrType(str string) int {
 	if u.VerifyEmail(str) {
 		return 1
 	}
@@ -199,7 +506,7 @@ func (u *Util) CheckStrType(str string) int {
 
 // VerifyEmail 验证邮件格式是否正确
 // @return bool
-func (u *Util) VerifyEmail(email string) bool {
+func (u *util) VerifyEmail(email string) bool {
 	pattern := `^[0-9a-z][_.0-9a-z-]{0,31}@([0-9a-z][0-9a-z-]{0,30}[0-9a-z]\.){1,4}[a-z]{2,4}$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(email)
@@ -207,15 +514,29 @@ func (u *Util) VerifyEmail(email string) bool {
 
 // VerifyPhone 验证手机格式是否正确
 // @return bool
-func (u *Util) VerifyPhone(phone string) bool {
+func (u *util) VerifyPhone(phone string) bool {
 	pattern := "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$"
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(phone)
 }
 
+// VerifyDate 校验日期的合理性(YYYY-MM-DD)
+func (u *util) VerifyDate(input string) bool {
+	pattern := `^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(input)
+}
+
+// VerifyDateTime 校验日期时间的合理性(YYYY-MM-DD HH:mm:ss)
+func (u *util) VerifyDateTime(input string) bool {
+	pattern := `^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]) ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(input)
+}
+
 // GetMachineId 获取设备id
 // 通过网卡ipv4生成
-func (u *Util) GetMachineId() int64 {
+func (u *util) GetMachineId() int64 {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return 127000000001
@@ -246,7 +567,7 @@ func (u *Util) GetMachineId() int64 {
 }
 
 // StructToMap 结构体转换成map
-func (u *Util) StructToMap(obj interface{}) map[string]interface{} {
+func (u *util) StructToMap(obj interface{}) map[string]interface{} {
 	mapVal := make(map[string]interface{})
 	elem := reflect.ValueOf(obj).Elem()
 	relType := elem.Type()
@@ -261,7 +582,7 @@ func (u *Util) StructToMap(obj interface{}) map[string]interface{} {
 // @return string protocol 协议
 // @return string domain 域名
 // @return int port 端口
-func (u *Util) UrlSplit(url string) (protocol, domain string, port int) {
+func (u *util) UrlSplit(url string) (protocol, domain string, port int) {
 	var err error
 	urlCompose := strings.Split(url, ":")
 	protocol = urlCompose[0]
@@ -281,7 +602,7 @@ func (u *Util) UrlSplit(url string) (protocol, domain string, port int) {
 // @params string domain 域名
 // @params int port 端口
 // @return string url 需要拆解的url
-func (u *Util) UrlJoint(protocol, domain string, port int) (url string) {
+func (u *util) UrlJoint(protocol, domain string, port int) (url string) {
 	url = protocol + "://" + domain
 	if port != 80 {
 		url += ":" + strconv.Itoa(port)
@@ -289,7 +610,7 @@ func (u *Util) UrlJoint(protocol, domain string, port int) (url string) {
 	return
 }
 
-func (u *Util) MySQLColumnTypeConvert(columnType string) string {
+func (u *util) MySQLColumnTypeConvert(columnType string) string {
 	convert := "string"
 	switch strings.ToUpper(columnType) {
 	case "CHAR", "VARCHAR":
@@ -318,7 +639,7 @@ func (u *Util) MySQLColumnTypeConvert(columnType string) string {
 // SnakeString 驼峰转蛇形
 // @params string s 需要转换的字符串
 // @return string
-func (u *Util) SnakeString(s string) string {
+func (u *util) SnakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
 	j := false
 	num := len(s)
@@ -342,7 +663,7 @@ func (u *Util) SnakeString(s string) string {
 // CamelString 蛇形转驼峰
 // @param s 要转换的字符串
 // @return string
-func (u *Util) CamelString(s string) string {
+func (u *util) CamelString(s string) string {
 	data := make([]byte, 0, len(s))
 	j := false
 	k := false
@@ -369,7 +690,7 @@ func (u *Util) CamelString(s string) string {
 // UcFirst 首字母转大写
 // @param s要转换的字符串
 // @return string
-func (u *Util) UcFirst(s string) string {
+func (u *util) UcFirst(s string) string {
 	var upperStr string
 	vv := []rune(s)
 	for i := 0; i < len(vv); i++ {
@@ -390,7 +711,7 @@ func (u *Util) UcFirst(s string) string {
 // checkPortAlived 检测端口是否已经暂用
 // @params int port 端口号
 // @return bool
-func (u *Util) checkPortAlived(port int) bool {
+func (u *util) checkPortAlived(port int) bool {
 	isAlived := false
 	var outBytes bytes.Buffer
 	cmd0 := exec.Command("netstat", "-ano")
@@ -415,7 +736,7 @@ func (u *Util) checkPortAlived(port int) bool {
 // 不是一定能获取到，如协程就获取不到
 // @params int port 端口号
 // @return int pid
-func (u *Util) GetPidByPort(port int) int {
+func (u *util) GetPidByPort(port int) int {
 	pid := -1
 	var outBytes bytes.Buffer
 	cmd0 := exec.Command("netstat", "-ano")
@@ -447,7 +768,7 @@ func (u *Util) GetPidByPort(port int) int {
 // 		当key为map[string]string时为设定的kv数据
 // @params string value 设定值
 // @return error 错误信息
-func (u *Util) SetEnv(key interface{}, value string) error {
+func (u *util) SetEnv(key interface{}, value string) error {
 	switch reflect.TypeOf(key).Kind().String() {
 	case "string":
 		return os.Setenv(key.(string), value)
@@ -465,8 +786,7 @@ func (u *Util) SetEnv(key interface{}, value string) error {
 }
 
 // GetEnv 获取环境变量
-//
-func (u *Util) GetEnv(keys ...string) map[string]string {
+func (u *util) GetEnv(keys ...string) map[string]string {
 	result := make(map[string]string)
 	for _, key := range keys {
 		result[key] = os.Getenv(key)
@@ -474,9 +794,17 @@ func (u *Util) GetEnv(keys ...string) map[string]string {
 	return result
 }
 
+// Recover 从恐慌(panic)中走出来,并把造成恐慌的源头写入日志
+// 这个函数一般用于defer
+func Recover() {
+	if err := recover(); err != nil {
+		NewLogger().Error(fmt.Sprintf("%s", err))
+	}
+}
+
 // Monitor 环境检测
 // @return error err 错误信息
-func (u *Util) Monitor() (err error) {
+func (u *util) Monitor() (err error) {
 	return
 	// MySQL环境
 	if NewMySQL().Engine == nil {

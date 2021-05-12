@@ -29,6 +29,16 @@ type (
 	}
 )
 
+var (
+	docMime = []string{
+		"application/msword",
+		"application/vnd.ms-excel",
+		"application/pdf",
+		"application/vnd.ms-powerpoint",
+		"text/plain",
+	}
+)
+
 const (
 	FileTypeOther = iota
 	FileTypePicture
@@ -38,14 +48,12 @@ const (
 )
 
 func (file *File) GetSaveName() *File {
-	CryptLib := new(Crypt)
 	filename := ""
 	filenameSplit := strings.Split(file.Filename, ".")
 	file.Ext = filenameSplit[len(filenameSplit)-1]
 	filenameSplit = filenameSplit[:len(filenameSplit)-1]
 	filename = strings.Join(filenameSplit, "_")
-	CryptLib.Str = filename + strconv.FormatInt(time.Now().UnixNano(), 10)
-	file.Savename = CryptLib.Sha256()
+	file.Savename = NewCrypt(filename + strconv.FormatInt(time.Now().UnixNano(), 10)).Sha256()
 	return file
 }
 
@@ -86,15 +94,7 @@ func (file *File) GetFileType() *File {
 		break
 	}
 
-	UtilLib := new(Util)
-	docMime := []string{
-		"application/msword",
-		"application/vnd.ms-excel",
-		"application/pdf",
-		"application/vnd.ms-powerpoint",
-		"text/plain",
-	}
-	if UtilLib.InStringSlice(file.MIME, docMime) {
+	if NewUtil().InArray("[]string", file.MIME, docMime) {
 		fileType = FileTypeDocument
 	}
 
