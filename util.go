@@ -264,22 +264,22 @@ func (u *util) Empty(dataType string, input, needle interface{}) bool {
 
 	switch dataType {
 	case "[]string":
-		return len(needle.([]string)[input.(int)]) > 0
+		return len(needle.([]string)[input.(int)]) < 1
 
 	case "[]int":
-		return needle.([]int)[input.(int)] > 0
+		return needle.([]int)[input.(int)] < 1
 
 	case "[]int64":
-		return needle.([]int64)[input.(int)] > 0
+		return needle.([]int64)[input.(int)] < 1
 
 	case "map[string]string":
-		return len(needle.(map[string]string)[input.(string)]) > 0
+		return len(needle.(map[string]string)[input.(string)]) < 1
 
 	case "map[string]int":
-		return needle.(map[string]int)[input.(string)] > 0
+		return needle.(map[string]int)[input.(string)] < 1
 
 	case "map[string]int64":
-		return needle.(map[string]int64)[input.(string)] > 0
+		return needle.(map[string]int64)[input.(string)] < 1
 	}
 	return false
 }
