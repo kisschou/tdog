@@ -35,14 +35,14 @@ type (
 	}
 
 	// reportCenter 校验报告中心
-	reportCenter struct {
-		reports     []*report `json:"report_list"`  // 校验报告列表
-		createTime  string    `json:"build_time"`   // 报告生成时间
-		elapsedTime int64     `json:"elapsed_time"` // 执行耗时
+	validReportCenter struct {
+		reports     []*validReport `json:"report_list"`  // 校验报告列表
+		createTime  string         `json:"build_time"`   // 报告生成时间
+		elapsedTime int64          `json:"elapsed_time"` // 执行耗时
 	}
 
 	// report 校验结果报告
-	report struct {
+	validReport struct {
 		Name    string   `json:"name"`     // 名称
 		Rule    []string `json:"validate"` // 校验方式
 		Result  bool     `json:"result"`   // 校验结果
@@ -213,7 +213,7 @@ func verifyEnum(pattern, valType string, val interface{}) (isSuccess bool, err e
 }
 
 // checkIn 校验就是所有规则跑一遍
-func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
+func checkIn(rule *Rule, needle map[string]string) (err error) {
 	UtilTdog := NewUtil()
 	defer Recover()
 
@@ -223,7 +223,7 @@ func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 
 		// 参数类型校验
 		if err != nil {
-			output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "值类型与设定类型不符"}
+			err = errors.New("值类型与设定类型不符")
 			return
 		}
 
@@ -232,30 +232,31 @@ func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 			switch ruleName {
 			case "empty": // 非空
 				if UtilTdog.Empty("map[string]string", rule.Name, needle) {
-					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "数据为空"}
+					err = errors.New("数据为空")
+					return
 				}
 				break
 			case "phone": // 手机号码
 				if rule.ParamType != "string" || !UtilTdog.VerifyPhone(val.(string)) {
-					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "号码格式错误"}
+					err = errors.New("号码格式错误")
 					return
 				}
 				break
 			case "email": // 邮箱
 				if rule.ParamType != "string" || !UtilTdog.VerifyEmail(val.(string)) {
-					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "邮箱格式错误"}
+					err = errors.New("邮箱格式错误")
 					return
 				}
 				break
 			case "date": // 日期
 				if rule.ParamType != "string" || !UtilTdog.VerifyDate(val.(string)) {
-					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "日期格式错误"}
+					err = errors.New("日期格式错误")
 					return
 				}
 				break
 			case "datetime": // 日期时间
 				if rule.ParamType != "string" || !UtilTdog.VerifyDateTime(val.(string)) {
-					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "日期时间格式错误"}
+					err = errors.New("日期时间格式错误")
 					return
 				}
 				break
@@ -270,7 +271,7 @@ func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 						return
 					}
 					if !isSuccess {
-						output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "数据不在约束范围内"}
+						err = errors.New("数据不在约束范围内")
 						return
 					}
 				}
@@ -282,7 +283,7 @@ func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 						return
 					}
 					if !isSuccess {
-						output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "数据不在枚举内"}
+						err = errors.New("数据不在枚举内")
 						return
 					}
 				}
@@ -292,18 +293,17 @@ func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 	} else if rule.IsMust {
 		// 必填校验
 		// 记录错误并跳出循环
-		output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "未包含"}
+		err = errors.New("未包含")
 		return
 	}
 
-	// 返回成功报告
-	output = &report{Name: rule.Name, Rule: rule.Rule, Result: true, Message: "Success"}
+	err = nil
 	return
 }
 
 // Check 校验
 // 一旦遇到校验失败的项, 立刻停止并返回报告.
-func (v *validate) Check(needle map[string]string) (output *report, err error) {
+func (v *validate) Check(needle map[string]string) (output *validReport, err error) {
 	if len(v.rules) < 1 {
 		err = errors.New("未指定校验规则")
 		return
@@ -313,11 +313,11 @@ func (v *validate) Check(needle map[string]string) (output *report, err error) {
 		return
 	}
 	for _, validateInfo := range v.rules {
-		output, err = checkIn(validateInfo, needle)
+		output = &validReport{Name: validateInfo.Name, Rule: validateInfo.Rule, Result: true, Message: "Success"}
+		err = checkIn(validateInfo, needle)
 		if err != nil {
-			return
-		}
-		if !output.Result {
+			output.Result = false
+			output.Message = err.Error()
 			return
 		}
 	}
@@ -327,7 +327,7 @@ func (v *validate) Check(needle map[string]string) (output *report, err error) {
 // UninterruptedCheck 无中断校验
 // 遇到失败的项, 只记录，等所有数据都校验后,统一返回.
 // 返回报告中心结构体
-func (v *validate) UninterruptedCheck(needle map[string]string) (output *reportCenter, err error) {
+func (v *validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error) {
 	if len(v.rules) < 1 {
 		err = errors.New("未指定校验规则")
 		return
@@ -337,15 +337,16 @@ func (v *validate) UninterruptedCheck(needle map[string]string) (output *reportC
 		return
 	}
 	s := time.Now().Unix()
-	output = new(reportCenter)
-	reports := make([]*report, 0)
+	output = new(validReportCenter)
+	reports := make([]*validReport, 0)
 	for _, validateInfo := range v.rules {
-		eachOutput := new(report)
-		eachOutput, err = checkIn(validateInfo, needle)
+		report := &validReport{Name: validateInfo.Name, Rule: validateInfo.Rule, Result: true, Message: "Success"}
+		err = checkIn(validateInfo, needle)
 		if err != nil {
-			return
+			report.Result = false
+			report.Message = err.Error()
 		}
-		reports = append(reports, eachOutput)
+		reports = append(reports, report)
 	}
 	output.reports = reports
 	output.createTime = time.Now().Format("2006-01-02 15:04:05")
@@ -354,37 +355,37 @@ func (v *validate) UninterruptedCheck(needle map[string]string) (output *reportC
 }
 
 // ReportList get all report from report center.
-func (rc *reportCenter) ReportList() []*report {
+func (rc *validReportCenter) ReportList() []*validReport {
 	return rc.reports
 }
 
 // ReportByIndex get the report by index. so given int index, returns *report.
-func (rc *reportCenter) ReportByIndex(index int) *report {
+func (rc *validReportCenter) ReportByIndex(index int) *validReport {
 	return rc.reports[index]
 }
 
 // ReportByName get the report by name. so must given string name, and will returns *report
-func (rc *reportCenter) ReportByName(name string) *report {
+func (rc *validReportCenter) ReportByName(name string) *validReport {
 	for _, reportImpl := range rc.reports {
 		if reportImpl.Name == name {
 			return reportImpl
 		}
 	}
-	return &report{Name: "", Rule: []string{}, Result: false, Message: "未找到名为`" + name + "`的报表."}
+	return &validReport{Name: "", Rule: []string{}, Result: false, Message: "未找到名为`" + name + "`的报表."}
 }
 
 // BuildTime get build time from report center.
-func (rc *reportCenter) BuildTime() string {
+func (rc *validReportCenter) BuildTime() string {
 	return rc.createTime
 }
 
 // ElapsedTime get elapsed time from report center.
-func (rc *reportCenter) ElapsedTime() int64 {
+func (rc *validReportCenter) ElapsedTime() int64 {
 	return rc.elapsedTime
 }
 
 // ToJson convert to json and return.
-func (rc *reportCenter) ToJson() string {
+func (rc *validReportCenter) ToJson() string {
 	data, err := json.Marshal(rc)
 	if err != nil {
 		go NewLogger().Error(err.Error())
