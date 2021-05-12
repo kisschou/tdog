@@ -80,7 +80,7 @@ func (v *validate) Rule(input []*Rule) *validate {
 // The difference is that this is of JSON type and needs to be converted to []*Rule.
 // example: [{"name":"api_id","type":"int64","is_must":1,"validate":"scope(0,)|"},...]
 func (v *validate) Json(input string) *validate {
-	rules := make([]map[string]string, 0)
+	rules := make([]map[string]interface{}, 0)
 	err := json.Unmarshal([]byte(input), &rules)
 	if err != nil {
 		return v
@@ -89,23 +89,22 @@ func (v *validate) Json(input string) *validate {
 	ruleList := make([]*Rule, 0)
 	for _, ruleInfo := range rules {
 		// 是否必须
-		isMust, err := strconv.Atoi(ruleInfo["is_must"])
-		if err != nil {
-			continue
-		}
+		isMust := int(ruleInfo["is_must"].(float64))
 		// 规则获取
-		validateRule := strings.Split(ruleInfo["validate"], "|")
+		validateRule := strings.Split(ruleInfo["validate"].(string), "|")
 		for k, v := range validateRule {
-			if !UtilTdog.InArray("[]string", v, ruleDict) {
+			validateRule[k] = strings.TrimSpace(v)
+			if len(strings.TrimSpace(v)) < 1 {
 				validateRule = UtilTdog.Remove("[]string", validateRule, k).([]string)
 			}
 		}
-		ruleList = append(ruleList, &Rule{
-			Name:      ruleInfo["name"],
-			ParamType: ruleInfo["type"],
+		eachRule := &Rule{
+			Name:      ruleInfo["name"].(string),
+			ParamType: ruleInfo["type"].(string),
 			IsMust:    isMust > 0,
 			Rule:      validateRule,
-		})
+		}
+		ruleList = append(ruleList, eachRule)
 	}
 	v.rules = ruleList
 	return v
@@ -155,32 +154,31 @@ func verifyScore(pattern, valType string, val interface{}) (isSuccess bool, err 
 	default:
 		break
 	case "string":
-		if (err1 != nil && len(val.(string)) < min) || (err2 != nil && len(val.(string)) > max) {
+		if (err1 == nil && len(val.(string)) < min) || (err2 == nil && len(val.(string)) > max) {
 			isSuccess = false
 		}
 		break
 	case "int":
-		if (err1 != nil && val.(int) < min) || (err2 != nil && val.(int) > max) {
+		if (err1 == nil && val.(int) < min) || (err2 == nil && val.(int) > max) {
 			isSuccess = false
 		}
 		break
 	case "int64":
-		if (err1 != nil && val.(int64) < int64(min)) || (err2 != nil && val.(int64) > int64(max)) {
+		min, err1 := strconv.ParseInt(strings.TrimSpace(matchs[1]), 10, 64)
+		max, err2 := strconv.ParseInt(strings.TrimSpace(matchs[2]), 10, 64)
+		if (err1 == nil && val.(int64) < min) || (err2 == nil && val.(int64) > max) {
 			isSuccess = false
 		}
 		break
-	case "float":
-		if (err1 != nil && val.(float32) < float32(min)) || (err2 != nil && val.(float32) > float32(max)) {
-			isSuccess = false
-		}
-		break
-	case "double":
-		if (err1 != nil && val.(float64) < float64(min)) || (err2 != nil && val.(float64) > float64(max)) {
+	case "float", "double":
+		min, err1 := strconv.ParseFloat(strings.TrimSpace(matchs[1]), 64)
+		max, err2 := strconv.ParseFloat(strings.TrimSpace(matchs[2]), 64)
+		if (err1 == nil && val.(float64) < min) || (err2 == nil && val.(float64) > max) {
 			isSuccess = false
 		}
 		break
 	case "object":
-		if (err1 != nil && len(val.(map[string]interface{})) < min) || (err2 != nil && len(val.(map[string]interface{})) > max) {
+		if (err1 == nil && len(val.(map[string]interface{})) < min) || (err2 == nil && len(val.(map[string]interface{})) > max) {
 			isSuccess = false
 		}
 		break
@@ -193,20 +191,32 @@ func verifyEnum(pattern, valType string, val interface{}) (isSuccess bool, err e
 	defer Recover()
 	isSuccess = false
 
-	if valType != "string" {
-		err = errors.New("枚举只支持类型为string的数据")
+	if !NewUtil().InArray("[]string", valType, []string{"string", "int"}) {
+		err = errors.New("枚举只支持类型为string和int的数据")
 		return
 	}
 
-	matchs := regexp.MustCompile(`^scope\((.*),(.*)\)$`).FindStringSubmatch(pattern)
+	matchs := regexp.MustCompile(`^enum\((.*)\)$`).FindStringSubmatch(pattern)
 	if len(matchs) != 2 {
 		err = errors.New("规则中的枚举(enum)格式有问题.Example:enum(小黄,yellow,Mr.黄)")
 		return
 	}
 
 	enums := strings.Split(matchs[1], ",")
-	if NewUtil().InArray("[]string", val.(string), enums) {
-		isSuccess = true
+	for k, v := range enums {
+		enums[k] = strings.TrimSpace(v)
+	}
+	switch valType {
+	case "string":
+		if NewUtil().InArray("[]string", val.(string), enums) {
+			isSuccess = true
+		}
+		break
+	case "int":
+		if NewUtil().InArray("[]string", strconv.Itoa(val.(int)), enums) {
+			isSuccess = true
+		}
+		break
 	}
 
 	return
@@ -318,9 +328,12 @@ func (v *validate) Check(needle map[string]string) (output *validReport, err err
 		if err != nil {
 			output.Result = false
 			output.Message = err.Error()
+			err = nil
 			return
 		}
 	}
+	// all success.
+	output = &validReport{Name: "", Rule: []string{}, Result: true, Message: "Success"}
 	return
 }
 
@@ -336,7 +349,7 @@ func (v *validate) UninterruptedCheck(needle map[string]string) (output *validRe
 		err = errors.New("未发现需要校验的数据")
 		return
 	}
-	s := time.Now().Unix()
+	s := time.Now().UnixNano()
 	output = new(validReportCenter)
 	reports := make([]*validReport, 0)
 	for _, validateInfo := range v.rules {
@@ -348,9 +361,10 @@ func (v *validate) UninterruptedCheck(needle map[string]string) (output *validRe
 		}
 		reports = append(reports, report)
 	}
+	err = nil
 	output.reports = reports
 	output.createTime = time.Now().Format("2006-01-02 15:04:05")
-	output.elapsedTime = (time.Now().Unix() - s)
+	output.elapsedTime = (time.Now().UnixNano() - s) / 1000000
 	return
 }
 
@@ -386,7 +400,12 @@ func (rc *validReportCenter) ElapsedTime() int64 {
 
 // ToJson convert to json and return.
 func (rc *validReportCenter) ToJson() string {
-	data, err := json.Marshal(rc)
+	var inputData = map[string]interface{}{
+		"build_time":   rc.BuildTime(),
+		"elapsed_time": rc.elapsedTime,
+		"report_list":  rc.reports,
+	}
+	data, err := json.Marshal(inputData)
 	if err != nil {
 		go NewLogger().Error(err.Error())
 		return ""
