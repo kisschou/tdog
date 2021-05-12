@@ -102,24 +102,57 @@ func (v *validate) Json(input string) *validate {
 	return v
 }
 
+// verifyType 字符串类型校验
+func verfityType(input, actionType string) bool {
+	switch actionType {
+	case "string":
+		break
+	case "int":
+		break
+	case "int64":
+		break
+	case "float":
+		break
+	case "double":
+		break
+	case "object":
+		break
+	}
+	return true
+}
+
 // checkIn 校验就是所有规则跑一遍
 func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 	UtilTdog := NewUtil()
 
 	if UtilTdog.Isset("map[string]string", rule.Name, needle) {
-		// 参数类型校验
 		val := needle[rule.Name] // 值
+
+		// 参数类型校验
+		if !verfityType(val, rule.ParamType) {
+			output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "值类型与设定类型不符"}
+			return
+		}
 
 		// 规则校验
 		for _, ruleName := range rule.Rule {
 			switch ruleName {
+			case "empty": // 非空
+				if UtilTdog.Empty("map[string]string", rule.Name, needle) {
+					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "数据为空"}
+				}
+				break
 			case "phone": // 手机号码
-				if UtilTdog.VerifyPhone() {
+				if !UtilTdog.VerifyPhone(val) {
+					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "号码格式错误"}
+					return
 				}
 				break
 			case "email": // 邮箱
-				break
-			case "empty": // 非空
+				if !UtilTdog.VerifyEmail(val) {
+					output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "邮箱格式错误"}
+					return
+				}
 				break
 			case "date": // 日期
 				break
@@ -140,7 +173,7 @@ func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
 	} else if rule.IsMust {
 		// 必填校验
 		// 记录错误并跳出循环
-		output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "未包含."}
+		output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "未包含"}
 	}
 	return
 }
