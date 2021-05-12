@@ -7,6 +7,7 @@ package tdog
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -33,6 +34,10 @@ type (
 
 	// report 校验结果报告
 	report struct {
+		Name    string   `json:"name"`     // 名称
+		Rule    []string `json:"validate"` // 校验方式
+		Result  bool     `json:"result"`   // 校验结果
+		Message string   `json:"message"`  // 结果信息
 	}
 )
 
@@ -55,14 +60,6 @@ func NewValidate() *validate {
 	return &validate{}
 }
 
-// defaultRule Get the default rule.
-// The default rule is: must exist and cannot be empty.
-func (v *validate) defaultRule(rule *Rule) *Rule {
-	rule.IsMust = true
-	rule.Rule = []string{"empty"}
-	return rule
-}
-
 // Rule Set a rule that you want to use in the next validation.
 // given rule extend Rule struct, returns validate struct.
 func (v *validate) Rule(input []*Rule) *validate {
@@ -79,6 +76,7 @@ func (v *validate) Json(input string) *validate {
 	if err != nil {
 		return v
 	}
+	UtilTdog := NewUtil()
 	ruleList := make([]*Rule, 0)
 	for _, ruleInfo := range rules {
 		// 是否必须
@@ -87,7 +85,6 @@ func (v *validate) Json(input string) *validate {
 			continue
 		}
 		// 规则获取
-		UtilTdog := NewUtil()
 		validateRule := strings.Split(ruleInfo["validate"], "|")
 		for k, v := range validateRule {
 			if !UtilTdog.InArray("[]string", v, ruleDict) {
@@ -105,12 +102,93 @@ func (v *validate) Json(input string) *validate {
 	return v
 }
 
+// checkIn 校验就是所有规则跑一遍
+func checkIn(rule *Rule, needle map[string]string) (output *report, err error) {
+	UtilTdog := NewUtil()
+
+	if UtilTdog.Isset("map[string]string", rule.Name, needle) {
+		// 参数类型校验
+		val := needle[rule.Name] // 值
+
+		// 规则校验
+		for _, ruleName := range rule.Rule {
+			switch ruleName {
+			case "phone": // 手机号码
+				if UtilTdog.VerifyPhone() {
+				}
+				break
+			case "email": // 邮箱
+				break
+			case "empty": // 非空
+				break
+			case "date": // 日期
+				break
+			case "datetime": // 日期时间
+				break
+			case "sensitive-word": // 敏感词
+				break
+			default:
+				// 范围
+				if strings.Contains(ruleName, "scope") {
+				}
+				// 枚举
+				if strings.Contains(ruleName, "enum") {
+				}
+				break
+			}
+		}
+	} else if rule.IsMust {
+		// 必填校验
+		// 记录错误并跳出循环
+		output = &report{Name: rule.Name, Rule: rule.Rule, Result: false, Message: "未包含."}
+	}
+	return
+}
+
 // Check 校验
 // 一旦遇到校验失败的项, 立刻停止并返回报告.
-func (v *validate) Check(input map[string]string) {
+func (v *validate) Check(needle map[string]string) (output *report, err error) {
+	if len(v.rules) < 1 {
+		err = errors.New("未指定校验规则")
+		return
+	}
+	if len(needle) < 1 {
+		err = errors.New("未发现需要校验的数据")
+		return
+	}
+	for _, validateInfo := range v.rules {
+		output, err = checkIn(validateInfo, needle)
+		if err != nil {
+			return
+		}
+		if !output.Result {
+			return
+		}
+	}
+	return
 }
 
 // UninterruptedCheck 无中断校验
 // 遇到失败的项, 只记录，等所有数据都校验后,统一返回.
-func (v *validate) UninterruptedCheck(input map[string]string) {
+func (v *validate) UninterruptedCheck(needle map[string]string) (output []*report, err error) {
+	if len(v.rules) < 1 {
+		err = errors.New("未指定校验规则")
+		return
+	}
+	if len(needle) < 1 {
+		err = errors.New("未发现需要校验的数据")
+		return
+	}
+	for _, validateInfo := range v.rules {
+		eachOutput := new(report)
+		eachOutput, err = checkIn(validateInfo, needle)
+		if err != nil {
+			return
+		}
+		output = append(output, eachOutput)
+	}
+	return
+}
+
+func (r *report) JSON() {
 }
