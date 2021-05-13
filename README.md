@@ -4,6 +4,35 @@
 
 Just start in a smaile.
 
+## Contents
+-   [tdog](#tdog)
+    -   [Contents](#contents)
+    -   [About](#about)
+    -   [Installation](#installation)
+    -   [Quick start](#quick-start)
+        -   [Use it for server:](#use-it-for-server)
+        -   [Use it for scaffolding:](#use-it-for-scaffolding)
+    -   [Functions](#functions)
+        -   [1. MySQL Handler](#mysql-handler)
+            -   [1.1 Struct](#struct)
+            -   [1.2 NewMySQL() \*mySql](#newmysql-mysql)
+            -   [1.3 (*mySql) Change(name string) *xorm.Engine](#mysql-changename-string-xorm.engine)
+            -   [1.4 (*mySql) New(name string, conf *MySqlConf)\*xorm.Engine](#mysql-newname-string-conf-mysqlconf-xorm.engine)
+            -   [1.5 Example](#example)
+        -   [2. Redis Handler](#redis-handler)
+        -   [3. Util Handler](#util-handler)
+        -   [4. Snowflake Handler](#snowflake-handler)
+        -   [5. Excel Handler](#excel-handler)
+        -   [6. Config Handler](#config-handler)
+        -   [7. Logger Handler](#logger-handler)
+        -   [8. Validation Handler](#validation-handler)
+            -   [8.1 Rule Struct](#rule-struct)
+            -   [8.2 Rule description](#rule-description)
+            -   [8.3 Functions and Usage](#functions-and-usage)
+            -   [8.4 Validate Report Center and Validate Report](#validate-report-center-and-validate-report)
+    -   [Contributing](#contributing)
+    -   [Licence](#licence)
+
 
 ## About
 
