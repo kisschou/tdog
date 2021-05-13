@@ -117,7 +117,7 @@ In a set of rules, fast, convenient, automatic calibration of the corresponding 
 
 So, rules are important.
 
-
+<br />
 
 ##### 8.1 Rule Struct
 
@@ -139,7 +139,7 @@ Rule struct {
 
 > IsMust takes precedence over all rules. All rules take precedence and are executed in the specified order.
 
-
+<br />
 
 ##### 8.2 Rule description
 
@@ -161,13 +161,13 @@ Rule struct {
 
 > The scope(x,y) rule can set both x and y values, or only one of them. When you set the value of x, you're adding a condition that's greater than x, and the same thing for the value of y, when you set it, you're adding a condition that's less than y.
 
-
+<br />
 
 ##### 8.3 Functions and Usage
 
 In fact, what is said here is some obvious things, but afraid of a long time, they have forgotten, so record.
 
-
+<br />
 
 ###### 8.3.1 NewValidate()
 
@@ -175,19 +175,19 @@ This function is used to initialize the validate structure, which is the startin
 
 After import tdog, this function is used as `tdog.newvalidate()`
 
-
+<br />
 
 ###### 8.3.1 (*validate) Rule(input []\*rule) *validate
 
 This function is mainly used to inject a list of rules. The list of rules is derived from the `Rule Struct`.
 
-
+<br />
 
 ###### 8.3.2 (*validate) Json(input string) *validate
 
 This Function is also used to inject a list of rules, the difference is that the parameter passed to this function is `json`. If used in conjunction with the `Rule Function`, the latter will override the former.
 
-
+<br />
 
 ###### 8.3.3 (*validate) Check(needle map[string]string) (output *validReport, err error)
 
@@ -196,6 +196,8 @@ Begin validation and return the `validation report structure` as soon as any dat
 The received parameter is `map[string]string`. This is the collection of uplink data. If multidimensional array is involved, it needs to build its own loop processing.
 
 What is returned is a structure of the `Validate report` and an `error interface`. Errors need to be handled by your own judgment. This is an old thing in golang. The use of the structure of the `Validate report` can be viewed in more detail below.
+
+<br />
 
 
 ###### 8.3.4 (*validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error)
@@ -206,10 +208,14 @@ The received parameter is `map[string]string`. This is the collection of uplink 
 
 It will pack all the Validate reports into the `Validate report center` and return. The detailed description of the calibration report center will look down. It also returns an `error interface` that needs to be handled by itself.
 
+<br />
+
 
 ##### 8.4 Validate Report Center and Validate Report
 
 The processing related to the Validate report cannot escape these two little guys.
+
+<br />
 
 ###### 8.4.1 Validate Report
 
@@ -227,14 +233,35 @@ This structure has no sub-functions, but it has some parameters that can be used
 > If after a round of inspection and found that all have passed the verification, a report structure will be returned at this time, its Name and Rule are empty, Result is True, and Message is Success.
 > So if you see a similar validate report, This can continue the following process.
 
+<br />
+
 ###### 8.4.2 Validate Report Center
 
-- (*validReportCenter) ReportList() []*validReport // get all report from report center.
-- (*validReportCenter) ReportByIndex(index int) *validReport // get the report by index. so given int index, returns `*report`.
-- (*validReportCenter) ReportByName(name string) *validReport  // get the report by name. so must given string name, and will returns `*report`
-- (*validReportCenter) BuildTime() string // get build time from report center.
-- (*validReportCenter) ElapsedTime() int64 // get elapsed time from report center.
-- (*validReportCenter) ToJson() string // convert to json and return.
+- (*validReportCenter) ReportList() []*validReport 
+
+  > get all report from report center.
+
+- (*validReportCenter) ReportByIndex(index int) *validReport
+
+  > get the report by index. so given int index, returns `*report`.
+
+- (*validReportCenter) ReportByName(name string) *validReport
+
+  > get the report by name. so must given string name, and will returns `*report`
+
+- (*validReportCenter) BuildTime() string
+
+  > get build time from report center.
+
+- (*validReportCenter) ElapsedTime() int64
+
+  > get elapsed time from report center.
+
+- (*validReportCenter) ToJson() string
+
+  > convert to json and return.
+
+  <br />
 
 
 ## Contributing
@@ -246,6 +273,8 @@ Let's have a good time together!!!
 - Commit your Changes (git commit -m 'Add some AmazingFeature')
 - Push to the Branch (git push origin feature/AmazingFeature)
 - Open a Pull Request
+
+<br />
 
 
 ## Licence
