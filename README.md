@@ -180,6 +180,36 @@ MySql configuration instructions:
 > - MaxIdleConns
 > - MaxOpenConns
 
+If you are importing a database connection from a configuration file, the configuration file will be styled using TOML. The configuration items are as follows:
+
+```toml
+$ cat database.toml
+## Whether to enable debugging mode.
+debug = true
+
+# master
+[master] # engine name
+host = "127.0.0.1" # connection address
+port = "3306" # connection port
+user = "root" # connection account
+pass = "root" # connection password
+db = "test_db" # connection database
+charset = "utf8mb4" # Character set used by the database
+prefix = "" # The prefix of the table in the database
+
+# db read only
+[master_read] # engine name
+host = "127.0.0.1" # connection address
+port = "3306" # connection port
+user = "root" # connection account
+pass = "root" # connection password
+db = "test_db" # connection database
+charset = "utf8mb4" # Character set used by the database
+prefix = "" # The prefix of the table in the database
+```
+
+> See the configuration section for how to get them from the toml file.
+
 <br />
 
 ##### 1.2 NewMySQL() *mySql
@@ -231,21 +261,130 @@ trans.Commit()
 
 #### 2. Redis Handler
 
+The [go-redis](https://github.com/go-redis/redis) package is used, so the detailed functions can be referred to its [documentation](https://pkg.go.dev/github.com/go-redis/redis/v8).
+
+Here are just a few things I feel I need:
+
+- Eliminating the need to write initialization over and over again when using the same configuration for the same library within a framework
+
+- Made a simple link pool, automatic loading configuration initialization engine, improve the reusability
+
+<br />
+
+##### 1.1 Struct
+
+```go
+type redisModel struct {
+	engineList map[string]*redisImpl.Client // Engine Pool
+	Engine     *redisImpl.Client            // Current Engine
+	db         int                          // Current Db
+}
+```
+
+If you are importing a redis connection from a configuration file, the configuration file will be styled using TOML. The configuration items are as follows:
+
+```toml
+$ cat cache.toml
+[master]
+host = "127.0.0.1" # Connection address
+port = "6379" # Connection port
+pass = "" # Connection password
+pool_size = 10 # Connection pool size
+```
+
+> See the configuration section for how to get them from the toml file.
+
+<br />
+
+##### 1.2 NewRedis() *redisModel
+
+This function is used to initialize the redisModel structure, which is the starting point and the core of everything.
+
+After import tdog, this function is used as `tdog.NewRedis()`
+
+<br />
+
+##### 1.3 (*redisModel) Change(name string) *redisImpl.Client
+
+Use the tag name to switch the current redis engine.
+
+If the tag name does not exist in the engine group, it will go to the configuration file to obtain the corresponding configuration, and then return to the engine after construction.
+
+<br />
+
+##### 1.4 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client
+
+You can use this function to generate an engine through a custom configuration file.
+
+Passing parameter description:
+
+| param    | type   | desc                           |
+| -------- | ------ | ------------------------------ |
+| name     | string | Set the connection name.       |
+| host     | string | Set the connection host.       |
+| port     | string | Set the connection port.       |
+| pass     | string | Set the connection password.   |
+| poolSize | int    | Sets the connection pool size. |
+
+<br />
+
+##### 1.5 (*redisModel) Db(index int) *redisImpl.Client
+
+Accept an index to switch the libraries used by the current engine.
+
+<br />
+
+##### 1.6 Example
+
+```go
+import "github.com/kisschou/tdog"
+
+engine := tdog.NewRedis().Engine // init a redis engine use default configuation.
+result, err := engine.SetNX(tdog.Ctx, "test:key", "Hello World", time.Duration(60)*time.Second).Result() // Set key
+engine.Get(tdog.Ctx, "test:key").String() // Get key
+```
+
+> For more orm operation methods, please refer to the [document](https://pkg.go.dev/github.com/go-xorm/xorm).
+
 <br />
 
 #### 3. Util Handler
 
 <br />
 
-#### 4. Snowflake Handler
+#### 4. Crypt Handler
 
 <br />
 
 #### 5. Excel Handler
 
+The use of [XLSX](https://github.com/tealeg/xlsx) package to do a convenient use of Excel processing tools, because do not know how to face the Excel processing, so just do a simple function.
+
+<br />
+
+###### 5.1 NewExcel(file string) *excel
+
+Initialize an Excel module with the file, which is the starting point and the core of everything.
+
+Note: that the file passed in here must contain the path.
+
+<br />
+
+###### 5.2 ( *excel) Get() \[\]\[\]\[\]string
+
+Read all the data out of the file and return it.
+
+<br />
+
+###### 5.3 (*excel) Open() (excelImpl *xlsx.File)
+
+Return to the operation controller of Excel file, refer to the detailed tutorial of XLSX for the specific operation functions.
+
 <br />
 
 #### 6. Config Handler
+
+
 
 <br />
 
