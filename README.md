@@ -191,14 +191,61 @@ This Function is also used to inject a list of rules, the difference is that the
 
 ###### 8.3.3 (*validate) Check(needle map[string]string) (output *validReport, err error)
 
+Begin validation and return the `validation report structure` as soon as any data fails.
+
+The received parameter is `map[string]string`. This is the collection of uplink data. If multidimensional array is involved, it needs to build its own loop processing.
+
+What is returned is a structure of the `Validate report` and an `error interface`. Errors need to be handled by your own judgment. This is an old thing in golang. The use of the structure of the `Validate report` can be viewed in more detail below.
 
 
 ###### 8.3.4 (*validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error)
 
+Start the Validate, regardless of whether it encounters an object that has an error, it will stubbornly insist on running all the data.
+
+The received parameter is `map[string]string`. This is the collection of uplink data. If multidimensional array is involved, it needs to build its own loop processing.
+
+It will pack all the Validate reports into the `Validate report center` and return. The detailed description of the calibration report center will look down. It also returns an `error interface` that needs to be handled by itself.
 
 
 ##### 8.4 Validate Report Center and Validate Report
 
+The processing related to the Validate report cannot escape these two little guys.
+
+###### 8.4.1 Validate Report
+
+This structure has no sub-functions, but it has some parameters that can be used:
+
+| param     | type     | desc                                                         |
+| --------- | -------- | ------------------------------------------------------------ |
+| Name      | string   | The key name of the query in the parameter list.             |
+| Rule      | []string | The validation rules used can be found in the Rule Description section below. |
+| Result    | bool     | The result of the verification, `True` means the verification is successful, `False` means the verification failed |
+| Message   | string   | The text message feedback of the verification result is currently only fixed in Chinese, and customization is not supported. If necessary, you can handle it yourself according by `Result`. |
+
+> You can use these parameters directly.
+>
+> If after a round of inspection and found that all have passed the verification, a report structure will be returned at this time, its Name and Rule are empty, Result is True, and Message is Success.
+> So if you see a similar validate report, This can continue the following process.
+
+###### 8.4.2 Validate Report Center
+
+- (*validReportCenter) ReportList() []*validReport // get all report from report center.
+- (*validReportCenter) ReportByIndex(index int) *validReport // get the report by index. so given int index, returns `*report`.
+- (*validReportCenter) ReportByName(name string) *validReport  // get the report by name. so must given string name, and will returns `*report`
+- (*validReportCenter) BuildTime() string // get build time from report center.
+- (*validReportCenter) ElapsedTime() int64 // get elapsed time from report center.
+- (*validReportCenter) ToJson() string // convert to json and return.
+
+
+## Contributing
+
+Let's have a good time together!!!
+
+- Fork the Project
+- Create your Feature Branch (git checkout -b feature/AmazingFeature)
+- Commit your Changes (git commit -m 'Add some AmazingFeature')
+- Push to the Branch (git push origin feature/AmazingFeature)
+- Open a Pull Request
 
 
 ## Licence
