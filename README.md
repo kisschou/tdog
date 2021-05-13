@@ -103,40 +103,126 @@ Here are just a few things I feel I need:
 
 ```go
 mySql struct {
-		engineList map[string]*xorm.Engine // engine pool
-		Engine     *xorm.Engine            // current engine
+	engineList map[string]*xorm.Engine // engine pool
+	Engine     *xorm.Engine            // current engine
+}
+
+MySqlConf struct {
+	engine       string
+	Host         string
+	Port         string
+	User         string
+	Pass         string
+	Db           string
+	Charset      string
+	Prefix       string
+	dsn          string
+	Debug        bool
+	MaxIdleConns int
+	MaxOpenConns int
 }
 ```
+MySql configuration instructions:
+
+| field         | type     | desc                                                         |
+| ------------- | -------- | ------------------------------------------------------------ |
+| engine        | string   | Operating database engine.             |
+| Host          | string   | Database connection address.       |
+| Port          | string   | Database connection port. |
+| User          | string   | Database connection account. |
+| Pass          | string   | Database connection password. |
+| Db            | string   | Database connection database. |
+| Charset       | string   | Character set used by the database. |
+| Prefix        | string   | The prefix of the table in the database. |
+| dsn           | string   | Data source name. |
+| Debug         | string   | Whether to enable debugging mode. |
+| MaxIdleConns  | string   | The max idle connections on pool. |
+| MaxOpenConns  | string   | The max open connections on pool. |
+
+> When you customize the MySQL configuration file, you only need to set the following values:
+> - Host
+> - Port
+> - User
+> - Pass
+> - Db
+> - Charset
+> - Prefix
+> - Debug
+> - MaxIdleConns
+> - MaxOpenConns
 
 <br />
 
 ##### 1.2 NewMySQL() *mySql
 
+This function is used to initialize the mySql structure, which is the starting point and the core of everything.
+
+After import tdog, this function is used as `tdog.NewMySQL()`
+
+<br />
+
+##### 1.3 (*mySql) Change(name string) *xorm.Engine
+
+Use the tag name to switch the current database engine.
+
+If the tag name does not exist in the engine group, it will go to the configuration file to obtain the corresponding configuration, and then return to the engine after construction.
+
+<br />
+
+##### 1.4 (*mySql) New(name string, conf *MySqlConf) *xorm.Engine
+
+You can use this function to generate an engine through a custom configuration file.
+
+<br />
+
+##### 1.5 Example
+
+```go
+import "github.com/kisschou/tdog"
+
+engine := tdog.NewMySQL().Engine // init a mysql engine use default configuation.
+
+tab1Impl := new(tab1) // init table struct.
+result, err := engine.Where("id=?", 1).Get(tab1Impl)
+// Query SQL: SELECT * FROM tab1 WHERE id = 1 LIMIT 1;
+
+// About Transaction
+trans := engine.Session() // init a new transaction.
+defer trans.Close()
+affected, err := trans.InsertMulti([]*tab1)
+if affected < 1 && err != nil {
+	trans.Rollback()
+}
+trans.Commit()
+```
+
+> For more orm operation methods, please refer to the [document](https://pkg.go.dev/github.com/go-xorm/xorm).
+
 <br />
 
 #### 2. Redis Handler
 
-
+<br />
 
 #### 3. Util Handler
 
-
+<br />
 
 #### 4. Snowflake Handler
 
-
+<br />
 
 #### 5. Excel Handler
 
-
+<br />
 
 #### 6. Config Handler
 
-
+<br />
 
 #### 7. Logger Handler
 
-
+<br />
 
 #### 8. Validation Handler
 
@@ -152,10 +238,10 @@ So, rules are important.
 
 ```go
 Rule struct {
-		Name      string   `json:"name"`     // key's name
-		ParamType string   `json:"type"`     // val's type
-		IsMust    bool     `json:"is_must"`  // is must be set
-		Rule      []string `json:"validate"` // vaildate rule
+	Name      string   `json:"name"`     // key's name
+	ParamType string   `json:"type"`     // val's type
+	IsMust    bool     `json:"is_must"`  // is must be set
+	Rule      []string `json:"validate"` // vaildate rule
 }
 ```
 
@@ -202,7 +288,7 @@ In fact, what is said here is some obvious things, but afraid of a long time, th
 
 This function is used to initialize the validate structure, which is the starting point and the core of everything.
 
-After import tdog, this function is used as `tdog.newvalidate()`
+After import tdog, this function is used as `tdog.NewValidate()`
 
 <br />
 
@@ -284,7 +370,7 @@ This structure has no sub-functions, but it has some parameters that can be used
 
 - (*validReportCenter) ElapsedTime() int64
 
-  > get elapsed time from report center.
+  > get elapsed time from report center. The return value is nanoseconds.
 
 - (*validReportCenter) ToJson() string
 
