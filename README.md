@@ -13,6 +13,8 @@ Core for all my project of golang. It's sort of a framework, but I feel like it'
 
 The Restful-Server section is referred to GIN. It's not powerful, but it's relatively complete.
 
+<br />
+
 
 ## Installation
 
@@ -27,6 +29,7 @@ To install Tdog package, you need to install Go and set your Go workspace first.
     import "github.com/kisschou/tdog"
   ```
 
+<br />
 
 ## Quick start
 
@@ -76,14 +79,40 @@ func main() {
 }
 ```
 
+<br />
 
 ## Functions
 
 Functions are at the heart of scaffolding.
 
+<br />
+
 #### 1. MySQL Handler
 
+The [XORM](https://github.com/go-xorm/xorm) package is used, so the detailed functions can be referred to its [documentation](https://pkg.go.dev/github.com/go-xorm/xorm).
 
+Here are just a few things I feel I need:
+
+- Eliminating the need to write initialization over and over again when using the same configuration for the same library within a framework
+
+- Made a simple link pool, automatic loading configuration initialization engine, improve the reusability
+
+<br />
+
+##### 1.1 Struct
+
+```go
+mySql struct {
+		engineList map[string]*xorm.Engine // engine pool
+		Engine     *xorm.Engine            // current engine
+}
+```
+
+<br />
+
+##### 1.2 NewMySQL() *mySql
+
+<br />
 
 #### 2. Redis Handler
 
