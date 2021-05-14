@@ -5,72 +5,7 @@
 Just start in a smaile.
 
 ## Contents
--   [tdog](#tdog)
-    -   [Contents](#contents)
-    -   [About](#about)
-    -   [Installation](#installation)
-    -   [Quick start](#quick-start)
-        -   [Use it for server:](#use-it-for-server)
-        -   [Use it for scaffolding:](#use-it-for-scaffolding)
-    -   [Functions](#functions)
-        -   [1. MySQL Handler](#1-mysql-handler)
-            -   [1.1 Struct](#11-struct)
-            -   [1.2 NewMySQL() *mySql](#12-newmysql-mysql)
-            -   [1.3 (*mySql) Change(name string) *xorm.Engine](#13-mysql-changename-string-xormengine)
-            -   [1.4 (*mySql) New(name string, conf *MySqlConf) *xorm.Engine](#14-mysql-newname-string-conf-mysqlconf-xormengine)
-            -   [1.5 Example](#15-example)
-        -   [2. Redis Handler](#2-redis-handler)
-            -   [1.1 Struct](#11-struct)
-            -   [1.2 Functions and Usage](#12-functions-and-usage)
-                -   [1.2.1 NewRedis() *redisModel](#121-newredis-redismodel)
-                -   [1.2.2 (*redisModel) Change(name string)*redisImpl.Client](#122-redismodel-changename-string-redisimplclient)
-                -   [1.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client](#123-redismodel-newname-host-port-pass-string-poolsize-int-redisimplclient)
-                -   [1.2.4 (*redisModel) Db(index int) *redisImpl.Client](#124-redismodel-dbindex-int-redisimplclient)
-            -   [1.3 Example](#13-example)
-        -   [3. Util Handler](#3-util-handler)
-        -   [4. Crypt Handler](#4-crypt-handler)
-        -   [5. Excel Handler](#5-excel-handler)
-            -   [5.1 Functions and Usage](#51-functions-and-usage)
-                -   [5.1.1 NewExcel(file string) *excel](#511-newexcelfile-string-excel)
-                -   [5.1.2 (*excel) Get() \[\]\[\]\[\]string](#512-excel-get-string)
-                -   [5.1.3 (*excel) Open() (excelImpl *xlsx.File)](#513-excel-open-excelimpl-xlsxfile)
-        -   [6. Config Handler](#6-config-handler)
-            -   [6.1 Struct](#61-struct)
-            -   [6.2 Functions and Usage](#62-functions-and-usage)
-                -   [6.2.1 NewConfig() *config](#621-newconfig-config)
-                -   [6.2.2 (*config) SetPath(path string) *config](#622-config-setpathpath-string-config)
-                -   [6.2.3 (*config) SetFile(name string) *config](#623-config-setfilename-string-config)
-                -   [6.2.4 (*config) SetPrefix(prefix string) *config](#624-config-setprefixprefix-string-config)
-                -   [6.2.5 (*config) Get(key string) *configResult](#625-config-getkey-string-configresult)
-                -   [6.2.6 (*config) GetMulti(keys ...string) map\[string\]*configResult](#626-config-getmultikeys-string-mapstringconfigresult)
-                -   [6.2.7 (*configResult) GetSearchKey() string](#627-configresult-getsearchkey-string)
-                -   [6.2.8 (*configResult) IsExists() bool](#628-configresult-isexists-bool)
-                -   [6.2.9 (*configResult) RawData() (data interface{})](#629-configresult-rawdata-data-interface)
-                -   [6.2.10 (*configResult) ToString() (data string)](#6210-configresult-tostring-data-string)
-                -   [6.2.11 (*configResult) ToInt() (data int)](#6211-configresult-toint-data-int)
-                -   [6.2.12 (*configResult) ToBool() (data bool)](#6212-configresult-tobool-data-bool)
-                -   [6.2.13 (*configResult) ToIntSlice() (data \[\]int)](#6213-configresult-tointslice-data-int)
-                -   [6.2.14 (*configResult) ToStringMap() (data map\[string\]interface{})](#6214-configresult-tostringmap-data-mapstringinterface)
-                -   [6.2.15 (*configResult) ToStringMapString() (data map\[string\]string)](#6215-configresult-tostringmapstring-data-mapstringstring)
-                -   [6.2.16 (*configResult) ToStringMapStringSlice() (data map\[string\]\[\]string)](#6216-configresult-tostringmapstringslice-data-mapstringstring)
-                -   [6.2.17 (*configResult) ToStringSlice() (data \[\]string)](#6217-configresult-tostringslice-data-string)
-                -   [6.2.18 (*configResult) ToInt64() (data int64)](#6218-configresult-toint64-data-int64)
-            -   [6.3 Example](#63-example)
-        -   [7. Logger Handler](#7-logger-handler)
-        -   [8. Validation Handler](#8-validation-handler)
-            -   [8.1 Rule Struct](#81-rule-struct)
-            -   [8.2 Rule description](#82-rule-description)
-            -   [8.3 Functions and Usage](#83-functions-and-usage-3)
-                -   [8.3.1 NewValidate()](#831-newvalidate)
-                -   [8.3.2 (*validate) Rule(input \[\]*rule) *validate](#832-validate-ruleinput-rule-validate)
-                -   [8.3.3 (*validate) Json(input string) *validate](#833-validate-jsoninput-string-validate)
-                -   [8.3.4 (*validate) Check(needle map\[string\]string) (output *validReport, err error)](#834-validate-checkneedle-mapstringstring-output-validreport-err-error)
-                -   [8.3.5 (*validate) UninterruptedCheck(needle map\[string\]string) (output *validReportCenter, err error)](#835-validate-uninterruptedcheckneedle-mapstringstring-output-validreportcenter-err-error)
-            -   [8.4 Validate Report Center and Validate Report](#84-validate-report-center-and-validate-report)
-                -   [8.4.1 Validate Report](#841-validate-report)
-                -   [8.4.2 Validate Report Center](#842-validate-report-center)
-    -   [Contributing](#contributing)
-    -   [Licence](#licence)
+[TOC]
 
 
 ## About
@@ -395,7 +330,117 @@ engine.Get(tdog.Ctx, "test:key").String() // Get key
 
 <br />
 
+##### 3.1 Struct
+
+<br />
+
+##### 3.2 Functions and Usage
+
+<br />
+
+##### 3.3 Example
+
+<br />
+
 #### 4. Crypt Handler
+
+In fact, the encapsulation is some simple encryption, but sometimes use it can not remember how to write, scaffolding is the key to easy to use.
+
+<br />
+
+##### 4.1 Struct
+
+There is nothing in the structure that needs to be introduced.
+
+<br />
+
+##### 4.2 Functions and Usage
+
+These are all encryption methods that I still find quite common.
+
+<br />
+
+###### 4.2.1 NewCrypt(input string) *crypt
+
+<br />
+
+###### 4.2.2 (*crypt) Md5() string
+
+<br />
+
+###### 4.2.3 (*crypt) Sha1() string
+
+<br />
+
+###### 4.2.4 (*crypt) Sha256() string
+
+<br />
+
+###### 4.2.5 (*crypt) Sha512()
+
+<br />
+
+###### 4.2.6 (*crypt) Crc32() string
+
+<br />
+
+###### 4.2.7 (*crypt) Base64Encode() string
+
+<br />
+
+###### 4.2.8 (*crypt) Base64Decode() string
+
+<br />
+
+###### 4.2.9 (*crypt) UrlBase64Encode() string
+
+<br />
+
+###### 4.2.10 (*crypt) UrlBase64Decode() string
+
+<br />
+
+###### 4.2.11 (*crypt) Urlencode() string
+
+<br />
+
+###### 4.2.12 (*crypt) Urldecode() string
+
+<br />
+
+###### 4.2.13 (*crypt) BiuPwdNewBuilder(password string) (salt string, newPassword string)
+
+<br />
+
+###### 4.2.14 (*crypt) BiuPwdBuilder(salt string, password string) (newPassword string)
+
+<br />
+
+###### 4.2.15 (*crypt) GenerateRsaKey(bits int) (publicKey, privateKey string)
+
+<br />
+
+###### 4.2.16 (*crypt) RsaPubEncode(pubKey string) string
+
+<br />
+
+###### 4.2.17 (*crypt) RsaPriDecode(priKey string) string
+
+<br />
+
+###### 4.2.18 (*crypt) RsaPriEncode(priKey string) string
+
+<br />
+
+###### 4.2.19 (
+
+
+
+###### *crypt) RsaPubDecode(pubKey string) string
+
+<br />
+
+##### 4.3 Example
 
 <br />
 
@@ -508,11 +553,20 @@ Set the prefix of the query item. Generally used for batch query of multiple con
 
 ###### 6.2.5 (*config) Get(key string) *configResult
 
-Began to get, directions for:
+For example, to execute `Get("database.masetr.host")`, flow of execution is:
 
-> example: .Get("database.masetr.host")
-> 1. Check if it exists in the `app.toml` file. Return if it exists.
-> 2. Check `database.toml` file is exists, and check if `master.host` in the `database.toml`. Return if it exists.
+```mermaid
+graph TB
+	A(Start) --> B[Fetched in app.toml]
+  B --> C{exists?}
+  C --YES--> D(Returns the result) 
+	C --No--> C1(Fetched in database.toml)
+	D --> E(end)
+	C1 --> D1{exists?}
+	D1 --YES--> D
+	D1 --NO--> D2(Returns an empty)
+	D2 --> E
+```
 
 <br />
 
@@ -646,29 +700,56 @@ The queue uses Redis, so you should configure the connection parameters for Redi
 
 ##### 7.1 Struct
 
+The model structure is so simplistic that there doesn't seem to be much to say.
+
 <br />
 
 ##### 7.2 Functions and Usage
+
+The logs are all written to a specified key in Redis. The default key is `log:list`.
 
 <br />
 
 ###### 7.2.1 NewLogger() *logger
 
+This function is used to initialize the logger structure, which is the starting point and the core of everything.
+
+After import tdog, this function is used as `tdog.NewLogger()`
+
 <br />
 
 ###### 7.2.2 (*logger) Error(message string)
+
+Writes an error message to the log list.
 
 <br />
 
 ###### 7.2.3 (*logger) Warn(message string)
 
+Writes a warning message to the log list.
+
 <br />
 
 ###### 7.2.4 (*logger) Info(message string)
 
+Writes a message to the log list.
+
 <br />
 
 ##### 7.3 Example
+
+```go
+import "github.com/kisschou/tdog"
+
+tdog.NewLogger().Error("This is a error message!")
+tdog.NewLogger().Warn("This is a warn message!")
+tdog.NewLogger().Info("This is a info message!")
+
+# Asynchronous processing is recommended
+go tdog.NewLogger().Error("This is a error message!")
+```
+
+I will add key modifications to it in the future.
 
 <br />
 
