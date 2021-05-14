@@ -13,23 +13,62 @@ Just start in a smaile.
         -   [Use it for server:](#use-it-for-server)
         -   [Use it for scaffolding:](#use-it-for-scaffolding)
     -   [Functions](#functions)
-        -   [1. MySQL Handler](#mysql-handler)
-            -   [1.1 Struct](#struct)
-            -   [1.2 NewMySQL() \*mySql](#newmysql-mysql)
-            -   [1.3 (*mySql) Change(name string) *xorm.Engine](#mysql-changename-string-xorm.engine)
-            -   [1.4 (*mySql) New(name string, conf *MySqlConf)\*xorm.Engine](#mysql-newname-string-conf-mysqlconf-xorm.engine)
-            -   [1.5 Example](#example)
-        -   [2. Redis Handler](#redis-handler)
-        -   [3. Util Handler](#util-handler)
-        -   [4. Snowflake Handler](#snowflake-handler)
-        -   [5. Excel Handler](#excel-handler)
-        -   [6. Config Handler](#config-handler)
-        -   [7. Logger Handler](#logger-handler)
-        -   [8. Validation Handler](#validation-handler)
-            -   [8.1 Rule Struct](#rule-struct)
-            -   [8.2 Rule description](#rule-description)
-            -   [8.3 Functions and Usage](#functions-and-usage)
-            -   [8.4 Validate Report Center and Validate Report](#validate-report-center-and-validate-report)
+        -   [1. MySQL Handler](#1-mysql-handler)
+            -   [1.1 Struct](#11-struct)
+            -   [1.2 NewMySQL() *mySql](#12-newmysql-mysql)
+            -   [1.3 (*mySql) Change(name string) *xorm.Engine](#13-mysql-changename-string-xormengine)
+            -   [1.4 (*mySql) New(name string, conf *MySqlConf) *xorm.Engine](#14-mysql-newname-string-conf-mysqlconf-xormengine)
+            -   [1.5 Example](#15-example)
+        -   [2. Redis Handler](#2-redis-handler)
+            -   [1.1 Struct](#11-struct)
+            -   [1.2 Functions and Usage](#12-functions-and-usage)
+                -   [1.2.1 NewRedis() *redisModel](#121-newredis-redismodel)
+                -   [1.2.2 (*redisModel) Change(name string)*redisImpl.Client](#122-redismodel-changename-string-redisimplclient)
+                -   [1.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client](#123-redismodel-newname-host-port-pass-string-poolsize-int-redisimplclient)
+                -   [1.2.4 (*redisModel) Db(index int) *redisImpl.Client](#124-redismodel-dbindex-int-redisimplclient)
+            -   [1.3 Example](#13-example)
+        -   [3. Util Handler](#3-util-handler)
+        -   [4. Crypt Handler](#4-crypt-handler)
+        -   [5. Excel Handler](#5-excel-handler)
+            -   [5.1 Functions and Usage](#51-functions-and-usage)
+                -   [5.1.1 NewExcel(file string) *excel](#511-newexcelfile-string-excel)
+                -   [5.1.2 (*excel) Get() \[\]\[\]\[\]string](#512-excel-get-string)
+                -   [5.1.3 (*excel) Open() (excelImpl *xlsx.File)](#513-excel-open-excelimpl-xlsxfile)
+        -   [6. Config Handler](#6-config-handler)
+            -   [6.1 Struct](#61-struct)
+            -   [6.2 Functions and Usage](#62-functions-and-usage)
+                -   [6.2.1 NewConfig() *config](#621-newconfig-config)
+                -   [6.2.2 (*config) SetPath(path string) *config](#622-config-setpathpath-string-config)
+                -   [6.2.3 (*config) SetFile(name string) *config](#623-config-setfilename-string-config)
+                -   [6.2.4 (*config) SetPrefix(prefix string) *config](#624-config-setprefixprefix-string-config)
+                -   [6.2.5 (*config) Get(key string) *configResult](#625-config-getkey-string-configresult)
+                -   [6.2.6 (*config) GetMulti(keys ...string) map\[string\]*configResult](#626-config-getmultikeys-string-mapstringconfigresult)
+                -   [6.2.7 (*configResult) GetSearchKey() string](#627-configresult-getsearchkey-string)
+                -   [6.2.8 (*configResult) IsExists() bool](#628-configresult-isexists-bool)
+                -   [6.2.9 (*configResult) RawData() (data interface{})](#629-configresult-rawdata-data-interface)
+                -   [6.2.10 (*configResult) ToString() (data string)](#6210-configresult-tostring-data-string)
+                -   [6.2.11 (*configResult) ToInt() (data int)](#6211-configresult-toint-data-int)
+                -   [6.2.12 (*configResult) ToBool() (data bool)](#6212-configresult-tobool-data-bool)
+                -   [6.2.13 (*configResult) ToIntSlice() (data \[\]int)](#6213-configresult-tointslice-data-int)
+                -   [6.2.14 (*configResult) ToStringMap() (data map\[string\]interface{})](#6214-configresult-tostringmap-data-mapstringinterface)
+                -   [6.2.15 (*configResult) ToStringMapString() (data map\[string\]string)](#6215-configresult-tostringmapstring-data-mapstringstring)
+                -   [6.2.16 (*configResult) ToStringMapStringSlice() (data map\[string\]\[\]string)](#6216-configresult-tostringmapstringslice-data-mapstringstring)
+                -   [6.2.17 (*configResult) ToStringSlice() (data \[\]string)](#6217-configresult-tostringslice-data-string)
+                -   [6.2.18 (*configResult) ToInt64() (data int64)](#6218-configresult-toint64-data-int64)
+            -   [6.3 Example](#63-example)
+        -   [7. Logger Handler](#7-logger-handler)
+        -   [8. Validation Handler](#8-validation-handler)
+            -   [8.1 Rule Struct](#81-rule-struct)
+            -   [8.2 Rule description](#82-rule-description)
+            -   [8.3 Functions and Usage](#83-functions-and-usage-3)
+                -   [8.3.1 NewValidate()](#831-newvalidate)
+                -   [8.3.2 (*validate) Rule(input \[\]*rule) *validate](#832-validate-ruleinput-rule-validate)
+                -   [8.3.3 (*validate) Json(input string) *validate](#833-validate-jsoninput-string-validate)
+                -   [8.3.4 (*validate) Check(needle map\[string\]string) (output *validReport, err error)](#834-validate-checkneedle-mapstringstring-output-validreport-err-error)
+                -   [8.3.5 (*validate) UninterruptedCheck(needle map\[string\]string) (output *validReportCenter, err error)](#835-validate-uninterruptedcheckneedle-mapstringstring-output-validreportcenter-err-error)
+            -   [8.4 Validate Report Center and Validate Report](#84-validate-report-center-and-validate-report)
+                -   [8.4.1 Validate Report](#841-validate-report)
+                -   [8.4.2 Validate Report Center](#842-validate-report-center)
     -   [Contributing](#contributing)
     -   [Licence](#licence)
 
@@ -296,7 +335,11 @@ pool_size = 10 # Connection pool size
 
 <br />
 
-##### 1.2 NewRedis() *redisModel
+##### 1.2 Functions and Usage
+
+<br />
+
+###### 1.2.1 NewRedis() *redisModel
 
 This function is used to initialize the redisModel structure, which is the starting point and the core of everything.
 
@@ -304,7 +347,7 @@ After import tdog, this function is used as `tdog.NewRedis()`
 
 <br />
 
-##### 1.3 (*redisModel) Change(name string) *redisImpl.Client
+###### 1.2.2 (*redisModel) Change(name string) *redisImpl.Client
 
 Use the tag name to switch the current redis engine.
 
@@ -312,7 +355,7 @@ If the tag name does not exist in the engine group, it will go to the configurat
 
 <br />
 
-##### 1.4 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client
+###### 1.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client
 
 You can use this function to generate an engine through a custom configuration file.
 
@@ -328,13 +371,13 @@ Passing parameter description:
 
 <br />
 
-##### 1.5 (*redisModel) Db(index int) *redisImpl.Client
+###### 1.2.4 (*redisModel) Db(index int) *redisImpl.Client
 
 Accept an index to switch the libraries used by the current engine.
 
 <br />
 
-##### 1.6 Example
+##### 1.3 Example
 
 ```go
 import "github.com/kisschou/tdog"
@@ -362,7 +405,11 @@ The use of [XLSX](https://github.com/tealeg/xlsx) package to do a convenient use
 
 <br />
 
-###### 5.1 NewExcel(file string) *excel
+##### 5.1 Functions and Usage
+
+<br />
+
+###### 5.1.1 NewExcel(file string) *excel
 
 Initialize an Excel module with the file, which is the starting point and the core of everything.
 
@@ -370,13 +417,13 @@ Note: that the file passed in here must contain the path.
 
 <br />
 
-###### 5.2 ( *excel) Get() \[\]\[\]\[\]string
+###### 5.1.2 ( *excel) Get() \[\]\[\]\[\]string
 
 Read all the data out of the file and return it.
 
 <br />
 
-###### 5.3 (*excel) Open() (excelImpl *xlsx.File)
+###### 5.1.3 (*excel) Open() (excelImpl *xlsx.File)
 
 Return to the operation controller of Excel file, refer to the detailed tutorial of XLSX for the specific operation functions.
 
@@ -384,7 +431,208 @@ Return to the operation controller of Excel file, refer to the detailed tutorial
 
 #### 6. Config Handler
 
+This is a configuration file acquisition tool packaged with [viper](https://github.com/spf13/viper). The reasons for encapsulation are:
 
+  - The configuration file of a project is theoretically of the same type and exists in a directory, so it can be used to preset the basic information, eliminating the trouble of manually setting the path and file name each time it is used.
+
+  - The configuration may not be stored in the same configuration file. In order to eliminate the need for cross-file query, the problem of rebuilding the engine based on the file.
+
+  - Support query and output of multiple configurations under one or more files.
+
+<br />
+
+##### 6.1 Struct
+
+The configuration file writing needs to meet the toml configuration file writing requirements, and multiple configuration files can be made in one directory.
+
+Basic Configuration files `app.toml`, it does not have to exist, but it is the first query file.
+
+```shell
+$ tree ./config
+
+config/
+├── app.toml
+├── cache.toml
+├── database.toml
+├── error.toml
+└── ...
+
+$ cat app.toml
+
+# 产品名 string
+app_name = "ServiceCenter"
+
+# 服务端口 string
+app_port = "8002"
+```
+
+<br />
+
+##### 6.2 Functions and Usage
+
+First, have to specify the configuration of the configuration file to env at the intersection. This can use the `SetEnv` function under the `Util` module:
+
+```go
+import "github.com/kisschou/tdog"
+
+tdog.NewUtil().SetEnv("CONFIG_PATH", "/path/to/config/")
+```
+
+<br />
+
+###### 6.2.1 NewConfig() *config
+
+Initialize an `config` module with the file, which is the starting point and the core of everything.
+
+<br />
+
+###### 6.2.2 (*config) SetPath(path string) *config
+
+If the configuration file you are querying is not in the preset path, you can use the change function to temporarily modify the query path.
+
+<br />
+
+###### 6.2.3 (*config) SetFile(name string) *config
+
+Specify the query configuration file, that is, only look for the configuration in this configuration file.
+
+Generally use the same file batch query and the same name configuration item query.
+
+<br />
+
+###### 6.2.4 (*config) SetPrefix(prefix string) *config
+
+Set the prefix of the query item. Generally used for batch query of multiple configuration items in the same place.
+
+<br />
+
+###### 6.2.5 (*config) Get(key string) *configResult
+
+Began to get, directions for:
+
+> example: .Get("database.masetr.host")
+> 1. Check if it exists in the `app.toml` file. Return if it exists.
+> 2. Check `database.toml` file is exists, and check if `master.host` in the `database.toml`. Return if it exists.
+
+<br />
+
+###### 6.2.6 (*config) GetMulti(keys ...string) map[string]*configResult
+
+Start batch query.
+
+<br />
+
+###### 6.2.7 (*configResult) GetSearchKey() string
+
+Get the key used by the result query from the result set.
+
+<br />
+
+###### 6.2.8 (*configResult) IsExists() bool
+
+Whether to find the result.
+
+<br />
+
+###### 6.2.9 (*configResult) RawData() (data interface{})
+
+Get the result of interface{} type.
+
+<br />
+
+###### 6.2.10 (*configResult) ToString() (data string)
+
+Get the result of string type.
+
+<br />
+
+###### 6.2.11 (*configResult) ToInt() (data int)
+
+Get the result of int type.
+
+<br />
+
+###### 6.2.12 (*configResult) ToBool() (data bool)
+
+Get the result of bool type.
+
+<br />
+
+###### 6.2.13 (*configResult) ToIntSlice() (data []int)
+
+Get the result of int slice type.
+
+<br />
+
+###### 6.2.14 (*configResult) ToStringMap() (data map[string]interface{})
+
+Get the result of string map type.
+
+<br />
+
+###### 6.2.15 (*configResult) ToStringMapString() (data map[string]string)
+
+Get the result of string map string type.
+
+<br />
+
+###### 6.2.16 (*configResult) ToStringMapStringSlice() (data map\[string\]\[\]string)
+
+Get the result of string map string slice type.
+
+<br />
+
+###### 6.2.17 (*configResult) ToStringSlice() (data []string)
+
+Get the result of string slice type.
+
+<br />
+
+###### 6.2.18 (*configResult) ToInt64() (data int64)
+
+Get the result of int64 type.
+
+<br />
+
+##### 6.3 Example
+
+```go
+import "github.com/kisschou/tdog"
+
+tdog.NewUtil().SetEnv("CONFIG_PATH", "/path/to/config/")
+
+// Get
+tdog.NewConfig().Get("app_port").ToString() // app.toml => app_port
+tdog.NewConfig().Get("database.master.port").RawData().(string) // database.toml => [master] port
+
+// GetMulti
+resultImpls := NewConfig().GetMulti("app_port", "database.master.port", "cache.port")
+for _, resultImpl := range resultImpls {
+	fmt.Println(resultImpl.GetSearchKey(), resultImpl.IsExists(), resultImpl.ToString())
+}
+
+resultImpls =  NewConfig().SetFile("cache").SetPrefix("master.").GetMulti("host", "port", "pass", "pool_size")
+var host, port, pass string
+var poolSize int
+for _, resultImpl := range resultImpls {
+	switch resultImpl.GetSearchKey() {
+	case "host":
+		host = resultImpl.ToString()
+		break
+	case "port":
+		port = resultImpl.ToString()
+		break
+	case "pass":
+		pass = resultImpl.RawData().(string)
+		break
+	case "pool_size":
+		poolSize = resultImpl.ToInt()
+		break
+	}
+}
+```
+
+Please feel free to explore more.
 
 <br />
 
@@ -460,19 +708,19 @@ After import tdog, this function is used as `tdog.NewValidate()`
 
 <br />
 
-###### 8.3.1 (*validate) Rule(input []\*rule) *validate
+###### 8.3.2 (*validate) Rule(input []\*rule) *validate
 
 This function is mainly used to inject a list of rules. The list of rules is derived from the `Rule Struct`.
 
 <br />
 
-###### 8.3.2 (*validate) Json(input string) *validate
+###### 8.3.3 (*validate) Json(input string) *validate
 
 This Function is also used to inject a list of rules, the difference is that the parameter passed to this function is `json`. If used in conjunction with the `Rule Function`, the latter will override the former.
 
 <br />
 
-###### 8.3.3 (*validate) Check(needle map[string]string) (output *validReport, err error)
+###### 8.3.4 (*validate) Check(needle map[string]string) (output *validReport, err error)
 
 Begin validation and return the `validation report structure` as soon as any data fails.
 
@@ -483,7 +731,7 @@ What is returned is a structure of the `Validate report` and an `error interface
 <br />
 
 
-###### 8.3.4 (*validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error)
+###### 8.3.5 (*validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error)
 
 Start the Validate, regardless of whether it encounters an object that has an error, it will stubbornly insist on running all the data.
 
