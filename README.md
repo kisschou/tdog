@@ -5,6 +5,7 @@
 Just start in a smaile.
 
 ## Contents
+
 * [tdog](#tdog)
    * [Contents](#contents)
    * [About](#about)
@@ -103,7 +104,6 @@ Just start in a smaile.
                * [8.4.2 Validate Report Center](#842-validate-report-center)
    * [Contributing](#contributing)
    * [Licence](#licence)
-
 <br />
 
 
