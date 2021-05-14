@@ -638,6 +638,38 @@ Please feel free to explore more.
 
 #### 7. Logger Handler
 
+This is the logging module. The idea of replacing ELK with Uber's ZAP was originally ignited.
+
+The queue uses Redis, so you should configure the connection parameters for Redis first.
+
+<br />
+
+##### 7.1 Struct
+
+<br />
+
+##### 7.2 Functions and Usage
+
+<br />
+
+###### 7.2.1 NewLogger() *logger
+
+<br />
+
+###### 7.2.2 (*logger) Error(message string)
+
+<br />
+
+###### 7.2.3 (*logger) Warn(message string)
+
+<br />
+
+###### 7.2.4 (*logger) Info(message string)
+
+<br />
+
+##### 7.3 Example
+
 <br />
 
 #### 8. Validation Handler
