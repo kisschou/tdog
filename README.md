@@ -29,6 +29,37 @@ Just start in a smaile.
     * [3. Util Handler](#3-util-handler)
       * [3.1 Struct](#31-struct)
       * [3.2 Functions and Usage](#32-functions-and-usage)
+        * [3.2.1 NewUtil() *util](#321-newutil-util)
+        * [3.2.2 (*util) GetFilesBySuffix(filePath string, suffix string) (files []string, err error)](#322-util-getfilesbysuffixfilepath-string-suffix-string-files-string-err-error)               
+        * [3.2.3 (*util) FileExists(path string) bool](#323-util-fileexistspath-string-bool)
+        * [3.2.4 (*util) IsDir(path string) bool](#324-util-isdirpath-string-bool)
+        * [3.2.5 (*util) IsFile(path string)](#325-util-isfilepath-string)
+        * [3.2.6 (*util) DirExistsAndCreate(path string)](#326-util-direxistsandcreatepath-string)
+        * [3.2.7 (*util) RandomStr(length int, randType ...int) string](#327-util-randomstrlength-int-randtype-int-string)
+        * [3.2.8 (*util) RandInt64(min, max int64) int64](#328-util-randint64min-max-int64-int64)
+        * [3.2.9 (*util) InArray(dataType string, input, needle interface{}) bool](#329-util-inarraydatatype-string-input-needle-interface-bool)
+        * [3.2.10 (*util) Isset(dataType string, input, needle interface{}) bool](#3210-util-issetdatatype-string-input-needle-interface-bool)
+        * [3.2.11 (*util) Empty(dataType string, input, needle interface{}) bool](#3211-util-emptydatatype-string-input-needle-interface-bool)
+        * [3.2.12 (*util) ArrayUnique(dataType string, input interface{}) interface{}](#3212-util-arrayuniquedatatype-string-input-interface-interface)
+        * [3.2.13 (*util) ArrayMerge(dataType string, list ...interface{}) interface{}](#3213-util-arraymergedatatype-string-list-interface-interface)
+        * [3.2.14 (*util) Remove(dataType string, slice interface{}, index int) interface{}](#3214-util-removedatatype-string-slice-interface-index-int-interface)
+        * [3.2.15 (*util) VerifyEmail(email string) bool](#3215-util-verifyemailemail-string-bool)
+        * [3.2.16 (*util) VerifyPhone(phone string) bool](#3216-util-verifyphonephone-string-bool)
+        * [3.2.17 (*util) VerifyDate(input string) bool](#3217-util-verifydateinput-string-bool)
+        * [3.2.18 (*util) VerifyDateTime(input string) bool](#3218-util-verifydatetimeinput-string-bool)
+        * [3.2.19 (*util) GetMachineId() int64](#3219-util-getmachineid-int64)
+        * [3.2.20 (*util) StructToMap(obj interface{}) map[string]interface{}](#3220-util-structtomapobj-interface-mapstringinterface)
+        * [3.2.21 (*util) UrlSplit(url string) (protocol, domain string, port int)](#3221-util-urlspliturl-string-protocol-domain-string-port-int)
+        * [3.2.22 (*util) UrlJoint(protocol, domain string, port int) (url string)](#3222-util-urljointprotocol-domain-string-port-int-url-string)
+        * [3.2.23 (*util) SnakeString(s string) string](#3223-util-snakestrings-string-string)
+        * [3.2.24 (*util) CamelString(s string) string](#3224-util-camelstrings-string-string)
+        * [3.2.25 (*util) UcFirst(s string) string](#3225-util-ucfirsts-string-string)
+        * [3.2.26 (*util) checkPortAlived(port int) bool](#3226-util-checkportalivedport-int-bool)
+        * [3.2.26 (*util) GetPidByPort(port int) int](#3226-util-getpidbyportport-int-int)
+        * [3.2.27 (*util) SetEnv(key interface{}, value string) error](#3227-util-setenvkey-interface-value-string-error)
+        * [3.2.28 (*util) GetEnv(keys ...string) map[string]string](#3228-util-getenvkeys-string-mapstringstring)
+        * [3.2.29 Recover()](#3229-recover)
+        * [3.2.30 Monitor() (err error)](#3230-monitor-err-error)
       * [3.3 Example](#33-example)
     * [4. Crypt Handler](#4-crypt-handler)
       * [4.1 Struct](#41-struct)
@@ -102,7 +133,7 @@ Just start in a smaile.
         * [8.4.2 Validate Report Center](#842-validate-report-center)
    * [Contributing](#contributing)
    * [Licence](#licence)
-<br />
+  <br />
 
 
 ## About
@@ -425,17 +456,321 @@ engine.Get(tdog.Ctx, "test:key").String() // Get key
 
 #### 3. Util Handler
 
+Some scaffolding that I think is quite common. Currently as long as the implementation, not chasing too much performance, limited to strong typing, many places to write very cumbersome and incomplete support, the package will continue to improve, expand.
+
 <br />
 
 ##### 3.1 Struct
+
+There is nothing special about the structure.
 
 <br />
 
 ##### 3.2 Functions and Usage
 
+This is perhaps the duty of a scaffolding.
+
+<br />
+
+###### 3.2.1 NewUtil() *util
+
+This function is used to initialize the util structure, which is the starting point and the core of everything.
+
+After import tdog, this function is used as `tdog.NewUtil()`
+
+<br />
+
+###### 3.2.2 (*util) GetFilesBySuffix(filePath string, suffix string) (files []string, err error)
+
+Gets the filename of all the specified suffixes from the specified path.
+
+<br />
+
+###### 3.2.3 (*util) FileExists(path string) bool
+
+Check file is exists.
+
+<br />
+
+###### 3.2.4 (*util) IsDir(path string) bool
+
+Check if it is a directory.
+
+<br />
+
+###### 3.2.5 (*util) IsFile(path string)
+
+Check if it is a file.
+
+<br />
+
+###### 3.2.6 (*util) DirExistsAndCreate(path string)
+
+Check if the directory exists, create it if it does not exist.
+
+<br />
+
+###### 3.2.7 (*util) RandomStr(length int, randType ...int) string
+
+Generates a string of the specified type and length.
+
+| param    | type   | description                                                  |
+| -------- | ------ | ------------------------------------------------------------ |
+| length   | int    | Specifies the length of the generated string                 |
+| randType | ...int | Specify random type.Optional, multiple options, optional parameters: 1 to add a number 2 to add lowercase letters 3 to add capital letters, the default is 1. |
+
+<br />
+
+###### 3.2.8 (*util) RandInt64(min, max int64) int64
+
+Specifies the range to generate a random number of type int64.
+
+<br />
+
+###### 3.2.9 (*util) InArray(dataType string, input, needle interface{}) bool
+
+Determine whether a value exists in the array.
+
+Parameter description:
+
+- `dataType` : Identifying the type of needle, options:
+  - []string
+  - []int
+  - []int64
+  - map[string]string
+  - map[string]int
+  - map[string]int64
+- `input` : Input value, this type is equal to the same type as the `value` of the `dataType`.
+- `needle` : Retrieved set, this type is equal to `dataType`.
+
+<br />
+
+###### 3.2.10 (*util) Isset(dataType string, input, needle interface{}) bool
+
+Determine if a key exists in the array.
+
+Parameter description:
+
+- `dataType` : Identifying the type of needle, options:
+  - []string
+  - []int
+  - []int64
+  - []interface{}
+  - map[string]string
+  - map[string]int
+  - map[string]int64
+  - map[string]interface{}
+- `input` : Input value, this type is equal to the `dataType` of the same `key` type.
+- `needle` : Retrieved set, this type is equal to `dataType`.
+
+<br />
+
+###### 3.2.11 (*util) Empty(dataType string, input, needle interface{}) bool
+
+If the value of the key specified in the array is null, the number is greater than 0.
+
+Parameter description:
+
+- `dataType` : Identifying the type of needle, options:
+  - []string
+  - []int
+  - []int64
+  - map[string]string
+  - map[string]int
+  - map[string]int64
+- `input` : Input value, this type is equal to the `dataType` of the same `key` type.
+- `needle` : Retrieved set, this type is equal to `dataType`.
+
+<br />
+
+###### 3.2.12 (*util) ArrayUnique(dataType string, input interface{}) interface{}
+
+Arrays remove duplicate keys.
+
+Parameter description:
+
+- `dataType` : Identifying the type of needle, options:
+  - []string
+  - []int
+  - []int64
+  - []interface{}
+  - map[string]string
+  - map[string]int
+  - map[string]int64
+  - map[string]interface{}
+- `input` : Arrays to process, this type is equal to `dataType`.
+
+<br />
+
+###### 3.2.13 (*util) ArrayMerge(dataType string, list ...interface{}) interface{}
+
+Merge multiple arrays.
+
+> Note that these arrays must be of the same type.
+
+Parameter description:
+
+- `dataType` : Identifying the type of needle, options:
+  - []string
+  - []int
+  - []interface{}
+  - map[string]string
+  - map[string]int
+  - map[string]interface{}
+- `list` : Two or more arrays of the same type.
+
+<br />
+
+###### 3.2.14 (*util) Remove(dataType string, slice interface{}, index int) interface{}
+
+This function is written because in Go it seems that only map removes the specified key, not slice removes the specified index.
+
+Parameter description:
+
+- `dataType` : Identifying the type of needle, options:
+  - []string
+  - []int
+  - []int64
+  - []interface{}
+- `slice` : The section to be processed, this type is equal to `dataType`.
+- `index` : The index to drop.
+
+<br />
+
+###### 3.2.15 (*util) VerifyEmail(email string) bool
+
+Verify that the mailbox format is correct.
+
+<br />
+
+###### 3.2.16 (*util) VerifyPhone(phone string) bool
+
+Verify that the format of the phone number is correct.
+
+> For the time being, it only supports mobile phone number verification in mainland China.
+
+<br />
+
+###### 3.2.17 (*util) VerifyDate(input string) bool
+
+Verify that the date format is correct. Format: YYYY-MM-DD.
+
+<br />
+
+###### 3.2.18 (*util) VerifyDateTime(input string) bool
+
+Verify that the date and time format is correct. Format: YYYY-MM-DD HH:mm:ss.
+
+<br />
+
+###### 3.2.19 (*util) GetMachineId() int64
+
+Get the device number and generate it through the network card IPv4.
+
+<br />
+
+###### 3.2.20 (*util) StructToMap(obj interface{}) map[string]interface{}
+
+Structure is converted to MAP.
+
+Because of some unknown problems, often lead to panic, so joined recover(), although recovered, but still did not convert successfully.
+
+It's a function that needs further refinement.
+
+<br />
+
+###### 3.2.21 (*util) UrlSplit(url string) (protocol, domain string, port int)
+
+Url decomposition.
+
+<br />
+
+###### 3.2.22 (*util) UrlJoint(protocol, domain string, port int) (url string)
+
+Url stitching.
+
+<br />
+
+###### 3.2.23 (*util) SnakeString(s string) string
+
+The hump turns into a snake.
+
+<br />
+
+###### 3.2.24 (*util) CamelString(s string) string
+
+The shape of a snake turns to a hump.
+
+<br />
+
+###### 3.2.25 (*util) UcFirst(s string) string
+
+Capitalize the first letter.
+
+<br />
+
+###### 3.2.26 (*util) checkPortAlived(port int) bool
+
+Check if the port is already occupied.
+
+<br />
+
+###### 3.2.26 (*util) GetPidByPort(port int) int
+
+Get the PID from the port number.
+
+> It is not always available. If the coroutine is available, it is not.
+
+<br />
+
+###### 3.2.27 (*util) SetEnv(key interface{}, value string) error
+
+Writes the specified key value to the environment variable.
+
+Parameter description:
+
+- `key` : The key name can only be String or Map [String] String.
+  - if `string` : Corresponds to the value passed in as the key value.
+  - if `map[string]string` : Ignore the value passed in and set the key values in the map in bulk.
+
+- `value` : The corresponding value, which can be `empty` when the key is map.
+
+<br />
+
+###### 3.2.28 (*util) GetEnv(keys ...string) map[string]string
+
+Gets one or more key values from an environment variable. 
+
+So the input can be one or more, and the map returned corresponds to the input key, and the value corresponds to the value retrieved by the response.
+
+<br />
+
+###### 3.2.29 Recover()
+
+Get out of the panic and write down the cause of the panic in your log.
+
+Usually use `defer`.
+
+<br />
+
+###### 3.2.30 Monitor() (err error)
+
+Basic check, check whether Redis and MySQL can connect etc.
+
+It is common to run through the script where it was started to make sure that the running script does not have an error somewhere due to this additional problem.
+
 <br />
 
 ##### 3.3 Example
+
+All functions are available directly after NewUtil.
+
+```go
+import "github.com/kisschou/tdog"
+
+util := tdog.NewUtil()
+res := util.RandomStr(10, 1, 2)
+```
 
 <br />
 
@@ -459,81 +794,139 @@ These are all encryption methods that I still find quite common.
 
 ###### 4.2.1 NewCrypt(input string) *crypt
 
+This function is used to initialize the crypt structure, which is the starting point and the core of everything.
+
+After import tdog, this function is used as `tdog.NewCrypt("a string to encrypt")`
+
 <br />
 
 ###### 4.2.2 (*crypt) Md5() string
+
+Returns the MD5 encrypted string.
 
 <br />
 
 ###### 4.2.3 (*crypt) Sha1() string
 
+Returns the SHA1 encrypted string.
+
 <br />
 
 ###### 4.2.4 (*crypt) Sha256() string
+
+Returns the SHA256 encrypted string.
 
 <br />
 
 ###### 4.2.5 (*crypt) Sha512()
 
+Returns the SHA512 encrypted string.
+
 <br />
 
 ###### 4.2.6 (*crypt) Crc32() string
+
+Returns the results processed through Cyclic Redundancy Check 32.
 
 <br />
 
 ###### 4.2.7 (*crypt) Base64Encode() string
 
+Base64 encrypts the data and returns the encryption result.
+
 <br />
 
 ###### 4.2.8 (*crypt) Base64Decode() string
+
+Returns data decrypted in Base64.
 
 <br />
 
 ###### 4.2.9 (*crypt) UrlBase64Encode() string
 
+UrlBase64 encrypts the data and returns the encryption result.
+
 <br />
 
 ###### 4.2.10 (*crypt) UrlBase64Decode() string
+
+Returns data decrypted in UrlBase64.
 
 <br />
 
 ###### 4.2.11 (*crypt) Urlencode() string
 
+Urlencode encrypts the data and returns the encryption result.
+
 <br />
 
 ###### 4.2.12 (*crypt) Urldecode() string
+
+Returns data decrypted in Urldecode.
 
 <br />
 
 ###### 4.2.13 (*crypt) BiuPwdNewBuilder(password string) (salt string, newPassword string)
 
+The original encryption scheme used by a project called Biushop encrypts incoming data using random salt, fixed salt, MD5, and SHA512, and returns the random salt used for encryption and the encryption result. The decryption result is irreversible.
+
 <br />
 
 ###### 4.2.14 (*crypt) BiuPwdBuilder(salt string, password string) (newPassword string)
+
+This is a complement to BiupWDNewBuilder, because I'm not used to Golang's support for optional parameters, and I'm a bit obsessive about the order of the parameters.
+
+This method is mainly through the incoming encryption data and random salt, to generate the encrypted results.
 
 <br />
 
 ###### 4.2.15 (*crypt) GenerateRsaKey(bits int) (publicKey, privateKey string)
 
+Receive an int to determine the number of bits of the generated RSA key, and return the generated public and private keys.
+
 <br />
 
 ###### 4.2.16 (*crypt) RsaPubEncode(pubKey string) string
+
+Receive the incoming public key and use it to RSA encrypt the data.
 
 <br />
 
 ###### 4.2.17 (*crypt) RsaPriDecode(priKey string) string
 
+Receive the incoming private key and use it to RSA decrypt the data.
+
 <br />
 
 ###### 4.2.18 (*crypt) RsaPriEncode(priKey string) string
+
+Receive the incoming private key and use it to RSA encrypt the data.
 
 <br />
 
 ###### 4.2.19 (*crypt) RsaPubDecode(pubKey string) string
 
+Receive the incoming public key and use it to RSA decrypt the data.
+
 <br />
 
 ##### 4.3 Example
+
+```go
+import "github.com/kisschou/tdog"
+
+// md5
+encrypt := tdog.NewCrypt("inputStr").Md5()
+
+// RSA
+crypt := tdog.NewCrypt("inputStr")
+publicKey, privateKey := crypt.GenerateRsaKey(20)
+encrypt := crypt.RsaPubEncode(publicKey)
+decrypt := tdog.NewCrypt(encrypt).RsaPriDecode(privateKey)
+
+encrypt = tdog.NewCrypt(decrypt).RsaPriEncode(privateKey)
+decrypt = tdog.NewCrypt(encrypt).RsaPubDecode(publicKey)
+```
 
 <br />
 
