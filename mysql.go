@@ -23,24 +23,24 @@ type (
 		Engine     *xorm.Engine            // current engine
 	}
 
-	mysqlConf struct {
+	MySqlConf struct {
 		engine       string
-		host         string
-		port         string
-		user         string
-		pass         string
-		db           string
-		charset      string
-		prefix       string
+		Host         string
+		Port         string
+		User         string
+		Pass         string
+		Db           string
+		Charset      string
+		Prefix       string
 		dsn          string
-		debug        bool // is start debug
-		maxIdleConns int  // 连接池的空闲数大小
-		maxOpenConns int  // max connections count
+		Debug        bool // is start debug
+		MaxIdleConns int  // 连接池的空闲数大小
+		MaxOpenConns int  // max connections count
 	}
 )
 
 // NewMySQL init MySQL module
-// auto-load master configuration and make it actived
+// auto-load master configuration and make it actived.
 // so...must write master configuration of mysql into configuration.
 func NewMySQL() *mySql {
 	sql := new(mySql)
@@ -64,11 +64,11 @@ func (sql *mySql) Change(name string) *xorm.Engine {
 		}
 
 		// 日志打印SQL
-		engine.ShowSQL(conf.debug) // 设置连接池的空闲数大小 engine.SetMaxIdleConns(conf.maxIdleConns)
+		engine.ShowSQL(conf.Debug) // 设置连接池的空闲数大小 engine.SetMaxIdleConns(conf.maxIdleConns)
 		// 设置最大连接数
-		engine.SetMaxOpenConns(conf.maxOpenConns)
+		engine.SetMaxOpenConns(conf.MaxOpenConns)
 		// 名称映射规则主要负责结构体名称到表名和结构体field到表字段的名称映射
-		engine.SetTableMapper(core.NewPrefixMapper(core.SnakeMapper{}, conf.prefix))
+		engine.SetTableMapper(core.NewPrefixMapper(core.SnakeMapper{}, conf.Prefix))
 		// 加入连接池
 		if sql.engineList == nil {
 			sql.engineList = make(map[string]*xorm.Engine, 0)
@@ -80,16 +80,10 @@ func (sql *mySql) Change(name string) *xorm.Engine {
 
 // New add new engine by params.
 // given string name means label name
-// given string host means mysql's host
-// given string port means mysql's port
-// given string user means mysql's user
-// given string pass means mysql's password
-// given string db means mysql's db
-// given string db means mysql's charset
-// given string prefix means mysql's prefix
+// given *MySqlConf conf means mysql's config
 // returns *xorm.Engine
-func (sql *mySql) New(name, host, port, user, pass, db, charset, prefix string) *xorm.Engine {
-	dsn := user + ":" + pass + "@tcp(" + host + ":" + port + ")/" + db + "?charset=" + charset + "&parseTime=True&loc=Local"
+func (sql *mySql) New(name string, conf *MySqlConf) *xorm.Engine {
+	dsn := conf.User + ":" + conf.Pass + "@tcp(" + conf.Host + ":" + conf.Port + ")/" + conf.Db + "?charset=" + conf.Charset + "&parseTime=True&loc=Local"
 	debug := NewConfig().Get("database.debug").ToBool()
 	engine, err := xorm.NewEngine("mysql", dsn)
 	if err != nil {
@@ -102,7 +96,7 @@ func (sql *mySql) New(name, host, port, user, pass, db, charset, prefix string) 
 	// 设置最大连接数
 	engine.SetMaxOpenConns(5)
 	// 名称映射规则主要负责结构体名称到表名和结构体field到表字段的名称映射
-	engine.SetTableMapper(core.NewPrefixMapper(core.SnakeMapper{}, prefix))
+	engine.SetTableMapper(core.NewPrefixMapper(core.SnakeMapper{}, conf.Prefix))
 	// 加入连接池
 	sql.engineList[name] = engine
 
@@ -111,20 +105,20 @@ func (sql *mySql) New(name, host, port, user, pass, db, charset, prefix string) 
 
 // loadConf load configuration from configuration file.
 // write to new *mysqlConf and return it.
-func loadConf(name string) *mysqlConf {
+func loadConf(name string) *MySqlConf {
 	configResults := NewConfig().SetFile("database").SetPrefix(name+".").GetMulti("host", "port", "user", "pass", "db", "charset", "prefix")
-	return &mysqlConf{
+	return &MySqlConf{
 		engine:       "mysql",
-		host:         configResults["host"].ToString(),
-		port:         configResults["port"].ToString(),
-		user:         configResults["user"].ToString(),
-		pass:         configResults["pass"].ToString(),
-		db:           configResults["db"].ToString(),
-		charset:      configResults["charset"].ToString(),
-		prefix:       configResults["prefix"].ToString(),
+		Host:         configResults["host"].ToString(),
+		Port:         configResults["port"].ToString(),
+		User:         configResults["user"].ToString(),
+		Pass:         configResults["pass"].ToString(),
+		Db:           configResults["db"].ToString(),
+		Charset:      configResults["charset"].ToString(),
+		Prefix:       configResults["prefix"].ToString(),
 		dsn:          configResults["user"].ToString() + ":" + configResults["pass"].ToString() + "@tcp(" + configResults["host"].ToString() + ":" + configResults["port"].ToString() + ")/" + configResults["db"].ToString() + "?charset=" + configResults["charset"].ToString() + "&parseTime=True&loc=Local",
-		debug:        NewConfig().Get("database.debug").ToBool(),
-		maxIdleConns: 5,
-		maxOpenConns: 5,
+		Debug:        NewConfig().Get("database.debug").ToBool(),
+		MaxIdleConns: 5,
+		MaxOpenConns: 5,
 	}
 }

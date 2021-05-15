@@ -36,7 +36,7 @@ func NewUtil() *util {
 	return &util{}
 }
 
-// get list of file's name from path with suffix.
+// GetFilesBySuffix Gets the filename of all the specified suffixes from the specified path.
 // given string filePath means file path of scan
 // given string suffix means catch for same suffix
 // returns []string files list of file name, file name has no suffix
@@ -490,20 +490,6 @@ func (u *util) Remove(dataType string, slice interface{}, index int) interface{}
 	return []string{}
 }
 
-// CheckStrType 检测字符串是邮件、手机号、字符串
-// @return 0字符串1邮件2手机号
-func (u *util) CheckStrType(str string) int {
-	if u.VerifyEmail(str) {
-		return 1
-	}
-
-	if u.VerifyPhone(str) {
-		return 2
-	}
-
-	return 0
-}
-
 // VerifyEmail 验证邮件格式是否正确
 // @return bool
 func (u *util) VerifyEmail(email string) bool {
@@ -568,6 +554,7 @@ func (u *util) GetMachineId() int64 {
 
 // StructToMap 结构体转换成map
 func (u *util) StructToMap(obj interface{}) map[string]interface{} {
+	defer Recover()
 	mapVal := make(map[string]interface{})
 	elem := reflect.ValueOf(obj).Elem()
 	relType := elem.Type()
@@ -597,43 +584,17 @@ func (u *util) UrlSplit(url string) (protocol, domain string, port int) {
 	return
 }
 
-// UrlJoint url整合
+// UrlJoint url拼接
 // @params string protocol 协议
 // @params string domain 域名
 // @params int port 端口
-// @return string url 需要拆解的url
+// @return string url 拼接完成的url
 func (u *util) UrlJoint(protocol, domain string, port int) (url string) {
 	url = protocol + "://" + domain
 	if port != 80 {
 		url += ":" + strconv.Itoa(port)
 	}
 	return
-}
-
-func (u *util) MySQLColumnTypeConvert(columnType string) string {
-	convert := "string"
-	switch strings.ToUpper(columnType) {
-	case "CHAR", "VARCHAR":
-		convert = "string"
-		break
-
-	case "TINYBLOB", "TINYTEXT", "BLOB", "TEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT":
-		convert = "text"
-		break
-
-	case "TINYINT", "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT":
-		convert = "select"
-		break
-
-	case "FLOAT", "DOUBLE":
-		convert = "string"
-		break
-
-	case "DATE", "TIME", "YEAR", "DATETIME", "TIMESTAMP":
-		convert = "date"
-		break
-	}
-	return convert
 }
 
 // SnakeString 驼峰转蛇形
@@ -708,7 +669,7 @@ func (u *util) UcFirst(s string) string {
 	return upperStr
 }
 
-// checkPortAlived 检测端口是否已经暂用
+// checkPortAlived 检测端口是否已经占用
 // @params int port 端口号
 // @return bool
 func (u *util) checkPortAlived(port int) bool {
@@ -804,7 +765,7 @@ func Recover() {
 
 // Monitor 环境检测
 // @return error err 错误信息
-func (u *util) Monitor() (err error) {
+func Monitor() (err error) {
 	return
 	// MySQL环境
 	if NewMySQL().Engine == nil {

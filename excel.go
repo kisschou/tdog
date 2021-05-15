@@ -4,14 +4,17 @@ import (
 	"github.com/tealeg/xlsx"
 )
 
-type Excel struct {
-	Path     string
-	File     string
-	SheetNum int
+type excel struct {
+	file     string
+	sheetNum int
 }
 
-func (excel *Excel) Get() [][][]string {
-	file := excel.Path + "/" + excel.File
+func NewExcel(file string) *excel {
+	return &excel{file: file}
+}
+
+func (e *excel) Get() [][][]string {
+	file := e.file
 	output, err := xlsx.FileToSlice(file)
 	if err != nil {
 		go NewLogger().Error(err.Error())
@@ -20,8 +23,8 @@ func (excel *Excel) Get() [][][]string {
 	return output
 }
 
-func (excel *Excel) Open() (excelImpl *xlsx.File) {
-	file := excel.Path + "/" + excel.File
+func (e *excel) Open() (excelImpl *xlsx.File) {
+	file := e.file
 	var err error
 	excelImpl, err = xlsx.OpenFile(file)
 	if err != nil {
