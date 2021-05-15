@@ -266,9 +266,9 @@ MySql configuration instructions:
 | Charset      | string | Character set used by the database.      |
 | Prefix       | string | The prefix of the table in the database. |
 | dsn          | string | Data source name.                        |
-| Debug        | string | Whether to enable debugging mode.        |
-| MaxIdleConns | string | The max idle connections on pool.        |
-| MaxOpenConns | string | The max open connections on pool.        |
+| Debug        | bool   | Whether to enable debugging mode.        |
+| MaxIdleConns | int    | The max idle connections on pool.        |
+| MaxOpenConns | int    | The max open connections on pool.        |
 
 > When you customize the MySQL configuration file, you only need to set the following values:
 > - Host
@@ -589,7 +589,7 @@ Arrays remove duplicate keys.
 
 Parameter description:
 
-- `dataType` : Identifying the type of needle, options:
+- `dataType` : Identifying the type of input, options:
   - []string
   - []int
   - []int64
@@ -610,7 +610,7 @@ Merge multiple arrays.
 
 Parameter description:
 
-- `dataType` : Identifying the type of needle, options:
+- `dataType` : Identifying the type of list, options:
   - []string
   - []int
   - []interface{}
@@ -627,7 +627,7 @@ This function is written because in Go it seems that only map removes the specif
 
 Parameter description:
 
-- `dataType` : Identifying the type of needle, options:
+- `dataType` : Identifying the type of slice, options:
   - []string
   - []int
   - []int64
@@ -719,7 +719,7 @@ Check if the port is already occupied.
 
 Get the PID from the port number.
 
-> It is not always available. If the coroutine is available, it is not.
+> It is not always available. For example, coroutines are not available.
 
 <br />
 
@@ -874,7 +874,7 @@ The original encryption scheme used by a project called Biushop encrypts incomin
 
 ###### 4.2.14 (*crypt) BiuPwdBuilder(salt string, password string) (newPassword string)
 
-This is a complement to BiupWDNewBuilder, because I'm not used to Golang's support for optional parameters, and I'm a bit obsessive about the order of the parameters.
+This is a complement to Biushop, because I'm not used to Golang's support for optional parameters, and I'm a bit obsessive about the order of the parameters.
 
 This method is mainly through the incoming encryption data and random salt, to generate the encrypted results.
 
@@ -990,10 +990,10 @@ config/
 
 $ cat app.toml
 
-# 产品名 string
+# product'name string
 app_name = "ServiceCenter"
 
-# 服务端口 string
+# service's port string
 app_port = "8002"
 ```
 
@@ -1019,7 +1019,7 @@ Initialize an `config` module with the file, which is the starting point and the
 
 ###### 6.2.2 (*config) SetPath(path string) *config
 
-If the configuration file you are querying is not in the preset path, you can use the change function to temporarily modify the query path.
+If the configuration file you are querying is not in the preset path, you can use this function to temporarily modify the query path.
 
 <br />
 
@@ -1043,10 +1043,10 @@ For example, to execute `Get("database.masetr.host")`, flow of execution is:
 
 ```mermaid
 graph TB
-	A(Start) --> B[Fetched in app.toml]
+	A(Start) --> B[Retrieves database.master.host in app.toml]
   B --> C{exists?}
   C --YES--> D(Returns the result) 
-	C --No--> C1(Fetched in database.toml)
+	C --No--> C1(Retrieves master.host in database.toml)
 	D --> E(end)
 	C1 --> D1{exists?}
 	D1 --YES--> D
@@ -1267,22 +1267,22 @@ Rule struct {
 | IsMust    | bool     | Specifies that the key name must exist in the parameter list.                 |
 | Rule      | []string | The validation rules used can be found in the Rule Description section below. |
 
-> IsMust takes precedence over all rules. All rules take precedence and are executed in the specified order.
+> `IsMust` takes precedence over all rules. All rules take precedence and are executed in the specified order.
 
 <br />
 
 ##### 8.2 Rule description
 
-| keyword             | description                                                                                                               | example           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| empty               | Determine if the value is empty.If it's a number, it's less than or equal to 0                                            | -                 |
+| keyword             | description                                                  | example           |
+| ------------------- | ------------------------------------------------------------ | ----------------- |
+| empty               | Determine if the value is empty.If it's a number, it determines if it's greater than 0. | -                 |
 | phone               | Determine whether the content of the value is a phone number. Currently, only Chinese mobile phone numbers are supported. | -                 |
-| email               | Determine whether the contents of the value are mailbox addresses.                                                        | -                 |
-| scope(x, y)         | Set a range to specify a reasonable length for a string or number.                                                        | scope(1,10)       |
-| enum(str1,str2,...) | Set an enumeration to constrain the contents of the value.                                                                | enum(header,body) |
-| date                | Determine whether the value conforms to the date format, which is yyyy-mm-dd.                                             | -                 |
-| datetime            | Check whether the value conforms to the date and time format, which is: yyyy-mm-dd HH: MM :ss.                            | -                 |
-| sensitive-word      | The desensitized word list retrieves whether the content contains sensitive words. This item is temporarily invalid.      | -                 |
+| email               | Determine whether the contents of the value are mailbox addresses. | -                 |
+| scope(x, y)         | Set a range to specify a reasonable length for a string or number. | scope(1,10)       |
+| enum(str1,str2,...) | Set an enumeration to constrain the contents of the value.   | enum(header,body) |
+| date                | Determine whether the value conforms to the date format, which is yyyy-mm-dd. | -                 |
+| datetime            | Check whether the value conforms to the date and time format, which is: yyyy-mm-dd HH: MM :ss. | -                 |
+| sensitive-word      | The desensitized word list retrieves whether the content contains sensitive words. This item is temporarily invalid. | -                 |
 
 > You can select multiple rules to constrain a field at the same time, such as' []string{" empty ", 'email', 'scope(10,)'} 'to specify a value that also satisfies:
 > · Can't be empty
