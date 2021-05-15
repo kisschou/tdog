@@ -19,13 +19,13 @@ Just start in a smaile.
       * [1.4 (*mySql) New(name string, conf *MySqlConf) *xorm.Engine](#14-mysql-newname-string-conf-mysqlconf-xormengine)
       * [1.5 Example](#15-example)
     * [2. Redis Handler](#2-redis-handler)
-        * [1.1 Struct](#11-struct-1)
-        * [1.2 Functions and Usage](#12-functions-and-usage)
-        * [1.2.1 NewRedis() *redisModel](#121-newredis-redismodel)
-        * [1.2.2 (*redisModel) Change(name string) *redisImpl.Client](#122-redismodel-changename-string-redisimplclient)
-        * [1.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client](#123-redismodel-newname-host-port-pass-string-poolsize-int-redisimplclient)
-        * [1.2.4 (*redisModel) Db(index int) *redisImpl.Client](#124-redismodel-dbindex-int-redisimplclient)
-      * [1.3 Example](#13-example)
+        * [2.1 Struct](#21-struct-1)
+        * [2.2 Functions and Usage](#22-functions-and-usage)
+        * [2.2.1 NewRedis() *redisModel](#221-newredis-redismodel)
+        * [2.2.2 (*redisModel) Change(name string) *redisImpl.Client](#222-redismodel-changename-string-redisimplclient)
+        * [2.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client](#223-redismodel-newname-host-port-pass-string-poolsize-int-redisimplclient)
+        * [2.2.4 (*redisModel) Db(index int) *redisImpl.Client](#224-redismodel-dbindex-int-redisimplclient)
+      * [2.3 Example](#23-example)
     * [3. Util Handler](#3-util-handler)
       * [3.1 Struct](#31-struct)
       * [3.2 Functions and Usage](#32-functions-and-usage)
@@ -373,7 +373,7 @@ Here are just a few things I feel I need:
 
 <br />
 
-##### 1.1 Struct
+##### 2.1 Struct
 
 ```go
 type redisModel struct {
@@ -398,11 +398,11 @@ pool_size = 10 # Connection pool size
 
 <br />
 
-##### 1.2 Functions and Usage
+##### 2.2 Functions and Usage
 
 <br />
 
-###### 1.2.1 NewRedis() *redisModel
+###### 2.2.1 NewRedis() *redisModel
 
 This function is used to initialize the redisModel structure, which is the starting point and the core of everything.
 
@@ -410,7 +410,7 @@ After import tdog, this function is used as `tdog.NewRedis()`
 
 <br />
 
-###### 1.2.2 (*redisModel) Change(name string) *redisImpl.Client
+###### 2.2.2 (*redisModel) Change(name string) *redisImpl.Client
 
 Use the tag name to switch the current redis engine.
 
@@ -418,7 +418,7 @@ If the tag name does not exist in the engine group, it will go to the configurat
 
 <br />
 
-###### 1.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client
+###### 2.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client
 
 You can use this function to generate an engine through a custom configuration file.
 
@@ -434,13 +434,13 @@ Passing parameter description:
 
 <br />
 
-###### 1.2.4 (*redisModel) Db(index int) *redisImpl.Client
+###### 2.2.4 (*redisModel) Db(index int) *redisImpl.Client
 
 Accept an index to switch the libraries used by the current engine.
 
 <br />
 
-##### 1.3 Example
+##### 2.3 Example
 
 ```go
 import "github.com/kisschou/tdog"

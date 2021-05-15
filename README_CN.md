@@ -6,7 +6,133 @@
 
 ## 内容
 
-
+* [tdog](#tdog)
+  * [内容](#内容)
+  * [介绍](#介绍)
+  * [安装](#安装)
+  * [快速使用](#快速使用)
+  * [函数们](#函数们)
+    * [1. MySQL](#1-mysql)
+      * [1.1 结构](#11-结构)
+      * [1.2 NewMySQL() *mySql](#12-newmysql-mysql)
+      * [1.3 (*mySql) Change(name string) *xorm.Engine](#13-mysql-changename-string-xormengine)
+      * [1.4 (*mySql) New(name string, conf *MySqlConf) *xorm.Engine](#14-mysql-newname-string-conf-mysqlconf-xormengine)
+      * [1.5 示例](#15-示例)
+    * [2. Redis](#2-redis)
+      * [2.1 结构](#21-结构)
+      * [2.2 函数和使用](#22-函数和使用)
+      * [2.2.1 NewRedis() *redisModel](#221-newredis-redismodel)
+      * [2.2.2 (*redisModel) Change(name string) *redisImpl.Client](#222-redismodel-changename-string-redisimplclient)
+      * [2.2.3 (*redisModel) New(name, host, port, pass string, poolSize int) *redisImpl.Client](#223-redismodel-newname-host-port-pass-string-poolsize-int-redisimplclient)
+      * [2.2.4 (*redisModel) Db(index int) *redisImpl.Client](#124-redismodel-dbindex-int-redisimplclient)
+      * [2.3 示例](#23-示例)
+    * [3. 功能](#3-功能)
+      * [3.1 结构](#31-结构)
+      * [3.2 函数和使用](#32-函数和使用)
+        * [3.2.1 NewUtil() *util](#321-newutil-util)
+        * [3.2.2 (*util) GetFilesBySuffix(filePath string, suffix string) (files []string, err error)](#322-util-getfilesbysuffixfilepath-string-suffix-string-files-string-err-error)               
+        * [3.2.3 (*util) FileExists(path string) bool](#323-util-fileexistspath-string-bool)
+        * [3.2.4 (*util) IsDir(path string) bool](#324-util-isdirpath-string-bool)
+        * [3.2.5 (*util) IsFile(path string)](#325-util-isfilepath-string)
+        * [3.2.6 (*util) DirExistsAndCreate(path string)](#326-util-direxistsandcreatepath-string)
+        * [3.2.7 (*util) RandomStr(length int, randType ...int) string](#327-util-randomstrlength-int-randtype-int-string)
+        * [3.2.8 (*util) RandInt64(min, max int64) int64](#328-util-randint64min-max-int64-int64)
+        * [3.2.9 (*util) InArray(dataType string, input, needle interface{}) bool](#329-util-inarraydatatype-string-input-needle-interface-bool)
+        * [3.2.10 (*util) Isset(dataType string, input, needle interface{}) bool](#3210-util-issetdatatype-string-input-needle-interface-bool)
+        * [3.2.11 (*util) Empty(dataType string, input, needle interface{}) bool](#3211-util-emptydatatype-string-input-needle-interface-bool)
+        * [3.2.12 (*util) ArrayUnique(dataType string, input interface{}) interface{}](#3212-util-arrayuniquedatatype-string-input-interface-interface)
+        * [3.2.13 (*util) ArrayMerge(dataType string, list ...interface{}) interface{}](#3213-util-arraymergedatatype-string-list-interface-interface)
+        * [3.2.14 (*util) Remove(dataType string, slice interface{}, index int) interface{}](#3214-util-removedatatype-string-slice-interface-index-int-interface)
+        * [3.2.15 (*util) VerifyEmail(email string) bool](#3215-util-verifyemailemail-string-bool)
+        * [3.2.16 (*util) VerifyPhone(phone string) bool](#3216-util-verifyphonephone-string-bool)
+        * [3.2.17 (*util) VerifyDate(input string) bool](#3217-util-verifydateinput-string-bool)
+        * [3.2.18 (*util) VerifyDateTime(input string) bool](#3218-util-verifydatetimeinput-string-bool)
+        * [3.2.19 (*util) GetMachineId() int64](#3219-util-getmachineid-int64)
+        * [3.2.20 (*util) StructToMap(obj interface{}) map[string]interface{}](#3220-util-structtomapobj-interface-mapstringinterface)
+        * [3.2.21 (*util) UrlSplit(url string) (protocol, domain string, port int)](#3221-util-urlspliturl-string-protocol-domain-string-port-int)
+        * [3.2.22 (*util) UrlJoint(protocol, domain string, port int) (url string)](#3222-util-urljointprotocol-domain-string-port-int-url-string)
+        * [3.2.23 (*util) SnakeString(s string) string](#3223-util-snakestrings-string-string)
+        * [3.2.24 (*util) CamelString(s string) string](#3224-util-camelstrings-string-string)
+        * [3.2.25 (*util) UcFirst(s string) string](#3225-util-ucfirsts-string-string)
+        * [3.2.26 (*util) checkPortAlived(port int) bool](#3226-util-checkportalivedport-int-bool)
+        * [3.2.26 (*util) GetPidByPort(port int) int](#3226-util-getpidbyportport-int-int)
+        * [3.2.27 (*util) SetEnv(key interface{}, value string) error](#3227-util-setenvkey-interface-value-string-error)
+        * [3.2.28 (*util) GetEnv(keys ...string) map[string]string](#3228-util-getenvkeys-string-mapstringstring)
+        * [3.2.29 Recover()](#3229-recover)
+        * [3.2.30 Monitor() (err error)](#3230-monitor-err-error)
+      * [3.3 示例](#33-示例)
+    * [4. 加密](#4-加密)
+      * [4.1 结构](#41-结构)
+      * [4.2 函数和使用](#42-函数和使用)
+        * [4.2.1 NewCrypt(input string) *crypt](#421-newcryptinput-string-crypt)
+        * [4.2.2 (*crypt) Md5() string](#422-crypt-md5-string)
+        * [4.2.3 (*crypt) Sha1() string](#423-crypt-sha1-string)
+        * [4.2.4 (*crypt) Sha256() string](#424-crypt-sha256-string)
+        * [4.2.5 (*crypt) Sha512()](#425-crypt-sha512)
+        * [4.2.6 (*crypt) Crc32() string](#426-crypt-crc32-string)
+        * [4.2.7 (*crypt) Base64Encode() string](#427-crypt-base64encode-string)
+        * [4.2.8 (*crypt) Base64Decode() string](#428-crypt-base64decode-string)
+        * [4.2.9 (*crypt) UrlBase64Encode() string](#429-crypt-urlbase64encode-string)
+        * [4.2.10 (*crypt) UrlBase64Decode() string](#4210-crypt-urlbase64decode-string)
+        * [4.2.11 (*crypt) Urlencode() string](#4211-crypt-urlencode-string)
+        * [4.2.12 (*crypt) Urldecode() string](#4212-crypt-urldecode-string)
+        * [4.2.13 (*crypt) BiuPwdNewBuilder(password string) (salt string, newPassword string)](#4213-crypt-biupwdnewbuilderpassword-string-salt-string-newpassword-string)
+        * [4.2.14 (*crypt) BiuPwdBuilder(salt string, password string) (newPassword string)](#4214-crypt-biupwdbuildersalt-string-password-string-newpassword-string)
+        * [4.2.15 (*crypt) GenerateRsaKey(bits int) (publicKey, privateKey string)](#4215-crypt-generatersakeybits-int-publickey-privatekey-string)
+        * [4.2.16 (*crypt) RsaPubEncode(pubKey string) string](#4216-crypt-rsapubencodepubkey-string-string)
+        * [4.2.17 (*crypt) RsaPriDecode(priKey string) string](#4217-crypt-rsapridecodeprikey-string-string)
+        * [4.2.18 (*crypt) RsaPriEncode(priKey string) string](#4218-crypt-rsapriencodeprikey-string-string)
+        * [4.2.19 (*crypt) RsaPubDecode(pubKey string) string](#4219-crypt-rsapubdecodepubkey-string-string)
+      * [4.3 示例](#43-示例)
+    * [5. Excel](#5-excel)
+      * [5.1 函数和使用](#51-函数和使用)
+        * [5.1.1 NewExcel(file string) *excel](#511-newexcelfile-string-excel)
+        * [5.1.2 ( *excel) Get() [][][]string](#512--excel-get-string)
+        * [5.1.3 (*excel) Open() (excelImpl *xlsx.File)](#513-excel-open-excelimpl-xlsxfile)
+    * [6. 配置](#6-配置)
+      * [6.1 结构](#61-结构)
+      * [6.2 函数和使用](#62-函数和使用)
+        * [6.2.1 NewConfig() *config](#621-newconfig-config)
+        * [6.2.2 (*config) SetPath(path string) *config](#622-config-setpathpath-string-config)
+        * [6.2.3 (*config) SetFile(name string) *config](#623-config-setfilename-string-config)
+        * [6.2.4 (*config) SetPrefix(prefix string) *config](#624-config-setprefixprefix-string-config)
+        * [6.2.5 (*config) Get(key string) *configResult](#625-config-getkey-string-configresult)
+        * [6.2.6 (*config) GetMulti(keys ...string) map[string]*configResult](#626-config-getmultikeys-string-mapstringconfigresult)
+        * [6.2.7 (*configResult) GetSearchKey() string](#627-configresult-getsearchkey-string)
+        * [6.2.8 (*configResult) IsExists() bool](#628-configresult-isexists-bool)
+        * [6.2.9 (*configResult) RawData() (data interface{})](#629-configresult-rawdata-data-interface)
+        * [6.2.10 (*configResult) ToString() (data string)](#6210-configresult-tostring-data-string)
+        * [6.2.11 (*configResult) ToInt() (data int)](#6211-configresult-toint-data-int)
+        * [6.2.12 (*configResult) ToBool() (data bool)](#6212-configresult-tobool-data-bool)
+        * [6.2.13 (*configResult) ToIntSlice() (data []int)](#6213-configresult-tointslice-data-int)
+        * [6.2.14 (*configResult) ToStringMap() (data map[string]interface{})](#6214-configresult-tostringmap-data-mapstringinterface)
+        * [6.2.15 (*configResult) ToStringMapString() (data map[string]string)](#6215-configresult-tostringmapstring-data-mapstringstring)
+        * [6.2.16 (*configResult) ToStringMapStringSlice() (data map[string][]string)](#6216-configresult-tostringmapstringslice-data-mapstringstring)
+        * [6.2.17 (*configResult) ToStringSlice() (data []string)](#6217-configresult-tostringslice-data-string)
+        * [6.2.18 (*configResult) ToInt64() (data int64)](#6218-configresult-toint64-data-int64)
+      * [6.3 示例](#63-示例)
+    * [7. 日志](#7-日志)
+      * [7.1 结构](#71-结构)
+      * [7.2 函数和使用](#72-函数和使用)
+        * [7.2.1 NewLogger() *logger](#721-newlogger-logger)
+        * [7.2.2 (*logger) Error(message string)](#722-logger-errormessage-string)
+        * [7.2.3 (*logger) Warn(message string)](#723-logger-warnmessage-string)
+        * [7.2.4 (*logger) Info(message string)](#724-logger-infomessage-string)
+      * [7.3 示例](#73-示例)
+    * [8. 自动验证](#8-自动验证)
+      * [8.1 结构](#81-结构)
+      * [8.2 规则描述](#82-规则描述)
+      * [8.3 函数和使用](#83-函数和使用)
+        * [8.3.1 NewValidate()](#831-newvalidate)
+        * [8.3.2 (*validate) Rule(input []*rule) *validate](#832-validate-ruleinput-rule-validate)
+        * [8.3.3 (*validate) Json(input string) *validate](#833-validate-jsoninput-string-validate)
+        * [8.3.4 (*validate) Check(needle map[string]string) (output *validReport, err error)](#834-validate-checkneedle-mapstringstring-output-validreport-err-error)
+        * [8.3.5 (*validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error)](#835-validate-uninterruptedcheckneedle-mapstringstring-output-validreportcenter-err-error)
+      * [8.4 验证报告中心和验证报告](#84-验证报告中心和验证报告)
+        * [8.4.1 验证报告](#841-验证报告)
+        * [8.4.2 验证报告中心](#842-验证报告中心)
+   * [贡献](#贡献)
+   * [Licence](#licence)
 
 <br />
 
@@ -275,7 +401,7 @@ pool_size = 10 # 连接数
 
 <br />
 
-##### 1.2 函数和用法
+##### 1.2 函数和使用
 
 <br />
 
@@ -331,7 +457,7 @@ engine.Get(tdog.Ctx, "test:key").String() // 获取键
 
 <br />
 
-#### 3. Util
+#### 3. 工具
 
 我认为有些脚手架是很常见的。目前只要实现，不追求太多的性能，局限于强类型，很多地方编写非常繁琐和不完整的支持，包会不断完善、扩展。
 
@@ -343,7 +469,7 @@ engine.Get(tdog.Ctx, "test:key").String() // 获取键
 
 <br />
 
-##### 3.2 函数和用法
+##### 3.2 函数和使用
 
 这也许是脚手架的职责。
 
@@ -651,7 +777,7 @@ res := util.RandomStr(10, 1, 2)
 
 <br />
 
-#### 4. Crypt
+#### 4. 加密
 
 其实，封装就是一些简单的加密，只是有时候用了就不记得怎么写了，搭建的关键是容易使用。
 
@@ -663,7 +789,7 @@ res := util.RandomStr(10, 1, 2)
 
 <br />
 
-##### 4.2 函数和用法
+##### 4.2 函数和使用
 
 这些都是我发现相当常见的加密方法。
 
@@ -813,7 +939,7 @@ decrypt = tdog.NewCrypt(encrypt).RsaPubDecode(publicKey)
 
 <br />
 
-##### 5.1 函数和用法
+##### 5.1 函数和使用
 
 <br />
 
@@ -837,7 +963,7 @@ decrypt = tdog.NewCrypt(encrypt).RsaPubDecode(publicKey)
 
 <br />
 
-#### 6. Config
+#### 6. 配置
 
 这是一个与[viper](https://github.com/spf13/viper)打包的配置文件获取工具。封装的原因是:
 
@@ -876,7 +1002,7 @@ app_port = "8002"
 
 <br />
 
-##### 6.2 函数和用法
+##### 6.2 函数和使用
 
 首先，必须将配置文件的配置指定到env的交叉点。这可以使用 `Util` 模块下的 `SetEnv` 函数:
 
@@ -1053,7 +1179,7 @@ for _, resultImpl := range resultImpls {
 
 <br />
 
-#### 7. Logger Handler
+#### 7. 日志
 
 这是日志模块。用优步的ZAP取代ELK的想法最初是被激发出来的。
 
@@ -1067,7 +1193,7 @@ for _, resultImpl := range resultImpls {
 
 <br />
 
-##### 7.2 函数和用法
+##### 7.2 函数和使用
 
 在Redis中，所有的日志都被写入一个指定的键。默认的密钥是 `log:list`。
 
@@ -1116,7 +1242,7 @@ go tdog.NewLogger().Error("This is a error message!")
 
 <br />
 
-#### 8. Validation Handler
+#### 8. 自动验证
 
 这是一个参数自动验证模块。
 
@@ -1126,7 +1252,7 @@ go tdog.NewLogger().Error("This is a error message!")
 
 <br />
 
-##### 8.1 规则结构
+##### 8.1 结构
 
 ```go
 Rule struct {
@@ -1170,7 +1296,7 @@ Rule struct {
 
 <br />
 
-##### 8.3 函数和用法
+##### 8.3 函数和使用
 
 其实这里所说的都是一些显而易见的事情，只是怕久了，自己已经忘记了，所以记录下来。
 
@@ -1217,13 +1343,13 @@ Rule struct {
 
 <br />
 
-##### 8.4 Validate Report Center and Validate Report
+##### 8.4 验证报告中心和验证报告
 
 校验报告中心和校验报告这两个小东西
 
 <br />
 
-###### 8.4.1 Validate Report
+###### 8.4.1 验证报告
 
 这个结构没有子函数，但是它有一些参数可以使用:
 
@@ -1241,7 +1367,7 @@ Rule struct {
 
 <br />
 
-###### 8.4.2 Validate Report Center
+###### 8.4.2 验证报告中心
 
 - (*validReportCenter) ReportList() []*validReport 
 
