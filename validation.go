@@ -43,10 +43,11 @@ type (
 
 	// report 校验结果报告
 	validReport struct {
-		Name    string   `json:"name"`     // 名称
-		Rule    []string `json:"validate"` // 校验方式
-		Result  bool     `json:"result"`   // 校验结果
-		Message string   `json:"message"`  // 结果信息
+		Name    string      `json:"name"`     // 名称
+		Rule    []string    `json:"validate"` // 校验方式
+		Result  bool        `json:"result"`   // 校验结果
+		Message string      `json:"message"`  // 结果信息
+		Val     interface{} `json:"val"`      // 取到的值
 	}
 )
 
@@ -333,7 +334,7 @@ func (v *validate) Check(needle map[string]string) (output *validReport, err err
 		}
 	}
 	// all success.
-	output = &validReport{Name: "", Rule: []string{}, Result: true, Message: "Success"}
+	output = &validReport{Result: true, Message: "Success"}
 	return
 }
 
@@ -358,6 +359,9 @@ func (v *validate) UninterruptedCheck(needle map[string]string) (output *validRe
 		if err != nil {
 			report.Result = false
 			report.Message = err.Error()
+		} else {
+			val, _ := verfityType(needle[validateInfo.Name], validateInfo.ParamType)
+			report.Val = val
 		}
 		reports = append(reports, report)
 	}
