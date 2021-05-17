@@ -1273,16 +1273,16 @@ Rule struct {
 
 ##### 8.2 Rule description
 
-| keyword             | description                                                  | example           |
-| ------------------- | ------------------------------------------------------------ | ----------------- |
-| empty               | Determine if the value is empty.If it's a number, it determines if it's greater than 0. | -                 |
+| keyword             | description                                                                                                               | example           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| empty               | Determine if the value is empty.If it's a number, it determines if it's greater than 0.                                   | -                 |
 | phone               | Determine whether the content of the value is a phone number. Currently, only Chinese mobile phone numbers are supported. | -                 |
-| email               | Determine whether the contents of the value are mailbox addresses. | -                 |
-| scope(x, y)         | Set a range to specify a reasonable length for a string or number. | scope(1,10)       |
-| enum(str1,str2,...) | Set an enumeration to constrain the contents of the value.   | enum(header,body) |
-| date                | Determine whether the value conforms to the date format, which is yyyy-mm-dd. | -                 |
-| datetime            | Check whether the value conforms to the date and time format, which is: yyyy-mm-dd HH: MM :ss. | -                 |
-| sensitive-word      | The desensitized word list retrieves whether the content contains sensitive words. This item is temporarily invalid. | -                 |
+| email               | Determine whether the contents of the value are mailbox addresses.                                                        | -                 |
+| scope(x, y)         | Set a range to specify a reasonable length for a string or number.                                                        | scope(1,10)       |
+| enum(str1,str2,...) | Set an enumeration to constrain the contents of the value.                                                                | enum(header,body) |
+| date                | Determine whether the value conforms to the date format, which is yyyy-mm-dd.                                             | -                 |
+| datetime            | Check whether the value conforms to the date and time format, which is: yyyy-mm-dd HH: MM :ss.                            | -                 |
+| sensitive-word      | The desensitized word list retrieves whether the content contains sensitive words. This item is temporarily invalid.      | -                 |
 
 > You can select multiple rules to constrain a field at the same time, such as' []string{" empty ", 'email', 'scope(10,)'} 'to specify a value that also satisfies:
 > · Can't be empty
@@ -1351,12 +1351,13 @@ The processing related to the Validate report cannot escape these two little guy
 
 This structure has no sub-functions, but it has some parameters that can be used:
 
-| param   | type     | desc                                                                                                                                                                                         |
-| ------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Name    | string   | The key name of the query in the parameter list.                                                                                                                                             |
-| Rule    | []string | The validation rules used can be found in the Rule Description section below.                                                                                                                |
-| Result  | bool     | The result of the verification, `True` means the verification is successful, `False` means the verification failed                                                                           |
-| Message | string   | The text message feedback of the verification result is currently only fixed in Chinese, and customization is not supported. If necessary, you can handle it yourself according by `Result`. |
+| param   | type        | desc                                                                                                                                                                                         |
+| ------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name    | string      | The key name of the query in the parameter list.                                                                                                                                             |
+| Rule    | []string    | The validation rules used can be found in the Rule Description section below.                                                                                                                |
+| Result  | bool        | The result of the verification, `True` means the verification is successful, `False` means the verification failed                                                                           |
+| Message | string      | The text message feedback of the verification result is currently only fixed in Chinese, and customization is not supported. If necessary, you can handle it yourself according by `Result`. |
+| Val     | interface{} | Gets the associated value. The type is the same as `ParamsType`.                                                                                                                             |
 
 > You can use these parameters directly.
 >
