@@ -392,6 +392,23 @@ func (rc *validReportCenter) ReportByName(name string) *validReport {
 	return &validReport{Name: "", Rule: []string{}, Result: false, Message: "未找到名为`" + name + "`的报表."}
 }
 
+// CheckSuccess Receive the incoming parameters, determine whether all have passed the verification,
+// if not, return the set that has not passed the verification.
+func (rc *validReportCenter) CheckSuccess(inputs ...string) (isAllSuccess bool, failList []*validReport) {
+	isAllSuccess = true
+	if len(inputs) < 1 {
+		return
+	}
+
+	for _, input := range inputs {
+		currentReport := rc.ReportByName(input)
+		if !currentReport.Result {
+			failList = append(failList, currentReport)
+		}
+	}
+	return
+}
+
 // BuildTime get build time from report center.
 func (rc *validReportCenter) BuildTime() string {
 	return rc.createTime
