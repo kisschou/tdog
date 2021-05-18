@@ -1382,6 +1382,12 @@ Rule struct {
 
   > 按名称获取报告。因此必须给定字符串名称，并将返回 `*report`
 
+- (rc *validReportCenter) CheckSuccess(inputs ...string) (isAllSuccess bool, failList []*validReport)
+
+  > 接受所有传入的键, 依次判断校验结果是否成功,
+  > `isAllSuccess` : 校验结果, `true` 表示全部成功
+  > `failList` : 失败的结果集合
+
 - (*validReportCenter) BuildTime() string
 
   > 从报告中心获得构建时间。

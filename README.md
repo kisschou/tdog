@@ -1380,6 +1380,10 @@ This structure has no sub-functions, but it has some parameters that can be used
 
   > get the report by name. so must given string name, and will returns `*report`
 
+- (rc *validReportCenter) CheckSuccess(inputs ...string) (isAllSuccess bool, failList []*validReport)
+
+  > Receive the incoming parameters, determine whether all have passed the verification, if not, return the set that has not passed the verification.
+
 - (*validReportCenter) BuildTime() string
 
   > get build time from report center.
