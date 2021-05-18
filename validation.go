@@ -342,6 +342,7 @@ func (v *validate) Check(needle map[string]string) (output *validReport, err err
 // 遇到失败的项, 只记录，等所有数据都校验后,统一返回.
 // 返回报告中心结构体
 func (v *validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error) {
+	output = new(validReportCenter)
 	if len(v.rules) < 1 {
 		err = errors.New("未指定校验规则")
 		return
@@ -351,7 +352,6 @@ func (v *validate) UninterruptedCheck(needle map[string]string) (output *validRe
 		return
 	}
 	s := time.Now().UnixNano()
-	output = new(validReportCenter)
 	reports := make([]*validReport, 0)
 	for _, validateInfo := range v.rules {
 		report := &validReport{Name: validateInfo.Name, Rule: validateInfo.Rule, Result: true, Message: "Success"}
