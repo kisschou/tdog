@@ -5,18 +5,3 @@ package tdog
  *
  * Author: Kisschou
  */
-
-func A() {
-}
-
-func C() {
-}
-
-func D() {
-}
-
-func S() {
-}
-
-func M() {
-}
