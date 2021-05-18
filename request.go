@@ -54,7 +54,7 @@ func (r *Request) New(c *Context) *Request {
 		if strings.Contains(c.Req.Header["Content-Type"][0], "json") {
 			decoder := json.NewDecoder(c.Req.Body)
 			var jsonParams map[string]interface{}
-			decoder.Decode(&jsonParams)
+			_ = decoder.Decode(&jsonParams)
 			r.Put = jsonParams
 		}
 
