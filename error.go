@@ -1,27 +1,32 @@
 package tdog
 
-import ()
+import (
+	"path/filepath"
+)
 
 type (
-	Error struct {
+	err struct {
+		code string
+		msg  string
 	}
 )
 
-func (e *Error) GetError(errCode string) (errMsg string) {
-	errMsg = errCode
-	if NewConfig().Get("error." + errCode).IsExists() {
-		errMsg = NewConfig().Get("error." + errCode).ToString()
+func NewError(input string) *err {
+	errInfo := make([]string, 0)
+	errFile := NewUtil().GetEnv("ERROR_FILE")
+	configImpl := NewConfig().SetPath(filepath.Dir(errFile["ERROR_FILE"])).SetFile(filepath.Base(errFile["ERROR_FILE"]))
+	if configImpl.Get(input).IsExists() {
+		errInfo = configImpl.Get(input).ToStringSlice()
 	} else {
-		errMsg = NewConfig().Get("error.ERROR_UNKNOW").ToString()
+		errInfo = configImpl.Get("BASE.UNKNOW").ToStringSlice()
 	}
-	return
+	return &err{code: errInfo[0], msg: errInfo[1]}
 }
 
-func (e *Error) GetErrorCode(errCode string) (code int) {
-	if NewConfig().Get("error_map." + errCode).IsExists() {
-		code = NewConfig().Get("error_map." + errCode).ToInt()
-	} else {
-		code = NewConfig().Get("error_map.ERROR_UNKNOW").ToInt()
-	}
-	return
+func (e *err) Code() string {
+	return e.code
+}
+
+func (e *err) Msg() string {
+	return e.msg
 }
