@@ -3,6 +3,7 @@ package tdog
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -31,10 +32,29 @@ func (r *Response) JSON(code int, obj interface{}) {
 	newObj := make(map[string]interface{})
 	newObj = obj.(H)
 	if code != http.StatusOK {
-		ErrorCore := new(Error)
 		if _, ok := newObj["code"]; ok {
-			newObj["message"] = ErrorCore.GetError(newObj["code"].(string))
-			newObj["err_code"] = ErrorCore.GetErrorCode(newObj["code"].(string))
+			errorImpl := NewError(newObj["code"].(string))
+			newObj["err_code"] = errorImpl.Code()
+			newObj["message"] = errorImpl.Msg()
+
+			// 附加消息返回
+			if _, ok := newObj["_msg"]; ok {
+				newObj["message"] = newObj["message"].(string) + newObj["_msg"].(string)
+				delete(newObj, "_msg")
+			}
+
+			// 替换提示消息
+			if _, ok := newObj["_replace"]; ok {
+				newObj["message"] = newObj["_replace"].(string)
+				delete(newObj, "_replace")
+			}
+
+			// 模版输出
+			if _, ok := newObj["_template"]; ok {
+				newObj["message"] = fmt.Sprintf(newObj["_template"].(string), newObj["message"].(string))
+				delete(newObj, "_template")
+			}
+
 			delete(newObj, "code")
 		}
 	} else {
