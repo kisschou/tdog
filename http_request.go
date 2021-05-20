@@ -9,13 +9,17 @@ import (
 )
 
 type (
-	HttpRequest struct {
+	httpRequest struct {
 		Method string
 		Header map[string]string
 		Url    string
 		Params map[string]interface{}
 	}
 )
+
+func NewRequest() *httpRequest {
+	return &httpRequest{Method: "", Header: map[string]string{}, Url: "", Params: map[string]interface{}{}}
+}
 
 // FormRequest 使用说明
 // header := make(map[string]string)
@@ -27,18 +31,18 @@ type (
 // // params
 // params["username"] = "admin"
 // params["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
-// HttpRequestLib := new(lib.HttpRequest)
-// HttpRequestLib.Method = "POST"
-// HttpRequestLib.Header = header
-// HttpRequestLib.Url = "http://127.0.0.1:8000/member/login"
-// HttpRequestLib.Params = params
-// res, err := HttpRequestLib.FormRequest()
+// httpRequestLib := new(lib.httpRequest)
+// httpRequestLib.Method = "POST"
+// httpRequestLib.Header = header
+// httpRequestLib.Url = "http://127.0.0.1:8000/member/login"
+// httpRequestLib.Params = params
+// res, err := httpRequestLib.FormRequest()
 // if err != nil {
 //    fmt.Println(err)
 // }
-// fmt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
+// fmt.Println("===========================> " + httpRequestLib.Method + " " + httpRequestLib.Url)
 // fmt.Println(res)
-func (hp *HttpRequest) FormRequest() (httpCode int, resData string, elapsedTime int64, err error) {
+func (hp *httpRequest) FormRequest() (httpCode int, resData string, elapsedTime int64, err error) {
 	startTime := time.Now().UnixNano()
 	client := &http.Client{}
 
@@ -91,17 +95,17 @@ func (hp *HttpRequest) FormRequest() (httpCode int, resData string, elapsedTime 
 // sendBody["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
 // sendBodyJson, _ := json.Marshal(sendBody)
 // params["body"] = sendBodyJson
-// HttpRequestLib.Method = "POST"
-// HttpRequestLib.Header = header
-// HttpRequestLib.Url = "http://127.0.0.1:8000/feign/http"
-// HttpRequestLib.Params = params
-// res, err = HttpRequestLib.BytesPost()
+// httpRequestLib.Method = "POST"
+// httpRequestLib.Header = header
+// httpRequestLib.Url = "http://127.0.0.1:8000/feign/http"
+// httpRequestLib.Params = params
+// res, err = httpRequestLib.BytesPost()
 // if err != nil {
 //	fmt.Println(err)
 // }
-// mt.Println("===========================> " + HttpRequestLib.Method + " " + HttpRequestLib.Url)
+// mt.Println("===========================> " + httpRequestLib.Method + " " + httpRequestLib.Url)
 // fmt.Println(res)
-func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
+func (hp *httpRequest) BytesPost() (int, string, int64, error) {
 	startTime := time.Now().UnixNano()
 	var elapsedTime int64
 	data, _ := json.Marshal(hp.Params)
@@ -136,7 +140,7 @@ func (hp *HttpRequest) BytesPost() (int, string, int64, error) {
 
 // ServicePost 针对请求网关服务构建
 // 继承后只需要set结构体中的Params
-func (hp *HttpRequest) ServicePost() (bool, string, int64) {
+func (hp *httpRequest) ServicePost() (bool, string, int64) {
 	// header
 	header := make(map[string]string)
 	header["Content-Type"] = "application/json"
