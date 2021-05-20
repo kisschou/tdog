@@ -15,6 +15,14 @@ type (
 		Url    string
 		Params map[string]interface{}
 	}
+
+	httpResponse struct {
+		Code        int
+		Data        string
+		Formatted   map[string]interface{}
+		ElapsedTime int64
+		Error       error
+	}
 )
 
 func NewRequest() *httpRequest {
@@ -45,30 +53,24 @@ func NewRequest() *httpRequest {
 func (hp *httpRequest) FormRequest() (httpCode int, resData string, elapsedTime int64, err error) {
 	startTime := time.Now().UnixNano()
 	client := &http.Client{}
-
 	reqDataJson, _ := json.Marshal(hp.Params)
-
 	req, err := http.NewRequest(hp.Method, hp.Url, bytes.NewBuffer(reqDataJson))
 	if err != nil {
 		httpCode = http.StatusInternalServerError
 		elapsedTime = time.Now().UnixNano() - startTime
 		return
 	}
-
 	for k, v := range hp.Header {
 		req.Header.Set(k, v)
 	}
-
 	res, err := client.Do(req)
 	defer res.Body.Close()
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		httpCode = http.StatusInternalServerError
 		elapsedTime = time.Now().UnixNano() - startTime
 		return
 	}
-
 	elapsedTime = time.Now().UnixNano() - startTime
 	httpCode = res.StatusCode
 	resData = string(body)
