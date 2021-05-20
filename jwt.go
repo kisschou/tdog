@@ -89,14 +89,14 @@ func (jwt *Jwt) Check(data string) bool {
 	header := new(JwtHeader)
 	header = header.New()
 	jwtHeader := make(map[string]string)
-	json.Unmarshal([]byte(NewCrypt(jwt.header).Base64Decode()), &jwtHeader)
+	_ = json.Unmarshal([]byte(NewCrypt(jwt.header).Base64Decode()), &jwtHeader)
 	if jwtHeader["type"] != header.Type || jwtHeader["alg"] != header.Algorithm {
 		return false
 	}
 
 	// check payload.
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
+	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	ita, _ := strconv.Atoi(fmt.Sprintf("%1.0f", jwtPayload["ita"]))
 	exp, _ := strconv.Atoi(fmt.Sprintf("%1.0f", jwtPayload["exp"]))
 	ita = ita + exp
@@ -119,7 +119,7 @@ func (jwt *Jwt) Refresh(authorization string) string {
 	jwt = jwt.Walk(authorization)
 	// check payload.
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
+	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	return jwt.New(jwtPayload["data"].(map[string]interface{}))
 }
 
@@ -129,7 +129,7 @@ func (jwt *Jwt) Get(data string, key string) (value interface{}) {
 	}
 	jwt = jwt.Walk(data)
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
+	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	list := jwtPayload["data"].(map[string]interface{})
 	if _, ok := list[key]; ok {
 		value = list[key]
@@ -144,6 +144,6 @@ func (jwt *Jwt) GetData(data string) map[string]interface{} {
 	}
 	jwt = jwt.Walk(data)
 	jwtPayload := make(map[string]interface{})
-	json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
+	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
 	return jwtPayload["data"].(map[string]interface{})
 }
