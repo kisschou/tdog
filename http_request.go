@@ -10,18 +10,17 @@ import (
 
 type (
 	httpRequest struct {
-		Method string
-		Header map[string]string
-		Url    string
-		Params map[string]interface{}
+		Method string                 `json:"method"`
+		Header map[string]string      `json:"header"`
+		Url    string                 `json:"url"`
+		Params map[string]interface{} `json:"params"`
 	}
 
 	httpResponse struct {
-		Code        int
-		Data        string
-		Formatted   map[string]interface{}
-		ElapsedTime int64
-		Error       error
+		Code        int                    `json:"http_code"`
+		Data        string                 `json:"response"`
+		Formatted   map[string]interface{} `json:"formatted"`
+		ElapsedTime int64                  `json:"elapsed_time"`
 	}
 )
 
@@ -30,85 +29,83 @@ func NewRequest() *httpRequest {
 	return &httpRequest{Method: "", Header: map[string]string{}, Url: "", Params: map[string]interface{}{}}
 }
 
-// FormRequest 发起表单请求
-func (hp *httpRequest) FormRequest() (httpCode int, resData string, elapsedTime int64, err error) {
-	startTime := time.Now().UnixNano()
-	client := &http.Client{}
-	reqDataJson, _ := json.Marshal(hp.Params)
-	req, err := http.NewRequest(hp.Method, hp.Url, bytes.NewBuffer(reqDataJson))
+func sendRequest(hp *httpRequest) (response *httpResponse, err error) {
+	// 入参转json
+	reqData, err := json.Marshal(hp.Params)
 	if err != nil {
-		httpCode = http.StatusInternalServerError
-		elapsedTime = time.Now().UnixNano() - startTime
 		return
 	}
+
+	// 创建请求体
+	req, err := http.NewRequest(hp.Method, hp.Url, bytes.NewBuffer(reqData))
+	if err != nil {
+		return
+	}
+
+	// 写入请求头部
 	for k, v := range hp.Header {
 		req.Header.Set(k, v)
 	}
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+
+	// 发起请求
+	var res *http.Response
+	res, err = http.DefaultClient.Do(req)
 	if err != nil {
-		httpCode = http.StatusInternalServerError
-		elapsedTime = time.Now().UnixNano() - startTime
 		return
 	}
-	elapsedTime = time.Now().UnixNano() - startTime
-	httpCode = res.StatusCode
-	resData = string(body)
+	defer res.Body.Close()
+
+	// 获取返回的内容
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	// 数据处理
+	response = new(httpResponse)
+	response.Code = res.StatusCode
+	response.Data = string(body)
+	formatted := make(map[string]interface{}, 0)
+	_ = json.Unmarshal(body, &formatted)
+	response.Formatted = formatted
 	return
 }
 
-// BytesPost 发送二进制数据流
-func (hp *httpRequest) BytesPost() (int, string, int64, error) {
+// Send 发起表单请求
+func (hp *httpRequest) Send() *httpResponse {
 	startTime := time.Now().UnixNano()
-	var elapsedTime int64
-	data, _ := json.Marshal(hp.Params)
-	body := bytes.NewReader(data)
-	req, err := http.NewRequest(hp.Method, hp.Url, body)
+	response, err := sendRequest(hp)
+	info, err := json.Marshal(&httpRequest{
+		Method: hp.Method,
+		Header: hp.Header,
+		Url:    hp.Url,
+		Params: hp.Params,
+	})
+	logInfo := "请求: " + string(info)
 	if err != nil {
-		go NewLogger().Error(err.Error())
-		elapsedTime = time.Now().UnixNano() - startTime
-		return http.StatusInternalServerError, "", elapsedTime, err
-	}
+		// 写入log
+		logInfo += "时发生错误, 错误信息: " + err.Error()
+		go NewLogger().Error(logInfo)
 
-	for k, v := range hp.Header {
-		req.Header.Set(k, v)
-	}
-
-	var resp *http.Response
-	resp, err = http.DefaultClient.Do(req)
-	if err != nil {
-		go NewLogger().Error(err.Error())
-		elapsedTime = time.Now().UnixNano() - startTime
-		return http.StatusInternalServerError, "", elapsedTime, err
-	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		go NewLogger().Error(err.Error())
-	}
-
-	elapsedTime = time.Now().UnixNano() - startTime
-	return resp.StatusCode, string(b), elapsedTime, err
-}
-
-// ServicePost 针对请求网关服务构建
-// 继承后只需要set结构体中的Params
-func (hp *httpRequest) ServicePost() (bool, string, int64) {
-	// header
-	header := make(map[string]string)
-	header["Content-Type"] = "application/json"
-	header["Connection"] = "Keep-Alive"
-
-	hp.Method = "POST"
-	hp.Header = header
-	hp.Url = NewConfig().Get("api_url.gateway_url").ToString() + "/feign/http"
-	httpCode, res, elapsedTime, err := hp.BytesPost()
-	if httpCode != http.StatusOK || err != nil {
-		if err != nil {
-			go NewLogger().Error(err.Error())
+		errorImpl := NewError("SERVICE_ERROR")
+		var formatted = map[string]interface{}{
+			"err_code": errorImpl.Code(),
+			"message":  errorImpl.Msg(),
 		}
-		return false, res, elapsedTime
+		data, _ := json.Marshal(formatted)
+		return &httpResponse{
+			Code:        http.StatusInternalServerError,
+			Formatted:   formatted,
+			Data:        string(data),
+			ElapsedTime: time.Now().UnixNano() - startTime,
+		}
 	}
-	return true, res, elapsedTime
+	response.ElapsedTime = time.Now().UnixNano() - startTime
+
+	// 写入log
+	data, _ := json.Marshal(response)
+	logInfo += "成功， 返回数据: " + string(data)
+	go NewLogger().Info(logInfo)
+
+	return response
 }
