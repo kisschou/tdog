@@ -25,31 +25,12 @@ type (
 	}
 )
 
+// NewRequest 初始化一个请求模型
 func NewRequest() *httpRequest {
 	return &httpRequest{Method: "", Header: map[string]string{}, Url: "", Params: map[string]interface{}{}}
 }
 
-// FormRequest 使用说明
-// header := make(map[string]string)
-// params := make(map[string]interface{})
-// // header
-// header["Authorization"] = resMap["authorization"].(string)
-// header["Content-Type"] = "application/json"
-// header["Connection"] = "keep-alive"
-// // params
-// params["username"] = "admin"
-// params["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
-// httpRequestLib := new(lib.httpRequest)
-// httpRequestLib.Method = "POST"
-// httpRequestLib.Header = header
-// httpRequestLib.Url = "http://127.0.0.1:8000/member/login"
-// httpRequestLib.Params = params
-// res, err := httpRequestLib.FormRequest()
-// if err != nil {
-//    fmt.Println(err)
-// }
-// fmt.Println("===========================> " + httpRequestLib.Method + " " + httpRequestLib.Url)
-// fmt.Println(res)
+// FormRequest 发起表单请求
 func (hp *httpRequest) FormRequest() (httpCode int, resData string, elapsedTime int64, err error) {
 	startTime := time.Now().UnixNano()
 	client := &http.Client{}
@@ -78,35 +59,6 @@ func (hp *httpRequest) FormRequest() (httpCode int, resData string, elapsedTime 
 }
 
 // BytesPost 发送二进制数据流
-// // header
-// header["Authorization"] = resMap["authorization"].(string)
-// header["Content-Type"] = "text/plain"
-// header["Connection"] = "Keep-Alive"
-// // params
-// params["method"] = "POST"
-// params["base_url"] = "user_url"
-// params["action_url"] = "/member/login"
-// params["header"] = ""
-// params["body"] = ""
-// sendHeader := make(map[string]string)
-// sendHeader["Authorization"] = resMap["authorization"].(string)
-// sendHeaderJson, _ := json.Marshal(sendHeader)
-// params["header"] = sendHeaderJson
-// sendBody := make(map[string]interface{})
-// sendBody["username"] = "admin"
-// sendBody["password"] = "$2a$10$fP.426qKaTmix50Oln8L.uav55gELhAd0Eg66Av4oG86u8km7D/Ky"
-// sendBodyJson, _ := json.Marshal(sendBody)
-// params["body"] = sendBodyJson
-// httpRequestLib.Method = "POST"
-// httpRequestLib.Header = header
-// httpRequestLib.Url = "http://127.0.0.1:8000/feign/http"
-// httpRequestLib.Params = params
-// res, err = httpRequestLib.BytesPost()
-// if err != nil {
-//	fmt.Println(err)
-// }
-// mt.Println("===========================> " + httpRequestLib.Method + " " + httpRequestLib.Url)
-// fmt.Println(res)
 func (hp *httpRequest) BytesPost() (int, string, int64, error) {
 	startTime := time.Now().UnixNano()
 	var elapsedTime int64
