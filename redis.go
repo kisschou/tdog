@@ -40,7 +40,8 @@ func NewRedis() *redisModel {
 func (r *redisModel) Change(name string) *redisImpl.Client {
 	var host, port, pass string
 	var poolSize int = 1
-	resultImpls := NewConfig().SetFile("cache").SetPrefix(name+".").GetMulti("host", "port", "pass", "pool_size")
+	envData := NewUtil().GetEnv("CONFIG_PATH")
+	resultImpls := NewConfig().SetPath(envData["CONFIG_PATH"]).SetFile("cache").SetPrefix(name+".").GetMulti("host", "port", "pass", "pool_size")
 	for k, resultImpl := range resultImpls {
 		switch k {
 		case "host":

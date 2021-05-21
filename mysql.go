@@ -106,7 +106,8 @@ func (sql *mySql) New(name string, conf *MySqlConf) *xorm.Engine {
 // loadConf load configuration from configuration file.
 // write to new *mysqlConf and return it.
 func loadConf(name string) *MySqlConf {
-	configResults := NewConfig().SetFile("database").SetPrefix(name+".").GetMulti("host", "port", "user", "pass", "db", "charset", "prefix")
+	envData := NewUtil().GetEnv("CONFIG_PATH")
+	configResults := NewConfig().SetPath(envData["CONFIG_PATH"]).SetFile("database").SetPrefix(name+".").GetMulti("host", "port", "user", "pass", "db", "charset", "prefix")
 	return &MySqlConf{
 		engine:       "mysql",
 		Host:         configResults["host"].ToString(),
