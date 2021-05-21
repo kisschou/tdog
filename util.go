@@ -231,19 +231,27 @@ func (u *util) Isset(dataType string, input, needle interface{}) bool {
 		_ = needle.([]interface{})[input.(int)]
 
 	case "map[string]string":
-		_ = needle.(map[string]string)[input.(string)]
+		if _, ok := needle.(map[string]string)[input.(string)]; !ok {
+			return false
+		}
 		break
 
 	case "map[string]int":
-		_ = needle.(map[string]int)[input.(string)]
+		if _, ok := needle.(map[string]int)[input.(string)]; !ok {
+			return false
+		}
 		break
 
 	case "map[string]int64":
-		_ = needle.(map[string]int64)[input.(string)]
+		if _, ok := needle.(map[string]int64)[input.(string)]; !ok {
+			return false
+		}
 		break
 
 	case "map[string]interface{}":
-		_ = needle.(map[string]interface{})[input.(string)]
+		if _, ok := needle.(map[string]interface{})[input.(string)]; !ok {
+			return false
+		}
 		break
 	}
 	return true
