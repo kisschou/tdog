@@ -68,3 +68,24 @@ func getContent(input string) (data []byte, err error) {
 	data, err = ioutil.ReadFile(input)
 	return
 }
+
+// removeSpace like its name. But only delete the leading and trailing spaces.
+func removeSpace(input []rune) []rune {
+	res := input
+	for k, v := range input {
+		if v == ' ' {
+			res = input[k+1:]
+		} else {
+			break
+		}
+	}
+	input = res
+	for i := len(input) - 1; i > 0; i-- {
+		if input[i] == ' ' {
+			res = input[:i]
+		} else {
+			break
+		}
+	}
+	return res
+}
