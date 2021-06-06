@@ -6,9 +6,48 @@
 package config
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"strings"
+)
+
+type (
+	box struct {
+		childBox      map[string]*box
+		landscapeList map[string][]landscapeInfo
+	}
+
+	landscapeInfo struct {
+		snippetType int
+		snippet     interface{}
+	}
+)
+
+const (
+	typeInterface = iota
+	typeString
+	typeInt
+	typeInt64
+	typeBool
+
+	typeSliceInterface
+	typeSliceString
+	typeSliceInt
+	typeSliceInt64
+	typeSliceMapStringString
+	typeSliceMapStringSliceString
+	typeSliceMapStringSliceInt
+	typeSliceMapStringSliceInt64
+	typeSliceMapStringSliceInterface
+
+	typeMapStringInterface
+	typeMapStringString
+	typeMapStringInt
+	typeMapStringInt64
+	typeMapStringSliceString
+	typeMapStringSliceInt
+	typeMapStringSliceInt64
 )
 
 // getFilesBySuffix Gets the filename of all the specified suffixes from the specified path.
@@ -88,4 +127,25 @@ func removeSpace(input []rune) []rune {
 		}
 	}
 	return res
+}
+
+func snippetTypeLexel(actualType int, actualSnippet interface{}) []landscapeInfo {
+}
+
+func snippetAnalysis(tree *tomlTree) (box *box) {
+	if tree.childTree != nil {
+		for categoryName, childTree := range tree.childTree {
+			box.childBox[categoryName] = snippetAnalysis(childTree)
+		}
+	}
+	if tree.landscapeList != nil {
+		for label, snippet := range tree.landscapeList {
+			box.landscapeList[label] = snippetLexel(bytes.Runes([]byte(snippet)))
+		}
+	}
+	return
+}
+
+func (tl *tomlLexer) query() *box {
+	return snippetAnalysis(tl.box)
 }

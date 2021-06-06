@@ -72,7 +72,6 @@ func (tl *tomlLexer) inBox(label string) bool {
 	return false
 }
 
-// putCategory put the categray in tl.box.
 func (tl *tomlLexer) putCategory() {
 	// Convert to string and remove spaces.
 	landscape = removeSpace(landscape)
@@ -94,21 +93,31 @@ func (tl *tomlLexer) putCategory() {
 
 // putInBox put k-v data in tl.box.
 func (tl *tomlLexer) putInBox(landscape string) {
+	// label no found.
 	if len(tl.currentLabel) < 1 {
 		return
 	}
+
+	// init a new toml tree.
 	box := new(tomlTree)
+
+	// extends tl.box.
 	if tl.box != nil {
 		box = tl.box
 	}
+
 	if len(tl.currentTree) < 1 {
 		if box.landscapeList == nil {
-			box.landscapeList = make([]map[string]string, 0)
+			box.landscapeList = make(map[string]string, 0)
 		}
-		box.landscapeList = append(box.landscapeList, map[string]string{tl.currentLabel: landscape})
+		box.landscapeList[tl.currentLabel] = landscape
 	}
+
 	if tl.inBox(tl.currentTree) {
-		box.childTree[tl.currentTree].landscapeList = append(box.childTree[tl.currentTree].landscapeList, map[string]string{tl.currentLabel: landscape})
+		if box.childTree[tl.currentTree].landscapeList == nil {
+			box.childTree[tl.currentTree].landscapeList = make(map[string]string, 0)
+		}
+		box.childTree[tl.currentTree].landscapeList[tl.currentLabel] = landscape
 	}
 	tl.box = box
 }
@@ -231,7 +240,7 @@ func (tl *tomlLexer) doubleQuotationMarks() {
 	// check is triple.
 	if doubleQuotationMarksSameCount == 1 {
 		if tl.input[tl.index] == tl.input[tl.index-1] && tl.input[tl.index] == tl.input[tl.index+1] {
-			singleQuotationMarksSameCount = -1
+			doubleQuotationMarksSameCount = -1
 			if doubleQuotationMarksTripleMonitor == monitorStart {
 				doubleQuotationMarksTripleMonitor = monitorStop
 			} else {
@@ -273,10 +282,15 @@ func (tl *tomlLexer) collation() *tomlLexer {
 
 		// end
 		if next == -1 {
+			if equalMonitor == monitorStart {
+				tl.equal()
+			}
 			break
 		}
 
-		landscape = append(landscape, next)
+		if commendMonitor == monitorStop {
+			landscape = append(landscape, next)
+		}
 
 		switch next {
 		case '(':
@@ -306,7 +320,9 @@ func (tl *tomlLexer) collation() *tomlLexer {
 			}
 			break
 		case '#':
-			tl.commend()
+			if commendMonitor == monitorStop {
+				tl.commend()
+			}
 			break
 		case '"':
 			tl.doubleQuotationMarks()
@@ -330,7 +346,6 @@ func (tl *tomlLexer) collation() *tomlLexer {
 
 		tl.index++
 	}
-	return tl
 }
 
 func (tl *tomlLexer) output() {
