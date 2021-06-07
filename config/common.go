@@ -9,6 +9,8 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path"
+	"runtime"
 	"strings"
 )
 
@@ -51,12 +53,12 @@ const (
 )
 
 // getFilesBySuffix Gets the filename of all the specified suffixes from the specified path.
-// given string path means file path of scan
+// given string scanPath means file path of scan
 // given string suffix means catch for same suffix
 // returns []string files list of file name, file name has no suffix
 // returns error err throw it if has errors
-func getFilesBySuffix(path string, suffix string) (files []string, err error) {
-	rd, err := ioutil.ReadDir(path)
+func getFilesBySuffix(scanPath string, suffix string) (files []string, err error) {
+	rd, err := ioutil.ReadDir(scanPath)
 	if err != nil {
 		return
 	}
@@ -64,7 +66,12 @@ func getFilesBySuffix(path string, suffix string) (files []string, err error) {
 	for _, fi := range rd {
 		if !fi.IsDir() {
 			fileSuffix := path.Ext(fi.Name())
-			fileName := strings.TrimRight(path, '/') + "/" + fi.Name()
+			fileName := ""
+			if runtime.GOOS == "windows" {
+				fileName = strings.TrimRight(scanPath, "\\") + "\\" + fi.Name()
+			} else {
+				fileName = strings.TrimRight(scanPath, "/") + "/" + fi.Name()
+			}
 			if "."+suffix == fileSuffix {
 				files = append(files, fileName)
 			}
@@ -129,7 +136,14 @@ func removeSpace(input []rune) []rune {
 	return res
 }
 
+func snippetLexel(input []rune) []landscapeInfo {
+	snippetTypeList := make([]landscapeInfo, 0)
+	return snippetTypeList
+}
+
 func snippetTypeLexel(actualType int, actualSnippet interface{}) []landscapeInfo {
+	snippetTypeList := make([]landscapeInfo, 0)
+	return snippetTypeList
 }
 
 func snippetAnalysis(tree *tomlTree) (box *box) {

@@ -18,7 +18,7 @@ type (
 	// tomlTree .
 	tomlTree struct {
 		childTree     map[string]*tomlTree
-		landscapeList []map[string]string
+		landscapeList map[string]string
 	}
 )
 
@@ -346,6 +346,7 @@ func (tl *tomlLexer) collation() *tomlLexer {
 
 		tl.index++
 	}
+	return tl
 }
 
 func (tl *tomlLexer) output() {

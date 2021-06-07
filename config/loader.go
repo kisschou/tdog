@@ -13,13 +13,13 @@ type ()
 
 func Load(input string) {
 	if strings.Contains(input, "=") {
-		return loadBytes([]byte(input))
+		loadBytes([]byte(input))
 	}
 	s := strings.Split(input, ".")
 	if len(s) > 1 && s[len(s)-1] == "toml" {
-		return loadFile(input)
+		loadFile(input)
 	}
-	return loadDir(input)
+	loadDir(input)
 }
 
 func loadBytes(input []byte) {
@@ -28,7 +28,7 @@ func loadBytes(input []byte) {
 
 func loadDir(input string) {
 	if isDir(input) {
-		files, err := getFilesBySuffix(input, "toml")
+		files, _ := getFilesBySuffix(input, "toml")
 		for _, file := range files {
 			loadFile(file)
 		}
