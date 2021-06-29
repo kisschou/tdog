@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -65,6 +66,9 @@ func getFilePath() string {
 	if len(path) < 1 {
 		path, _ = os.Getwd()
 		path += "/config"
+	}
+	if runtime.GOOS == "windows" {
+		path = strings.ReplaceAll(path, "/", "\\")
 	}
 	return path
 }
