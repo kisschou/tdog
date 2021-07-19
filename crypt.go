@@ -143,7 +143,7 @@ func (h *crypt) GenerateRsaKey(bits int) (publicKey, privateKey string) {
 	X509PrivateKey := x509.MarshalPKCS1PrivateKey(priKey)
 	//使用pem格式对x509输出的内容进行编码
 	//构建一个pem.Block结构体对象
-	privateBlock := pem.Block{Type: "PRIVATE KEY", Bytes: X509PrivateKey}
+	privateBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: X509PrivateKey}
 	// 生成私钥
 	privateKey = string(pem.EncodeToMemory(&privateBlock))
 	//获取公钥的数据
