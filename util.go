@@ -635,7 +635,7 @@ func (u *util) SnakeString(s string) string {
 func (u *util) CamelString(s string) string {
 	data := make([]byte, 0, len(s))
 	j := false
-	k := false
+	k := true // 首字母是否小写 // true: 小写; false: 大写
 	num := len(s) - 1
 	for i := 0; i <= num; i++ {
 		d := s[i]
