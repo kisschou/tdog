@@ -403,6 +403,7 @@ func (rc *validReportCenter) CheckSuccess(inputs ...string) (isAllSuccess bool, 
 	for _, input := range inputs {
 		currentReport := rc.ReportByName(input)
 		if !currentReport.Result {
+			isAllSuccess = false
 			failList = append(failList, currentReport)
 		}
 	}
