@@ -23,15 +23,26 @@ func (r *Response) New(c *Context) *Response {
 
 func (r *Response) Success(data interface{}, msg string) {
 	r.JSON(http.StatusOK, &H{
-		"data":     data,
-		"err_code": 0,
-		"message":  msg,
+		"data":      data,
+		"errorCode": 0,
+		"errorMsg":  msg,
+	})
+}
+
+func (r *Response) ListPage(list interface{}, count int64, msg string) {
+	r.JSON(http.StatusOK, &H{
+		"data": map[string]interface{}{
+			"list":  list,
+			"count": count,
+		},
+		"errorCode": 0,
+		"errorMsg":  msg,
 	})
 }
 
 func (r *Response) Error(code string) {
 	r.JSON(http.StatusInternalServerError, &H{
-		"err_code": code,
+		"errorCode": code,
 	})
 }
 
@@ -42,40 +53,6 @@ func (r *Response) JSON(code int, obj interface{}) {
 
 	r.context.Writer.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(r.context.Writer)
-	/*
-		newObj := make(map[string]interface{})
-		newObj = obj.(H)
-		if code != http.StatusOK {
-			if _, ok := newObj["code"]; ok {
-				errorImpl := NewError(newObj["code"].(string))
-				newObj["err_code"] = errorImpl.Code()
-				newObj["message"] = errorImpl.Msg()
-
-				// 附加消息返回
-				if _, ok := newObj["_msg"]; ok {
-					newObj["message"] = newObj["message"].(string) + newObj["_msg"].(string)
-					delete(newObj, "_msg")
-				}
-
-				// 替换提示消息
-				if _, ok := newObj["_replace"]; ok {
-					newObj["message"] = newObj["_replace"].(string)
-					delete(newObj, "_replace")
-				}
-
-				// 模版输出
-				if _, ok := newObj["_template"]; ok {
-					newObj["message"] = fmt.Sprintf(newObj["_template"].(string), newObj["message"].(string))
-					delete(newObj, "_template")
-				}
-
-				delete(newObj, "code")
-			}
-		} else {
-			newObj["err_code"] = 0
-		}
-		obj = newObj
-	*/
 	if err := encoder.Encode(obj); err != nil {
 		r.context.Error(err, obj)
 		http.Error(r.context.Writer, err.Error(), 500)
