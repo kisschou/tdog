@@ -20,6 +20,7 @@ import (
 	ParentCrc32 "hash/crc32"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/wenzhenxi/gorsa"
 )
@@ -203,4 +204,20 @@ func (h *crypt) RsaPubDecode(pubKey string) string {
 		return ""
 	}
 	return pubDecode
+}
+
+// ToUnicode convert string to unicode.
+func (h *crypt) ToUnicode() (string, error) {
+	str, err := strconv.Unquote(strings.Replace(strconv.Quote(string(h.input)), `\\u`, `\u`, -1))
+	if err != nil {
+		return "", err
+	}
+	return str, err
+}
+
+// UnicodeToStr convert unicode to string.
+func (h *crypt) UnicodeToStr() string {
+	textQuoted := strconv.QuoteToASCII(h.input)
+	textUnquoted := textQuoted[1 : len(textQuoted)-1]
+	return textUnquoted
 }
