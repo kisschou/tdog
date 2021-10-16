@@ -763,6 +763,17 @@ func (u *util) GetEnv(keys ...string) map[string]string {
 	return result
 }
 
+// FillToLen 填充指定字符到指定长度
+func (u *util) FillToLen(s string, length int, fill rune) string {
+	if len(s) >= length {
+		return s
+	}
+	for i := len(s); i < length; i++ {
+		s = string(fill) + s
+	}
+	return s
+}
+
 // Recover 从恐慌(panic)中走出来,并把造成恐慌的源头写入日志
 // 这个函数一般用于defer
 func Recover() {
