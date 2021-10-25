@@ -765,8 +765,11 @@ func (u *util) GetEnv(keys ...string) map[string]string {
 
 // FillToLen 填充指定字符到指定长度
 func (u *util) FillToLen(s string, length int, fill rune) string {
-	if len(s) >= length {
+	if len(s) == length {
 		return s
+	}
+	if len(s) > length {
+		return s[0:length]
 	}
 	for i := len(s); i < length; i++ {
 		s = string(fill) + s
