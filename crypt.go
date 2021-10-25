@@ -6,6 +6,9 @@
 package tdog
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	ParentMd5 "crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
@@ -128,6 +131,8 @@ func (h *crypt) BiuPwdBuilder(salt string, password string) (newPassword string)
 	return
 }
 
+// --------------- Rsa加密 ---------------
+
 // GenerateRsaKey 生成公私钥
 // @param bits int RSA密钥的字位数
 // @return publicKey string 公钥
@@ -204,6 +209,54 @@ func (h *crypt) RsaPubDecode(pubKey string) string {
 		return ""
 	}
 	return pubDecode
+}
+
+// --------------- Aes加密 ---------------
+
+// pKCS7Padding .
+func pKCS7Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
+}
+
+// pKCS7UnPadding .
+func pKCS7UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
+}
+
+// AesEncrypt AES加密
+func (h *crypt) AesEncrypt(key []byte) (string, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	blockSize := block.BlockSize()
+	origData := pKCS7Padding([]byte(h.input), blockSize)
+	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
+	crypted := make([]byte, len(origData))
+	blockMode.CryptBlocks(crypted, origData)
+	return base64.StdEncoding.EncodeToString(crypted), nil
+}
+
+// AesDecrypt AES解密
+func (h *crypt) AesDecrypt(key []byte) (string, error) {
+	crypted, err := base64.StdEncoding.DecodeString(h.input)
+	if err != nil {
+		return "", err
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	blockSize := block.BlockSize()
+	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+	origData := make([]byte, len(crypted))
+	blockMode.CryptBlocks(origData, crypted)
+	origData = pKCS7UnPadding(origData)
+	return string(origData), nil
 }
 
 // ToUnicode convert string to unicode.
