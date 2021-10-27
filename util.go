@@ -777,6 +777,38 @@ func (u *util) FillToLen(s string, length int, fill rune) string {
 	return s
 }
 
+// Println 打印配色.
+// 使用可选的颜色配置 color 在命令行中输出 input 文本信息.
+// color 为两位, 其中个位代表文本颜色, 十位代表背景色.
+// 颜色说明:
+// 1. 黑色;
+// 2. 白色;
+// 3. 红色;
+// 4. 绿色;
+// 5. 黄色;
+// 6. 蓝色;
+// 7. 紫色;
+func Println(input string, color int) {
+	template := "\x1b[%dm %s \x1b[0m\n"
+	wColor := []int{0, 30, 37, 31, 32, 33, 34, 35}
+	bColor := []int{0, 40, 47, 41, 42, 43, 44, 45}
+	if color < 1 {
+		fmt.Println(input)
+		return
+	}
+	bc := color / 10
+	wc := color % 10
+	if wc == 0 {
+		wc = 1
+	}
+	if bc > 0 {
+		template = "\x1b[%d;%dm %s \x1b[0m\n"
+		fmt.Print(fmt.Sprintf(template, bColor[bc], wColor[wc], input))
+		return
+	}
+	fmt.Print(fmt.Sprintf(template, wColor[wc], input))
+}
+
 // Recover 从恐慌(panic)中走出来,并把造成恐慌的源头写入日志
 // 这个函数一般用于defer
 func Recover() {
