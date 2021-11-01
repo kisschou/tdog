@@ -2,8 +2,6 @@ package tdog
 
 import (
 	"encoding/json"
-	"fmt"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -14,9 +12,6 @@ type (
 		Type      string // 类型
 		Algorithm string // 加密算法
 	}
-
-	// JwtPayload Payload 记录你需要的信息。 其中应该包含 Claims
-	JwtPayload map[string]interface{}
 
 	// JwtSignature 通过 header 生明的加密方法生成 签名
 	JwtSignature string
@@ -36,40 +31,36 @@ func (header *JwtHeader) New() *JwtHeader {
 	}
 }
 
-// New USAGE:
-// jwt := new(core.Jwt)
-// data := make(map[string]interface{})
-// data["username"] = username
-// data["password"] = password
-// jwt.New(data)
-func (jwt *Jwt) New(data JwtPayload) string {
+// NewJwt 初始化一个Jwt.
+func NewJwt() *Jwt {
+	return new(Jwt)
+}
 
+// Build 使用 data 的数据, 和16位的 iv 作为秘钥生成jwt字符串.
+func (jwt *Jwt) Build(data map[string]interface{}, iv string) string {
 	// header
-	jwtHeader := make(map[string]string)
-	header := new(JwtHeader)
-	header = header.New()
-	jwtHeader["type"] = header.Type
-	jwtHeader["alg"] = header.Algorithm
-	jsonData, _ := json.Marshal(jwtHeader)
+	jsonData, _ := json.Marshal(new(JwtHeader).New())
 	jwt.header = NewCrypt(string(jsonData)).Base64Encode()
 
 	// payload
 	payload := make(map[string]interface{})
 	payload["data"] = data
-	payload["ita"] = time.Now().Unix()
-	payload["exp"] = 7200
+	payload["ita"] = time.Now().Unix() + 7200
 	jsonData, _ = json.Marshal(payload)
-	jwt.payload = NewCrypt(string(jsonData)).Base64Encode()
+	jwt.payload, _ = NewCrypt(string(jsonData)).AesEncrypt([]byte(iv))
 
 	// signature
 	jsonData, _ = json.Marshal(payload)
-	jwt.signature = NewCrypt(string(jsonData) + NewConfig().Get("hex_key").ToString()).Sha256()
+	jwt.signature = NewCrypt(string(jsonData) + "_cryptWithSalt-" + iv).Sha256()
 
 	return jwt.header + "." + jwt.payload + "." + jwt.signature
 }
 
-func (jwt *Jwt) Walk(data string) *Jwt {
-	jwtData := strings.Split(data, ".")
+func walk(input string) *Jwt {
+	jwtData := strings.Split(input, ".")
+
+	defer Recover()
+
 	return &Jwt{
 		header:    jwtData[0],
 		payload:   jwtData[1],
@@ -77,73 +68,82 @@ func (jwt *Jwt) Walk(data string) *Jwt {
 	}
 }
 
-func (jwt *Jwt) Check(data string) bool {
-	jwtData := strings.Split(data, ".")
-	if len(jwtData) != 3 {
+// Valid 使用 iv 作为秘钥, 校验 input 字符串.
+func (jwt *Jwt) Valid(input string, iv string) bool {
+	jwt = walk(input)
+	if jwt == nil {
 		return false
 	}
 
-	jwt = jwt.Walk(data)
-
-	// check header.
-	header := new(JwtHeader)
-	header = header.New()
-	jwtHeader := make(map[string]string)
-	_ = json.Unmarshal([]byte(NewCrypt(jwt.header).Base64Decode()), &jwtHeader)
-	if jwtHeader["type"] != header.Type || jwtHeader["alg"] != header.Algorithm {
+	// valid header .
+	baseJwtHeader, _ := json.Marshal(new(JwtHeader).New())
+	if jwt.header != NewCrypt(string(baseJwtHeader)).Base64Encode() {
 		return false
 	}
 
-	// check payload.
-	jwtPayload := make(map[string]interface{})
-	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
-	ita, _ := strconv.Atoi(fmt.Sprintf("%1.0f", jwtPayload["ita"]))
-	exp, _ := strconv.Atoi(fmt.Sprintf("%1.0f", jwtPayload["exp"]))
-	ita = ita + exp
-	if ita < int(time.Now().Unix()) {
+	// valid exp .
+	dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
+	dm := make(map[string]interface{}, 0)
+	_ = json.Unmarshal([]byte(dt), &dm)
+	exp := int64(dm["ita"].(float64))
+	if time.Now().Unix() > exp {
 		return false
 	}
 
-	// check signature.
-	if jwt.signature != NewCrypt(NewCrypt(jwt.payload).Base64Decode()+NewConfig().Get("hex_key").ToString()).Sha256() {
+	// valid signature .
+	if NewCrypt(dt+"_cryptWithSalt-"+iv).Sha256() != jwt.signature {
 		return false
 	}
 
 	return true
 }
 
-func (jwt *Jwt) Refresh(authorization string) string {
-	if jwt.Check(authorization) {
-		return authorization
-	}
-	jwt = jwt.Walk(authorization)
-	// check payload.
-	jwtPayload := make(map[string]interface{})
-	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
-	return jwt.New(jwtPayload["data"].(map[string]interface{}))
-}
+// Get 使用 iv 作为秘钥, 解析 input 字符串, 并从其中的数据集合中获取下标为 key .
+func (jwt *Jwt) Get(input string, key string, iv string) (value interface{}) {
+	if jwt.Valid(input, iv) {
+		jwt = walk(input)
 
-func (jwt *Jwt) Get(data string, key string) (value interface{}) {
-	if !jwt.Check(data) {
-		return ""
-	}
-	jwt = jwt.Walk(data)
-	jwtPayload := make(map[string]interface{})
-	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
-	list := jwtPayload["data"].(map[string]interface{})
-	if _, ok := list[key]; ok {
-		value = list[key]
-		return
+		dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
+		dm := make(map[string]interface{}, 0)
+		_ = json.Unmarshal([]byte(dt), &dm)
+		data := dm["data"].(map[string]interface{})
+
+		if NewUtil().Isset("map[string]interface{}", key, data) {
+			value = data[key]
+		}
 	}
 	return
 }
 
-func (jwt *Jwt) GetData(data string) map[string]interface{} {
-	if !jwt.Check(data) {
-		return nil
+// GetData 使用 iv 作为秘钥, 解析 input 字符串, 取出其中的数据集合 .
+func (jwt *Jwt) GetData(input string, iv string) (data map[string]interface{}) {
+	if jwt.Valid(input, iv) {
+		jwt = walk(input)
+
+		dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
+		dm := make(map[string]interface{}, 0)
+		_ = json.Unmarshal([]byte(dt), &dm)
+		data = dm["data"].(map[string]interface{})
 	}
-	jwt = jwt.Walk(data)
-	jwtPayload := make(map[string]interface{})
-	_ = json.Unmarshal([]byte(NewCrypt(jwt.payload).Base64Decode()), &jwtPayload)
-	return jwtPayload["data"].(map[string]interface{})
+	return
+}
+
+// Refresh .
+func (jwt *Jwt) Refresh(input string, iv string) string {
+	// header
+	jsonData, _ := json.Marshal(new(JwtHeader).New())
+	jwt.header = NewCrypt(string(jsonData)).Base64Encode()
+
+	// payload
+	payload := make(map[string]interface{})
+	payload["data"] = jwt.GetData(input, iv)
+	payload["ita"] = time.Now().Unix() + 7200
+	jsonData, _ = json.Marshal(payload)
+	jwt.payload, _ = NewCrypt(string(jsonData)).AesEncrypt([]byte(iv))
+
+	// signature
+	jsonData, _ = json.Marshal(payload)
+	jwt.signature = NewCrypt(string(jsonData) + "_cryptWithSalt-" + iv).Sha256()
+
+	return jwt.header + "." + jwt.payload + "." + jwt.signature
 }
