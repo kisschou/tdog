@@ -54,11 +54,6 @@ func Test_Refresh(t *testing.T) {
 	// memberId
 	var trueMemberId int64 = 6683020668019466240
 
-	// data
-	testData := map[string]interface{}{
-		"memberId": trueMemberId,
-	}
-
 	// Refresh .
 	jwt = jwtTdog.Refresh(jwt, iv)
 
