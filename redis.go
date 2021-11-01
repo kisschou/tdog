@@ -7,6 +7,7 @@ package tdog
 
 import (
 	"context"
+
 	redisImpl "github.com/go-redis/redis/v8"
 )
 
@@ -40,38 +41,43 @@ func NewRedis() *redisModel {
 func (r *redisModel) Change(name string) *redisImpl.Client {
 	var host, port, pass string
 	var poolSize int = 1
+	engine := new(redisImpl.Client)
+
 	envData := NewUtil().GetEnv("CONFIG_PATH")
-	resultImpls := NewConfig().SetPath(envData["CONFIG_PATH"]).SetFile("cache").SetPrefix(name+".").GetMulti("host", "port", "pass", "pool_size")
-	for k, resultImpl := range resultImpls {
-		switch k {
-		case "host":
-			host = resultImpl.ToString()
-			break
-		case "port":
-			port = resultImpl.ToString()
-			break
-		case "pass":
-			pass = resultImpl.ToString()
-			break
-		case "pool_size":
-			poolSize = resultImpl.ToInt()
-			break
+	if len(envData["CONFIG_PATH"]) > 1 {
+		resultImpls := NewConfig().SetPath(envData["CONFIG_PATH"]).SetFile("cache").SetPrefix(name+".").GetMulti("host", "port", "pass", "pool_size")
+		for k, resultImpl := range resultImpls {
+			switch k {
+			case "host":
+				host = resultImpl.ToString()
+				break
+			case "port":
+				port = resultImpl.ToString()
+				break
+			case "pass":
+				pass = resultImpl.ToString()
+				break
+			case "pool_size":
+				poolSize = resultImpl.ToInt()
+				break
+			}
+		}
+		if host == "" || port == "" {
+			go NewLogger().Error("未找到该标签下的redis配置信息")
+			return nil
+		}
+		engine := redisImpl.NewClient(&redisImpl.Options{
+			Addr:     host + ":" + port,
+			Password: pass,
+			DB:       0,
+			PoolSize: poolSize,
+		})
+		if _, err := engine.Ping(Ctx).Result(); err != nil {
+			go NewLogger().Error("(" + name + ")redis连接失败:" + err.Error())
+			return nil
 		}
 	}
-	if host == "" || port == "" {
-		go NewLogger().Error("未找到该标签下的redis配置信息")
-		return nil
-	}
-	engine := redisImpl.NewClient(&redisImpl.Options{
-		Addr:     host + ":" + port,
-		Password: pass,
-		DB:       0,
-		PoolSize: poolSize,
-	})
-	if _, err := engine.Ping(Ctx).Result(); err != nil {
-		go NewLogger().Error("(" + name + ")redis连接失败:" + err.Error())
-		return nil
-	}
+
 	// 加入连接池
 	if r.engineList == nil {
 		r.engineList = make(map[string]*redisImpl.Client, 0)
