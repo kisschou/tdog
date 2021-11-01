@@ -57,18 +57,20 @@ func (sql *mySql) Change(name string) *xorm.Engine {
 	if engine == nil {
 		var err error
 		conf := loadConf(name)
-		engine, err = xorm.NewEngine(conf.engine, conf.dsn)
-		if err != nil {
-			go NewLogger().Error(err.Error())
-			return nil
-		}
+		if conf != nil {
+			engine, err = xorm.NewEngine(conf.engine, conf.dsn)
+			if err != nil {
+				go NewLogger().Error(err.Error())
+				return nil
+			}
 
-		// 日志打印SQL
-		engine.ShowSQL(conf.Debug) // 设置连接池的空闲数大小 engine.SetMaxIdleConns(conf.maxIdleConns)
-		// 设置最大连接数
-		engine.SetMaxOpenConns(conf.MaxOpenConns)
-		// 名称映射规则主要负责结构体名称到表名和结构体field到表字段的名称映射
-		engine.SetTableMapper(core.NewPrefixMapper(core.SnakeMapper{}, conf.Prefix))
+			// 日志打印SQL
+			engine.ShowSQL(conf.Debug) // 设置连接池的空闲数大小 engine.SetMaxIdleConns(conf.maxIdleConns)
+			// 设置最大连接数
+			engine.SetMaxOpenConns(conf.MaxOpenConns)
+			// 名称映射规则主要负责结构体名称到表名和结构体field到表字段的名称映射
+			engine.SetTableMapper(core.NewPrefixMapper(core.SnakeMapper{}, conf.Prefix))
+		}
 		// 加入连接池
 		if sql.engineList == nil {
 			sql.engineList = make(map[string]*xorm.Engine, 0)
@@ -84,7 +86,7 @@ func (sql *mySql) Change(name string) *xorm.Engine {
 // returns *xorm.Engine
 func (sql *mySql) New(name string, conf *MySqlConf) *xorm.Engine {
 	dsn := conf.User + ":" + conf.Pass + "@tcp(" + conf.Host + ":" + conf.Port + ")/" + conf.Db + "?charset=" + conf.Charset + "&parseTime=True&loc=Local"
-	debug := NewConfig().Get("database.debug").ToBool()
+	debug := conf.Debug
 	engine, err := xorm.NewEngine("mysql", dsn)
 	if err != nil {
 		go NewLogger().Error(err.Error())
@@ -107,19 +109,22 @@ func (sql *mySql) New(name string, conf *MySqlConf) *xorm.Engine {
 // write to new *mysqlConf and return it.
 func loadConf(name string) *MySqlConf {
 	envData := NewUtil().GetEnv("CONFIG_PATH")
-	configResults := NewConfig().SetPath(envData["CONFIG_PATH"]).SetFile("database").SetPrefix(name+".").GetMulti("host", "port", "user", "pass", "db", "charset", "prefix")
-	return &MySqlConf{
-		engine:       "mysql",
-		Host:         configResults["host"].ToString(),
-		Port:         configResults["port"].ToString(),
-		User:         configResults["user"].ToString(),
-		Pass:         configResults["pass"].ToString(),
-		Db:           configResults["db"].ToString(),
-		Charset:      configResults["charset"].ToString(),
-		Prefix:       configResults["prefix"].ToString(),
-		dsn:          configResults["user"].ToString() + ":" + configResults["pass"].ToString() + "@tcp(" + configResults["host"].ToString() + ":" + configResults["port"].ToString() + ")/" + configResults["db"].ToString() + "?charset=" + configResults["charset"].ToString() + "&parseTime=True&loc=Local",
-		Debug:        NewConfig().Get("database.debug").ToBool(),
-		MaxIdleConns: 5,
-		MaxOpenConns: 5,
+	if len(envData["CONFIG_PATH"]) > 1 {
+		configResults := NewConfig().SetPath(envData["CONFIG_PATH"]).SetFile("database").SetPrefix(name+".").GetMulti("host", "port", "user", "pass", "db", "charset", "prefix")
+		return &MySqlConf{
+			engine:       "mysql",
+			Host:         configResults["host"].ToString(),
+			Port:         configResults["port"].ToString(),
+			User:         configResults["user"].ToString(),
+			Pass:         configResults["pass"].ToString(),
+			Db:           configResults["db"].ToString(),
+			Charset:      configResults["charset"].ToString(),
+			Prefix:       configResults["prefix"].ToString(),
+			dsn:          configResults["user"].ToString() + ":" + configResults["pass"].ToString() + "@tcp(" + configResults["host"].ToString() + ":" + configResults["port"].ToString() + ")/" + configResults["db"].ToString() + "?charset=" + configResults["charset"].ToString() + "&parseTime=True&loc=Local",
+			Debug:        NewConfig().Get("database.debug").ToBool(),
+			MaxIdleConns: 5,
+			MaxOpenConns: 5,
+		}
 	}
+	return nil
 }
