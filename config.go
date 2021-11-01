@@ -58,7 +58,7 @@ func NewConfig() *config {
 // getFilePath returns defined configuration path when "CONFIG_PATH" isset in environment. default return /path/to/config
 func getFilePath() string {
 	path := os.Getenv("CONFIG_PATH")
-	if len(path) < 1 {
+	if len(path) < 1 || len(path["CONFIG_PATH"]) < 1 {
 		path, _ = os.Getwd()
 		path += "/config"
 	}
