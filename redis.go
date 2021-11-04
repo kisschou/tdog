@@ -66,7 +66,7 @@ func (r *redisModel) Change(name string) *redisImpl.Client {
 			go NewLogger().Error("未找到该标签下的redis配置信息")
 			return nil
 		}
-		engine := redisImpl.NewClient(&redisImpl.Options{
+		engine = redisImpl.NewClient(&redisImpl.Options{
 			Addr:     host + ":" + port,
 			Password: pass,
 			DB:       0,
