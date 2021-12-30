@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/spf13/viper"
+	"github.com/pelletier/go-toml"
 )
 
 /**
@@ -19,71 +19,67 @@ import (
 type (
 	// config configuration attributes
 	config struct {
-		filePath    string   // 配置文件路径
-		configFiles []string // 所有的配置文件
-		defaultFile string   // 默认配置文件
-		fileSuffix  string   // 文件后缀
-		fixedFile   string   // 指定文件
-		keyPrefix   string   // key前缀
-		searchKey   string   // 查询的key值
-		actionFile  string   // 当前查询的文件名
-		actionKey   string   // 当前查询的key
+		filePath    string // 配置文件路径
+		defaultFile string // 默认配置文件
+		fixedFile   string // 指定文件
+		keyPrefix   string // key前缀
+		searchKey   string // 查询的key值
+		actionFile  string // 当前查询的文件名
+		actionKey   string // 当前查询的key
 	}
 
 	// configResult result struct of configuration searched
 	configResult struct {
-		filePath   string // 配置文件路径
-		searchKey  string // 查询的key值
-		activeFile string // 命中文件
-		activeKey  string // 命中key
-		Message    string // 消息
+		filePath   string      // 配置文件路径
+		searchKey  string      // 查询的key值
+		activeFile string      // 命中文件
+		activeKey  string      // 命中key
+		result     interface{} // 结果
+		Message    string      // 消息
 	}
 )
 
+var (
+	// ConfigurationPath the path of configuration file.
+	ConfigurationPath string
+)
+
+// init .
+func init() {
+	ConfigurationPath := os.Getenv("CONFIG_PATH")
+	/*
+		if len(ConfigurationPath) < 1 {
+			Println("Please set CONFIG_PATH in environment at first.", 13)
+			os.Exit(0)
+		}
+	*/
+	if ConfigurationPath[len(ConfigurationPath)-1:] != "/" {
+		ConfigurationPath += "/"
+	}
+	if runtime.GOOS == "windows" {
+		ConfigurationPath = strings.ReplaceAll(ConfigurationPath, "/", "\\")
+	}
+}
+
 // NewConfig init config struct
 func NewConfig() *config {
-	configTdog := &config{
-		filePath:    "",
-		configFiles: nil,
-		defaultFile: getDefaultFile(),
-		fileSuffix:  getFileSuffix(),
+	return &config{
+		filePath:    ConfigurationPath,
+		defaultFile: "app",
 		searchKey:   "",
 		actionFile:  "",
 		actionKey:   "",
 	}
-	configTdog.SetPath(getFilePath())
-	return configTdog
 }
 
-// getFilePath returns defined configuration path when "CONFIG_PATH" isset in environment. default return /path/to/config
-func getFilePath() string {
-	path := os.Getenv("CONFIG_PATH")
-	if len(path) < 1 {
-		path, _ = os.Getwd()
-		path += "/config"
+// connect Make go-toml load configuration given *config
+func connect(c *config) *toml.Tree {
+	conf, err := toml.LoadFile(c.filePath + c.activeFile + ".toml")
+	if err != nil {
+		Println(err.Error(), 13)
+		return nil
 	}
-	if runtime.GOOS == "windows" {
-		path = strings.ReplaceAll(path, "/", "\\")
-	}
-	return path
-}
-
-// getFilePath returns default configuration file name
-func getDefaultFile() string {
-	return "app"
-}
-
-// getFilePath returns default configuration file suffix
-func getFileSuffix() string {
-	return "toml"
-}
-
-// getFilePath get all configuration file name from path
-func (c *config) getFiles() {
-	if c.filePath == "" {
-		c.configFiles = nil
-	}
-	c.configFiles, _ = NewUtil().GetFilesBySuffix(c.filePath, c.fileSuffix)
+	return conf
 }
 
 // SetPath assign configuration path
@@ -92,7 +88,6 @@ func (c *config) getFiles() {
 // returns config-handler
 func (c *config) SetPath(path string) *config {
 	c.filePath = path
-	c.getFiles()
 	return c
 }
 
@@ -102,29 +97,21 @@ func (c *config) SetFile(name string) *config {
 	return c
 }
 
-// SetPrefix assign and fixed key's prefix name
-// It will make your search key be prefix + key
+// SetPrefix assign and fixed key's prefix name.
+// It will make your search key be prefix + key,
+// So it will only be used with the GetMulti function.
 // given string key's prefix
 // returns config-handler
 func (c *config) SetPrefix(prefix string) *config {
-	c.keyPrefix = prefix
+	c.prefix = prefix
 	return c
 }
 
-// connect Make viper load configuration given *config
-func connect(c *config) {
-	viper.SetConfigName(c.actionFile)
-	viper.SetConfigType(c.fileSuffix)
-	viper.AddConfigPath(c.filePath)
-	err := viper.ReadInConfig()
-	if err != nil {
-		go NewLogger().Error(err.Error())
-	}
-}
-
-// find search from configuration returns *configResult and error struct when it err
+// find search from configuration returns *configResult and error struct when it err.
 func (c *config) find() (*configResult, error) {
 	var err error
+	var result interface{}
+
 	if len(c.actionFile) < 1 {
 		c.actionFile = c.defaultFile
 	}
@@ -135,52 +122,53 @@ func (c *config) find() (*configResult, error) {
 		c.actionKey = c.searchKey
 	}
 	if len(c.keyPrefix) > 0 {
+		if (c.keyPrefix)[len(c.keyPrefix)-1:] != "." {
+			c.keyPrefix += "."
+		}
 		c.actionKey = c.keyPrefix + c.actionKey
 	}
+
 	for {
-		connect(c)
-		if !viper.IsSet(c.actionKey) {
+		configImpl := connect(c)
+		if !configImpl.Has(c.activeKey) {
+			// 固定文件的, 多段不应含有文件名
 			if len(c.fixedFile) > 0 {
 				err = errors.New(fmt.Sprintf("[%s.%s%s], 未找到配置, %s -> %s -> %s", c.fixedFile, c.keyPrefix, c.searchKey, c.filePath, c.actionFile, c.keyPrefix+c.actionKey))
 				break
 			}
+
 			match := strings.Split(c.actionKey, ".")
 			if len(match) > 1 {
-				c.actionFile = match[0]
-				if !NewUtil().InArray("[]string", c.actionFile, c.configFiles) {
-					err = errors.New(fmt.Sprintf("[%s], 无法定位到配置, %s -> %s", c.searchKey, c.filePath, c.actionFile))
-					break
-				}
-				c.actionKey = strings.Join(match[1:], ".")
+				c.actionFile, c.actionKey = match[0], strings.Join(match[1:], ".")
+				continue
 			} else {
 				err = errors.New(fmt.Sprintf("[%s], 未找到配置, %s -> %s -> %s", c.searchKey, c.filePath, c.actionFile, c.keyPrefix+c.actionKey))
 				break
 			}
 		} else {
+			result = configImpl.Get(activeKey)
 			break
 		}
 	}
-	resultImpl := &configResult{
+
+	return &configResult{
 		filePath:   c.filePath,
 		searchKey:  c.searchKey,
 		activeFile: c.actionFile,
 		activeKey:  c.actionKey,
+		result:     result,
 		Message:    "",
-	}
-	return resultImpl, err
+	}, err
 }
 
 // Get get result by key on configuration file, extends *config
 // given string the search you want
 // returns *ConfigResult
 func (c *config) Get(key string) *configResult {
-	c.actionFile, c.actionKey, c.searchKey = "", "", key
-	c.searchKey = key
-	resultImpl, err := c.find()
+	resultImpl, err := (&config{}).find()
 	if err != nil {
 		go NewLogger().Warn(err.Error())
 		resultImpl.Message = err.Error()
-		return resultImpl
 	}
 	return resultImpl
 }
@@ -201,6 +189,8 @@ func (c *config) GetMulti(keys ...string) map[string]*configResult {
 	return multiConfigResult
 }
 
+// configResult -->
+
 // GetSearchKey get search key from search result, extends *configResult returns string search key
 func (cr *configResult) GetSearchKey() string {
 	return cr.searchKey
@@ -218,80 +208,62 @@ func (cr *configResult) IsExists() bool {
 // RawData get the result of interface type, extends *configResult
 // returns interface
 // can get true result by use x.(type)
-func (c *configResult) RawData() (data interface{}) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.Get(c.activeKey)
-	return
+func (c *configResult) RawData() interface{} {
+	return c.result
 }
 
 // ToString get the result of string type, if you sure about it, extends *configResult
 // returns string
-func (c *configResult) ToString() (data string) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetString(c.activeKey)
-	return
+func (c *configResult) ToString() string {
+	return (c.result).(string)
 }
 
 // ToInt get the result of int type, if you sure about it, extends *configResult
 // returns int
-func (c *configResult) ToInt() (data int) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetInt(c.activeKey)
-	return
+func (c *configResult) ToInt() int {
+	return (c.result).(int)
 }
 
 // ToBool get the result of bool type, if you sure about it, extends *configResult
 // returns bool
-func (c *configResult) ToBool() (data bool) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetBool(c.activeKey)
-	return
+func (c *configResult) ToBool() bool {
+	return (c.result).(bool)
 }
 
 // ToIntSlice get the result of int slice type, if you sure about it, extends *configResult
 // returns []int
-func (c *configResult) ToIntSlice() (data []int) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetIntSlice(c.activeKey)
-	return
+func (c *configResult) ToIntSlice() []int {
+	return (c.result).([]int)
 }
 
 // ToStringMap get the result of string map type, if you sure about it, extends *configResult
 // returns map[string]interface{}
-func (c *configResult) ToStringMap() (data map[string]interface{}) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetStringMap(c.activeKey)
-	return
+func (c *configResult) ToStringMap() map[string]interface{} {
+	return (c.result).(map[string]interface{})
 }
 
 // ToStringMapString get the result of string map string type, if you sure about it, extends *configResult
 // returns map[string]string
-func (c *configResult) ToStringMapString() (data map[string]string) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetStringMapString(c.activeKey)
-	return
+func (c *configResult) ToStringMapString() map[string]string {
+	return (c.result).(map[string]string)
 }
 
 // ToStringMapStringSlice get the result of string map string slice type, if you sure about it, extends *configResult
 // returns map[string][]string
-func (c *configResult) ToStringMapStringSlice() (data map[string][]string) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetStringMapStringSlice(c.activeKey)
-	return
+func (c *configResult) ToStringMapStringSlice() map[string][]string {
+	return (c.result).(map[string][]string)
 }
 
 // ToStringSlice get the result of string slice type, if you sure about it, extends *configResult
 // returns []string
-func (c *configResult) ToStringSlice() (data []string) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetStringSlice(c.activeKey)
-	return
+func (c *configResult) ToStringSlice() []string {
+	return (c.result).([]string)
 }
 
 // ToInt64 get the result of int64 type, if you sure about it, extends *configResult
 // returns int64
-func (c *configResult) ToInt64() (data int64) {
-	connect(&config{filePath: c.filePath, actionFile: c.activeFile, fileSuffix: getFileSuffix()})
-	data = viper.GetInt64(c.activeKey)
-	return
+func (c *configResult) ToInt64() int64 {
+	return (c.result).(int64)
 }
+
+// <--
