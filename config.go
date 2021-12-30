@@ -39,32 +39,20 @@ type (
 	}
 )
 
-var (
-	// ConfigurationPath the path of configuration file.
-	ConfigurationPath string
-)
-
-// init .
-func init() {
-	ConfigurationPath := os.Getenv("CONFIG_PATH")
-	/*
-		if len(ConfigurationPath) < 1 {
-			Println("Please set CONFIG_PATH in environment at first.", 13)
-			os.Exit(0)
-		}
-	*/
-	if ConfigurationPath[len(ConfigurationPath)-1:] != "/" {
-		ConfigurationPath += "/"
-	}
-	if runtime.GOOS == "windows" {
-		ConfigurationPath = strings.ReplaceAll(ConfigurationPath, "/", "\\")
-	}
-}
-
 // NewConfig init config struct
 func NewConfig() *config {
+	configurationPath := os.Getenv("CONFIG_PATH")
+	if len(configurationPath) > 0 {
+		if configurationPath[len(configurationPath)-1:] != "/" {
+			configurationPath += "/"
+		}
+		if runtime.GOOS == "windows" {
+			configurationPath = strings.ReplaceAll(configurationPath, "/", "\\")
+		}
+	}
+
 	return &config{
-		filePath:    ConfigurationPath,
+		filePath:    configurationPath,
 		defaultFile: "app",
 		searchKey:   "",
 		actionFile:  "",
@@ -74,10 +62,10 @@ func NewConfig() *config {
 
 // connect Make go-toml load configuration given *config
 func connect(c *config) *toml.Tree {
-	conf, err := toml.LoadFile(c.filePath + c.activeFile + ".toml")
+	conf, err := toml.LoadFile(c.filePath + c.actionFile + ".toml")
 	if err != nil {
 		Println(err.Error(), 13)
-		return nil
+		os.Exit(0)
 	}
 	return conf
 }
@@ -103,7 +91,7 @@ func (c *config) SetFile(name string) *config {
 // given string key's prefix
 // returns config-handler
 func (c *config) SetPrefix(prefix string) *config {
-	c.prefix = prefix
+	c.keyPrefix = prefix
 	return c
 }
 
@@ -127,10 +115,14 @@ func (c *config) find() (*configResult, error) {
 		}
 		c.actionKey = c.keyPrefix + c.actionKey
 	}
+	if len(c.filePath) < 1 {
+		Println("Please set CONFIG_PATH in environment at first.", 13)
+		os.Exit(0)
+	}
 
 	for {
 		configImpl := connect(c)
-		if !configImpl.Has(c.activeKey) {
+		if !configImpl.Has(c.actionKey) {
 			// 固定文件的, 多段不应含有文件名
 			if len(c.fixedFile) > 0 {
 				err = errors.New(fmt.Sprintf("[%s.%s%s], 未找到配置, %s -> %s -> %s", c.fixedFile, c.keyPrefix, c.searchKey, c.filePath, c.actionFile, c.keyPrefix+c.actionKey))
@@ -146,7 +138,7 @@ func (c *config) find() (*configResult, error) {
 				break
 			}
 		} else {
-			result = configImpl.Get(activeKey)
+			result = configImpl.Get(c.actionKey)
 			break
 		}
 	}
@@ -161,11 +153,12 @@ func (c *config) find() (*configResult, error) {
 	}, err
 }
 
-// Get get result by key on configuration file, extends *config
+// Get result by key on configuration file, extends *config
 // given string the search you want
 // returns *ConfigResult
 func (c *config) Get(key string) *configResult {
-	resultImpl, err := (&config{}).find()
+	c.actionFile, c.actionKey, c.searchKey = "", "", key
+	resultImpl, err := c.find()
 	if err != nil {
 		go NewLogger().Warn(err.Error())
 		resultImpl.Message = err.Error()
@@ -208,62 +201,62 @@ func (cr *configResult) IsExists() bool {
 // RawData get the result of interface type, extends *configResult
 // returns interface
 // can get true result by use x.(type)
-func (c *configResult) RawData() interface{} {
-	return c.result
+func (cr *configResult) RawData() interface{} {
+	return cr.result
 }
 
 // ToString get the result of string type, if you sure about it, extends *configResult
 // returns string
-func (c *configResult) ToString() string {
-	return (c.result).(string)
+func (cr *configResult) ToString() string {
+	return (cr.result).(string)
 }
 
 // ToInt get the result of int type, if you sure about it, extends *configResult
 // returns int
-func (c *configResult) ToInt() int {
-	return (c.result).(int)
+func (cr *configResult) ToInt() int {
+	return (cr.result).(int)
 }
 
 // ToBool get the result of bool type, if you sure about it, extends *configResult
 // returns bool
-func (c *configResult) ToBool() bool {
-	return (c.result).(bool)
+func (cr *configResult) ToBool() bool {
+	return (cr.result).(bool)
 }
 
 // ToIntSlice get the result of int slice type, if you sure about it, extends *configResult
 // returns []int
-func (c *configResult) ToIntSlice() []int {
-	return (c.result).([]int)
+func (cr *configResult) ToIntSlice() []int {
+	return (cr.result).([]int)
 }
 
 // ToStringMap get the result of string map type, if you sure about it, extends *configResult
 // returns map[string]interface{}
-func (c *configResult) ToStringMap() map[string]interface{} {
-	return (c.result).(map[string]interface{})
+func (cr *configResult) ToStringMap() map[string]interface{} {
+	return (cr.result).(map[string]interface{})
 }
 
 // ToStringMapString get the result of string map string type, if you sure about it, extends *configResult
 // returns map[string]string
-func (c *configResult) ToStringMapString() map[string]string {
-	return (c.result).(map[string]string)
+func (cr *configResult) ToStringMapString() map[string]string {
+	return (cr.result).(map[string]string)
 }
 
 // ToStringMapStringSlice get the result of string map string slice type, if you sure about it, extends *configResult
 // returns map[string][]string
-func (c *configResult) ToStringMapStringSlice() map[string][]string {
-	return (c.result).(map[string][]string)
+func (cr *configResult) ToStringMapStringSlice() map[string][]string {
+	return (cr.result).(map[string][]string)
 }
 
 // ToStringSlice get the result of string slice type, if you sure about it, extends *configResult
 // returns []string
-func (c *configResult) ToStringSlice() []string {
-	return (c.result).([]string)
+func (cr *configResult) ToStringSlice() []string {
+	return (cr.result).([]string)
 }
 
 // ToInt64 get the result of int64 type, if you sure about it, extends *configResult
 // returns int64
-func (c *configResult) ToInt64() int64 {
-	return (c.result).(int64)
+func (cr *configResult) ToInt64() int64 {
+	return (cr.result).(int64)
 }
 
 // <--
