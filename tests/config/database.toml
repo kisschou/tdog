@@ -1,0 +1,42 @@
+# 是否开启 SQL_DEBUG bool
+debug = true
+
+# 主库
+[master]
+host = "127.0.0.1" # 地址
+port = "3306" # 端口
+user = "root" # 用户
+pass = "root" # 密码
+db = "master_db" # 数据库
+charset = "utf8mb4" # 字符集
+prefix = "" # 表前缀
+
+# 会员库
+[member_service]
+host = "127.0.0.1" # 地址
+port = "3306" # 端口
+user = "root" # 用户
+pass = "root" # 密码
+db = "member_db" # 数据库
+charset = "utf8mb4" # 字符集
+prefix = "" # 表前缀
+
+# 文稿库
+[article_service]
+host = "127.0.0.1" # 地址
+port = "3306" # 端口
+user = "root" # 用户
+pass = "root" # 密码
+db = "article_db" # 数据库
+charset = "utf8mb4" # 字符集
+prefix = "" # 表前缀
+
+# 资源库
+[oss_service]
+host = "127.0.0.1" # 地址
+port = "3306" # 端口
+user = "root" # 用户
+pass = "root" # 密码
+db = "oss_db" # 数据库
+charset = "utf8mb4" # 字符集
+prefix = "" # 表前缀

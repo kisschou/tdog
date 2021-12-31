@@ -1,0 +1,20 @@
+# 服务序号
+app_id = "Demo007"
+
+# 产品名 string
+app_name = "Demo"
+
+# 服务地址 string
+app_server = "172.22.0.3"
+
+# 服务端口 string
+app_port = "22222"
+
+# 版本号
+app_version = "v1.0"
+
+# 加密混肴码 string
+hex_key = "1UgZfL<=Au3M9dQrcB7yzzd==8?xlZ:T3oP1id>jKWi4Bc9Kz<RbTSXqgPWJXxes945rzQ4ojlsqN25:95yb1-DsbAu1k6mUSs27CXDmQu-mx0lhH82-rA5=<NO0Z4:x"
+
+# 网关地址
+gateway = "http://172.22.0.2"

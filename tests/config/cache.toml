@@ -1,0 +1,27 @@
+# 主库
+[master]
+host = "127.0.0.1" # 地址
+port = "6379" # 端口
+pass = "WoBuShiRen" # 密码
+pool_size = 10 # 连接池大小
+
+# 会员库
+[member_service]
+host = "127.0.0.1" # 地址
+port = "6379" # 端口
+pass = "WoBuShiRen" # 密码
+pool_size = 10 # 连接池大小
+
+# 文稿库
+[article_service]
+host = "127.0.0.1" # 地址
+port = "6379" # 端口
+pass = "WoBuShiRen" # 密码
+pool_size = 10 # 连接池大小
+
+# 资源库
+[oss_service]
+host = "127.0.0.1" # 地址
+port = "6379" # 端口
+pass = "WoBuShiRen" # 密码
+pool_size = 10 # 连接池大小
