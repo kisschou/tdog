@@ -106,10 +106,15 @@ func (jwt *Jwt) Get(input string, key string, iv string) (value interface{}) {
 		dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
 		dm := make(map[string]interface{}, 0)
 		_ = json.Unmarshal([]byte(dt), &dm)
-		data := dm["data"].(map[string]interface{})
+		data := make(map[string]interface{}, 0)
+		if dm["data"] != nil {
+			data = dm["data"].(map[string]interface{})
+		}
 
 		if NewUtil().Isset("map[string]interface{}", key, data) {
 			value = data[key]
+		} else {
+			value = nil
 		}
 	}
 	return
@@ -123,7 +128,9 @@ func (jwt *Jwt) GetData(input string, iv string) (data map[string]interface{}) {
 		dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
 		dm := make(map[string]interface{}, 0)
 		_ = json.Unmarshal([]byte(dt), &dm)
-		data = dm["data"].(map[string]interface{})
+		if dm["data"] != nil {
+			data = dm["data"].(map[string]interface{})
+		}
 	}
 	return
 }

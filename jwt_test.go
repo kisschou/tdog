@@ -67,9 +67,18 @@ func Test_Refresh(t *testing.T) {
 
 	// valid get data .
 	dt := jwtTdog.GetData(jwt, iv)
-	assert.Equal(t, int64(dt["memberId"].(float64)), trueMemberId, "get data is not same result.")
+	var currentMemberId int64
+	if dt != nil {
+		if _, ok := dt["memberId"]; ok {
+			currentMemberId = int64(dt["memberId"].(float64))
+		}
+	}
+	assert.Equal(t, currentMemberId, trueMemberId, "get data is not same result.")
 
 	// valid get by key .
-	getMemberId := int64(jwtTdog.Get(jwt, "memberId", iv).(float64))
+	var getMemberId int64
+	if rawData := jwtTdog.Get(jwt, "memberId", iv); rawData != nil {
+		getMemberId = int64(jwtTdog.Get(jwt, "memberId", iv).(float64))
+	}
 	assert.Equal(t, getMemberId, trueMemberId, "get memberId is not same result.")
 }
