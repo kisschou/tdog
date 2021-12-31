@@ -41,18 +41,8 @@ type (
 
 // NewConfig init config struct
 func NewConfig() *config {
-	configurationPath := os.Getenv("CONFIG_PATH")
-	if len(configurationPath) > 0 {
-		if configurationPath[len(configurationPath)-1:] != "/" {
-			configurationPath += "/"
-		}
-		if runtime.GOOS == "windows" {
-			configurationPath = strings.ReplaceAll(configurationPath, "/", "\\")
-		}
-	}
-
 	return &config{
-		filePath:    configurationPath,
+		filePath:    os.Getenv("CONFIG_PATH"),
 		defaultFile: "app",
 		searchKey:   "",
 		actionFile:  "",
@@ -118,6 +108,13 @@ func (c *config) find() (*configResult, error) {
 	if len(c.filePath) < 1 {
 		Println("Please set CONFIG_PATH in environment at first.", 13)
 		os.Exit(0)
+	} else {
+		if (c.filePath)[len(c.filePath)-1:] != "/" {
+			c.filePath += "/"
+		}
+		if runtime.GOOS == "windows" {
+			c.filePath = strings.ReplaceAll(c.filePath, "/", "\\")
+		}
 	}
 
 	for {
