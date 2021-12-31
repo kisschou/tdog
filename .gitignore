@@ -9,3 +9,6 @@ go.sum
 
 ### log ###
 logs/*
+
+### vim ###
+*.swp
