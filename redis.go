@@ -58,7 +58,7 @@ func (r *redisModel) Change(name string) *redisImpl.Client {
 				pass = resultImpl.ToString()
 				break
 			case "pool_size":
-				poolSize = resultImpl.ToInt()
+				poolSize = resultImpl.ToInt64()
 				break
 			}
 		}
