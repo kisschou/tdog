@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 
+	tc "github.com/kisschou/TypeConverter"
 	"github.com/pelletier/go-toml"
 )
 
@@ -205,37 +206,47 @@ func (cr *configResult) RawData() interface{} {
 // ToString get the result of string type, if you sure about it, extends *configResult
 // returns string
 func (cr *configResult) ToString() string {
-	return (cr.result).(string)
+	return tc.New(cr.result).String
 }
 
 // ToInt get the result of int type, if you sure about it, extends *configResult
 // returns int
 func (cr *configResult) ToInt() int {
-	return (cr.result).(int)
+	return tc.New(cr.result).Int
 }
 
 // ToBool get the result of bool type, if you sure about it, extends *configResult
 // returns bool
 func (cr *configResult) ToBool() bool {
-	return (cr.result).(bool)
+	return tc.New(cr.result).Bool
 }
 
 // ToIntSlice get the result of int slice type, if you sure about it, extends *configResult
 // returns []int
 func (cr *configResult) ToIntSlice() []int {
-	return (cr.result).([]int)
+	s := make([]int, 0)
+	is := tc.New(cr.result).InterfaceSlice
+	for _, v := range is {
+		s = append(s, tc.New(v).Int)
+	}
+	return s
 }
 
 // ToStringMap get the result of string map type, if you sure about it, extends *configResult
 // returns map[string]interface{}
 func (cr *configResult) ToStringMap() map[string]interface{} {
-	return (cr.result).(map[string]interface{})
+	return tc.New(cr.result).StringMapInterface
 }
 
 // ToStringMapString get the result of string map string type, if you sure about it, extends *configResult
 // returns map[string]string
 func (cr *configResult) ToStringMapString() map[string]string {
-	return (cr.result).(map[string]string)
+	m := make(map[string]string, 0)
+	smi := tc.New(cr.result).StringMapInterface
+	for k, v := range smi {
+		m[k] = tc.New(v).String
+	}
+	return m
 }
 
 // ToStringMapStringSlice get the result of string map string slice type, if you sure about it, extends *configResult
@@ -247,13 +258,18 @@ func (cr *configResult) ToStringMapStringSlice() map[string][]string {
 // ToStringSlice get the result of string slice type, if you sure about it, extends *configResult
 // returns []string
 func (cr *configResult) ToStringSlice() []string {
-	return (cr.result).([]string)
+	s := make([]string, 0)
+	is := tc.New(cr.result).InterfaceSlice
+	for _, v := range is {
+		s = append(s, tc.New(v).String)
+	}
+	return s
 }
 
 // ToInt64 get the result of int64 type, if you sure about it, extends *configResult
 // returns int64
 func (cr *configResult) ToInt64() int64 {
-	return (cr.result).(int64)
+	return tc.New(cr.result).Int64
 }
 
 // <--
