@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/kisschou/ReqHelper"
 )
 
 const (
@@ -54,7 +55,7 @@ type (
 	}
 
 	HttpUtil struct {
-		Req *Request
+		Req *ReqHelper.Request
 		Res *Response
 	}
 
@@ -180,14 +181,13 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 
 // Next .
 func (c *Context) Next() {
-	RequestTdog := new(Request)
 	ResponseTdog := new(Response)
 
 	c.index++
 	s := int8(len(c.handlers))
 	for ; c.index < s; c.index++ {
 		c.handlers[c.index](&HttpUtil{
-			RequestTdog.New(c),
+			ReqHelper.New(c.Req),
 			ResponseTdog.New(c),
 		})
 	}
