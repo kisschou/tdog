@@ -225,7 +225,7 @@ func (cr *configResult) ToBool() bool {
 // returns []int
 func (cr *configResult) ToIntSlice() []int {
 	s := make([]int, 0)
-	is := tc.New(cr.result).InterfaceSlice
+	is := tc.New(cr.result).Slice
 	for _, v := range is {
 		s = append(s, tc.New(v).Int)
 	}
@@ -235,14 +235,14 @@ func (cr *configResult) ToIntSlice() []int {
 // ToStringMap get the result of string map type, if you sure about it, extends *configResult
 // returns map[string]interface{}
 func (cr *configResult) ToStringMap() map[string]interface{} {
-	return tc.New(cr.result).StringMapInterface
+	return tc.New(cr.result).Map
 }
 
 // ToStringMapString get the result of string map string type, if you sure about it, extends *configResult
 // returns map[string]string
 func (cr *configResult) ToStringMapString() map[string]string {
 	m := make(map[string]string, 0)
-	smi := tc.New(cr.result).StringMapInterface
+	smi := tc.New(cr.result).Map
 	for k, v := range smi {
 		m[k] = tc.New(v).String
 	}
@@ -259,7 +259,7 @@ func (cr *configResult) ToStringMapStringSlice() map[string][]string {
 // returns []string
 func (cr *configResult) ToStringSlice() []string {
 	s := make([]string, 0)
-	is := tc.New(cr.result).InterfaceSlice
+	is := tc.New(cr.result).Slice
 	for _, v := range is {
 		s = append(s, tc.New(v).String)
 	}

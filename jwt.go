@@ -111,7 +111,7 @@ func (jwt *Jwt) Get(input string, key string, iv string) (value interface{}) {
 			data = dm["data"].(map[string]interface{})
 		}
 
-		if NewUtil().Isset("map[string]interface{}", key, data) {
+		if NewUtil().Isset(key, data) {
 			value = data[key]
 		} else {
 			value = nil

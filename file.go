@@ -94,7 +94,7 @@ func (file *File) GetFileType() *File {
 		break
 	}
 
-	if NewUtil().InArray("[]string", file.MIME, docMime) {
+	if NewUtil().InArray(file.MIME, docMime) {
 		fileType = FileTypeDocument
 	}
 

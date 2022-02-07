@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	tc "github.com/kisschou/TypeConverter"
 )
 
 /**
@@ -142,360 +144,131 @@ func (u *util) RandInt64(min, max int64) int64 {
 	return rand.Int63n(max-min) + min
 }
 
+// ArrayKeys 获取所有键集合
+// @param interface{} input 输入集合
+func (u *util) ArrayKeys(input interface{}) []interface{} {
+	s := make([]interface{}, 0)
+	arr := tc.New(input).Map
+	for k, _ := range arr {
+		s = append(s, k)
+	}
+	return s
+}
+
+// ArrayVals 获取所有值集合
+// @param interface{} input 输入集合
+func (u *util) ArrayVals(input interface{}) []interface{} {
+	s := make([]interface{}, 0)
+	arr := tc.New(input).Map
+	for _, v := range arr {
+		s = append(s, v)
+	}
+	return s
+}
+
 // InArray 判断数组中是否存在某个值
-// @param string dataType 标识needle的类型,可选:
-//		[]string, []int, []int64, map[string]string, map[string]int, map[string]int64
-// @param interface{} input 输入值,这个类型等于dataType的值类型相同
+// @param interface{} input 输入值
 // @param interface{} needle 检索的集合
 // @return bool
-func (u *util) InArray(dataType string, input, needle interface{}) bool {
+func (u *util) InArray(input, needle interface{}) bool {
 	defer Recover()
 
-	switch dataType {
-	case "[]string":
-		for _, v := range needle.([]string) {
-			if v == input.(string) {
-				return true
-			}
+	arr := u.ArrayVals(needle)
+	val := tc.New(input).String
+	for _, v := range arr {
+		if val == tc.New(v).String {
+			return true
 		}
-		break
-
-	case "[]int":
-		for _, v := range needle.([]int) {
-			if v == input.(int) {
-				return true
-			}
-		}
-		break
-
-	case "[]int64":
-		for _, v := range needle.([]int64) {
-			if v == input.(int64) {
-				return true
-			}
-		}
-		break
-
-	case "map[string]string":
-		for _, v := range needle.(map[string]string) {
-			if v == input.(string) {
-				return true
-			}
-		}
-		break
-
-	case "map[string]int":
-		for _, v := range needle.(map[string]int) {
-			if v == input.(int) {
-				return true
-			}
-		}
-		break
-
-	case "map[string]int64":
-		for _, v := range needle.([]int64) {
-			if v == input.(int64) {
-				return true
-			}
-		}
-		break
 	}
-
 	return false
 }
 
 // Isset 判断数组中是否存在某个键
-// @param string dataType 标识needle的类型,可选:
-//		[]string, []int, []int64, []interface{}
-//		map[string]string, map[string]int, map[string]int64, map[string]interface{}
-// @param interface{} input 输入值,这个类型等于dataType的键类型相同
+// @param interface{} input 输入值
 // @param interface{} needle 检索的集合
 // @return bool
-func (u *util) Isset(dataType string, input, needle interface{}) bool {
+func (u *util) Isset(input, needle interface{}) bool {
 	defer Recover()
 
-	switch dataType {
-	case "[]string":
-		_ = needle.([]string)[input.(int)]
-		break
-
-	case "[]int":
-		_ = needle.([]int)[input.(int)]
-		break
-
-	case "[]int64":
-		_ = needle.([]int64)[input.(int)]
-		break
-
-	case "[]interface{}":
-		_ = needle.([]interface{})[input.(int)]
-
-	case "map[string]string":
-		if _, ok := needle.(map[string]string)[input.(string)]; !ok {
-			return false
+	arr := u.ArrayKeys(needle)
+	val := tc.New(input).String
+	for _, v := range arr {
+		if val == tc.New(v).String {
+			return true
 		}
-		break
-
-	case "map[string]int":
-		if _, ok := needle.(map[string]int)[input.(string)]; !ok {
-			return false
-		}
-		break
-
-	case "map[string]int64":
-		if _, ok := needle.(map[string]int64)[input.(string)]; !ok {
-			return false
-		}
-		break
-
-	case "map[string]interface{}":
-		if _, ok := needle.(map[string]interface{})[input.(string)]; !ok {
-			return false
-		}
-		break
 	}
 	return true
 }
 
 // Empty 判断数组指定key的值是否为空, 数字则大于0
-// @param string dataType 标识needle的类型,可选:
-//		[]string, []int, []int64,
-//		map[string]string, map[string]int, map[string]int64
 // @param interface{} input 输入值,这个类型等于dataType的键类型相同
 // @param interface{} needle 检索的集合
 // @return bool
-func (u *util) Empty(dataType string, input, needle interface{}) bool {
-	if !u.Isset(dataType, input, needle) {
+func (u *util) Empty(input, needle interface{}) bool {
+	if !u.Isset(input, needle) {
 		return false
 	}
 	defer Recover()
-
-	switch dataType {
-	case "[]string":
-		return len(needle.([]string)[input.(int)]) < 1
-
-	case "[]int":
-		return needle.([]int)[input.(int)] < 1
-
-	case "[]int64":
-		return needle.([]int64)[input.(int)] < 1
-
-	case "map[string]string":
-		return len(needle.(map[string]string)[input.(string)]) < 1
-
-	case "map[string]int":
-		return needle.(map[string]int)[input.(string)] < 1
-
-	case "map[string]int64":
-		return needle.(map[string]int64)[input.(string)] < 1
-	}
-	return false
+	arr := tc.New(needle).Map
+	key := tc.New(input).String
+	return tc.New(arr[key]).Bool
 }
 
 // ArrayUnique 数组去掉重复键
 // 提交什么类型过来就会返回什么类型，只不过要自己处理
-// @param string dataType 标识input和返回值的类型,可选:
-//		[]string, []int, []int64, []interface{}, map[string]string,
-//		map[string]int, map[string]int64, map[string]interface{}
 // @param interface{} input 需要处理的数组
 // @return 处理完成的数组
-func (u *util) ArrayUnique(dataType string, input interface{}) interface{} {
+func (u *util) ArrayUnique(input interface{}) []interface{} {
 	defer Recover()
-
-	switch dataType {
-	case "[]string":
-		res := make([]string, 0)
-		for k, v := range input.([]string) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "[]int":
-		res := make([]int, 0)
-		for k, v := range input.([]int) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "[]int64":
-		res := make([]int64, 0)
-		for k, v := range input.([]int64) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "[]interface{}":
-		res := make([]interface{}, 0)
-		for k, v := range input.([]interface{}) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "map[string]string":
-		res := make(map[string]string, 0)
-		for k, v := range input.(map[string]string) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "map[string]int":
-		res := make(map[string]int, 0)
-		for k, v := range input.(map[string]int) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "map[string]int64":
-		res := make(map[string]int64, 0)
-		for k, v := range input.(map[string]int64) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "map[string]interface{}":
-		res := make(map[string]interface{}, 0)
-		for k, v := range input.(map[string]interface{}) {
-			if !u.Isset(dataType, k, res) {
-				res[k] = v
-			}
-		}
-		return res
+	arr := tc.New(input).Slice
+	m := make(map[string]interface{}, 0)
+	for _, v := range arr {
+		m[tc.New(v).String] = v
 	}
-
-	return nil
+	return u.ArrayVals(m)
 }
 
 // ArrayMerge 数组合并
 // 必须指定数据类型且所有数组必须同类型
-// @param dataType string 传入数据的类型,可选:
-//		[]string, []int, []interface{}, map[string]string, map[string]int, map[string]interface{}
 // @param list ...interface{} 同类型的列表
 // @return interface{} 返回的类型和dataType是一致的，
-// 为nil表示错误，一般是传入了不同类型的数组造成的
-func (u *util) ArrayMerge(dataType string, list ...interface{}) interface{} {
-	if len(list) < 2 {
-		return list[0]
+func (u *util) ArrayMerge(lists ...interface{}) interface{} {
+	if len(lists) < 2 {
+		return lists[0]
 	}
-
 	defer Recover()
-
-	switch dataType {
-	case "[]string":
-		res := make([]string, 0)
-		for _, info := range list {
-			for _, v := range info.([]string) {
-				res = append(res, v)
-			}
+	res := make(map[string]interface{}, 0)
+	for _, list := range lists {
+		for k, v := range tc.New(list).Map {
+			res[k] = v
 		}
-		return res
-
-	case "[]int":
-		res := make([]int, 0)
-		for _, info := range list {
-			for _, v := range info.([]int) {
-				res = append(res, v)
-			}
-		}
-		return res
-
-	case "[]interface{}":
-		res := make([]interface{}, 0)
-		for _, info := range list {
-			for _, v := range info.([]interface{}) {
-				res = append(res, v)
-			}
-		}
-		return res
-
-	case "map[string]string":
-		res := make(map[string]string, 0)
-		for _, info := range list {
-			for k, v := range info.(map[string]string) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "map[string]int":
-		res := make(map[string]int, 0)
-		for _, info := range list {
-			for k, v := range info.(map[string]int) {
-				res[k] = v
-			}
-		}
-		return res
-
-	case "map[string]interface{}":
-		res := make(map[string]interface{}, 0)
-		for _, info := range list {
-			for k, v := range info.(map[string]interface{}) {
-				res[k] = v
-			}
-		}
-		return res
 	}
-
-	return nil
+	return res
 }
 
 // Remove 切片删除指定index
-// @param dataType string 传入数据的类型,可选:
-//		[]string, []int, []int64, []interface{}
-// @param slice interface{} 待处理的切片
-// @param index int 准备去掉的index
-// @return interface{} 返回的类型和dataType是一致的，
-// 为nil表示错误，一般是传入了不同类型的数组造成的
-func (u *util) Remove(dataType string, slice interface{}, index int) interface{} {
+// @param needle interface{} 待处理的集合
+// @param key interface{} 准备去掉的index
+// @return interface{} 返回的类型为 []interface{} 或者 map[string]interface{}
+func (u *util) Remove(needle, key interface{}) interface{} {
 	defer Recover()
-	switch dataType {
-	case "[]string":
-		res := make([]string, 0)
-		for k, v := range slice.([]string) {
-			if k != index {
-				res[k] = v
-			}
-		}
-		return res
-	case "[]int":
-		res := make([]int, 0)
-		for k, v := range slice.([]int) {
-			if k != index {
-				res[k] = v
-			}
-		}
-		return res
-	case "[]int64":
-		res := make([]int64, 0)
-		for k, v := range slice.([]int64) {
-			if k != index {
-				res[k] = v
-			}
-		}
-		return res
-	case "[]interface{}":
+	switch reflect.TypeOf(needle).Kind().String() {
+	case "slice":
+		s := tc.New(needle).Slice
 		res := make([]interface{}, 0)
-		for k, v := range slice.([]interface{}) {
-			if k != index {
-				res[k] = v
+		for k, v := range s {
+			if k != tc.New(key).Int {
+				res = append(res, v)
 			}
 		}
 		return res
+
+	case "map":
+		m := tc.New(needle).Map
+		delete(m, tc.New(key).String)
+		return m
 	}
-	return []string{}
+	return needle
 }
 
 // VerifyEmail 验证邮件格式是否正确

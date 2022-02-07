@@ -96,7 +96,7 @@ func (v *validate) Json(input string) *validate {
 		for k, v := range validateRule {
 			validateRule[k] = strings.TrimSpace(v)
 			if len(strings.TrimSpace(v)) < 1 {
-				validateRule = UtilTdog.Remove("[]string", validateRule, k).([]string)
+				validateRule = UtilTdog.Remove(validateRule, k).([]string)
 			}
 		}
 		eachRule := &Rule{
@@ -192,7 +192,7 @@ func verifyEnum(pattern, valType string, val interface{}) (isSuccess bool, err e
 	defer Recover()
 	isSuccess = false
 
-	if !NewUtil().InArray("[]string", valType, []string{"string", "int"}) {
+	if !NewUtil().InArray(valType, []string{"string", "int"}) {
 		err = errors.New("枚举只支持类型为string和int的数据")
 		return
 	}
@@ -209,12 +209,12 @@ func verifyEnum(pattern, valType string, val interface{}) (isSuccess bool, err e
 	}
 	switch valType {
 	case "string":
-		if NewUtil().InArray("[]string", val.(string), enums) {
+		if NewUtil().InArray(val.(string), enums) {
 			isSuccess = true
 		}
 		break
 	case "int":
-		if NewUtil().InArray("[]string", strconv.Itoa(val.(int)), enums) {
+		if NewUtil().InArray(val.(int), enums) {
 			isSuccess = true
 		}
 		break
@@ -228,7 +228,7 @@ func checkIn(rule *Rule, needle map[string]string) (err error) {
 	UtilTdog := NewUtil()
 	defer Recover()
 
-	if UtilTdog.Isset("map[string]string", rule.Name, needle) {
+	if UtilTdog.Isset(rule.Name, needle) {
 		var val interface{}
 		val, err = verfityType(needle[rule.Name], rule.ParamType) // 值
 
@@ -242,7 +242,7 @@ func checkIn(rule *Rule, needle map[string]string) (err error) {
 		for _, ruleName := range rule.Rule {
 			switch ruleName {
 			case "empty": // 非空
-				if UtilTdog.Empty("map[string]string", rule.Name, needle) {
+				if UtilTdog.Empty(rule.Name, needle) {
 					err = errors.New("数据为空")
 					return
 				}
