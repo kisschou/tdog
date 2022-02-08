@@ -70,7 +70,8 @@ func walk(input string) *Jwt {
 	}
 }
 
-// valid 不校验是否过期
+// valid 使用 iv 作为秘钥, 校验 input 字符串.
+// 跳过过期时间校验.
 func (jwt *Jwt) valid(input string, iv string) bool {
 	jwt = walk(input)
 	if jwt == nil {
