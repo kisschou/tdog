@@ -53,6 +53,9 @@ func NewConfig() *config {
 
 // connect Make go-toml load configuration given *config
 func connect(c *config) *toml.Tree {
+	if !NewUtil().FileExists(c.filePath + c.actionFile + ".toml") {
+		return nil
+	}
 	conf, err := toml.LoadFile(c.filePath + c.actionFile + ".toml")
 	if err != nil {
 		Println(err.Error(), 13)
@@ -120,6 +123,10 @@ func (c *config) find() (*configResult, error) {
 
 	for {
 		configImpl := connect(c)
+		if configImpl == nil {
+			err = errors.New(fmt.Sprintf("[%s], 未找到配置, %s -> %s -> %s", c.searchKey, c.filePath, c.actionFile, c.keyPrefix+c.actionKey))
+			break
+		}
 		if !configImpl.Has(c.actionKey) {
 			// 固定文件的, 多段不应含有文件名
 			if len(c.fixedFile) > 0 {
@@ -158,7 +165,7 @@ func (c *config) Get(key string) *configResult {
 	c.actionFile, c.actionKey, c.searchKey = "", "", key
 	resultImpl, err := c.find()
 	if err != nil {
-		go NewLogger().Warn(err.Error())
+		// go NewLogger().Warn(err.Error())
 		resultImpl.Message = err.Error()
 	}
 	return resultImpl
@@ -169,7 +176,7 @@ func (c *config) Get(key string) *configResult {
 // returns map[string]*ConfigResult means search key as key and *ConfigResult as value
 func (c *config) GetMulti(keys ...string) map[string]*configResult {
 	if len(keys) < 1 {
-		go NewLogger().Warn("Config: 批量查询参数缺失.")
+		go NewLogger().Error("Config: 批量查询参数缺失.")
 		return nil
 	}
 	multiConfigResult := make(map[string]*configResult, 0)
