@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+
+	tc "github.com/kisschou/TypeConverter"
 )
 
 type (
@@ -68,6 +70,28 @@ func walk(input string) *Jwt {
 	}
 }
 
+// valid 不校验是否过期
+func (jwt *Jwt) valid(input string, iv string) bool {
+	jwt = walk(input)
+	if jwt == nil {
+		return false
+	}
+
+	// valid header .
+	baseJwtHeader, _ := json.Marshal(new(JwtHeader).New())
+	if jwt.header != NewCrypt(string(baseJwtHeader)).Base64Encode() {
+		return false
+	}
+
+	// valid signature .
+	dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
+	if NewCrypt(dt+"_cryptWithSalt-"+iv).Sha256() != jwt.signature {
+		return false
+	}
+
+	return true
+}
+
 // Valid 使用 iv 作为秘钥, 校验 input 字符串.
 func (jwt *Jwt) Valid(input string, iv string) bool {
 	jwt = walk(input)
@@ -85,7 +109,7 @@ func (jwt *Jwt) Valid(input string, iv string) bool {
 	dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
 	dm := make(map[string]interface{}, 0)
 	_ = json.Unmarshal([]byte(dt), &dm)
-	exp := int64(dm["ita"].(float64))
+	exp := tc.New(dm["ita"]).Int64
 	if time.Now().Unix() > exp {
 		return false
 	}
@@ -100,7 +124,7 @@ func (jwt *Jwt) Valid(input string, iv string) bool {
 
 // Get 使用 iv 作为秘钥, 解析 input 字符串, 并从其中的数据集合中获取下标为 key .
 func (jwt *Jwt) Get(input string, key string, iv string) (value interface{}) {
-	if jwt.Valid(input, iv) {
+	if jwt.valid(input, iv) {
 		jwt = walk(input)
 
 		dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
@@ -122,7 +146,7 @@ func (jwt *Jwt) Get(input string, key string, iv string) (value interface{}) {
 
 // GetData 使用 iv 作为秘钥, 解析 input 字符串, 取出其中的数据集合 .
 func (jwt *Jwt) GetData(input string, iv string) (data map[string]interface{}) {
-	if jwt.Valid(input, iv) {
+	if jwt.valid(input, iv) {
 		jwt = walk(input)
 
 		dt, _ := NewCrypt(jwt.payload).AesDecrypt([]byte(iv))
