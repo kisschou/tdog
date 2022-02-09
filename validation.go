@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	tc "github.com/kisschou/TypeConverter"
 )
 
 /**
@@ -112,27 +114,28 @@ func (v *validate) Json(input string) *validate {
 }
 
 // verifyType 字符串类型校验
-func verfityType(input, actionType string) (res interface{}, err error) {
+func verfityType(input interface{}, actionType string) (res interface{}, err error) {
+	tcR := tc.New(input)
 	switch actionType {
 	default:
 	case "string":
-		res = input
+		res = tcR.String
 		break
 	case "int":
-		res, err = strconv.Atoi(input)
+		res, err = strconv.Atoi(tcR.String)
 		break
 	case "int64":
-		res, err = strconv.ParseInt(input, 10, 64)
+		res, err = strconv.ParseInt(tcR.String, 10, 64)
 		break
 	case "float":
-		res, err = strconv.ParseFloat(input, 32)
+		res, err = strconv.ParseFloat(tcR.String, 32)
 		break
 	case "double":
-		res, err = strconv.ParseFloat(input, 64)
+		res, err = strconv.ParseFloat(tcR.String, 64)
 		break
 	case "object":
 		resMap := make(map[string]interface{}, 0)
-		err = json.Unmarshal([]byte(input), &resMap)
+		err = json.Unmarshal([]byte(tcR.String), &resMap)
 		res = resMap
 		break
 	}
@@ -224,7 +227,7 @@ func verifyEnum(pattern, valType string, val interface{}) (isSuccess bool, err e
 }
 
 // checkIn 校验就是所有规则跑一遍
-func checkIn(rule *Rule, needle map[string]string) (err error) {
+func checkIn(rule *Rule, needle map[string]interface{}) (err error) {
 	UtilTdog := NewUtil()
 	defer Recover()
 
@@ -314,7 +317,7 @@ func checkIn(rule *Rule, needle map[string]string) (err error) {
 
 // Check 校验
 // 一旦遇到校验失败的项, 立刻停止并返回报告.
-func (v *validate) Check(needle map[string]string) (output *validReport, err error) {
+func (v *validate) Check(needle map[string]interface{}) (output *validReport, err error) {
 	if len(v.rules) < 1 {
 		err = errors.New("未指定校验规则")
 		return
@@ -341,7 +344,7 @@ func (v *validate) Check(needle map[string]string) (output *validReport, err err
 // UninterruptedCheck 无中断校验
 // 遇到失败的项, 只记录，等所有数据都校验后,统一返回.
 // 返回报告中心结构体
-func (v *validate) UninterruptedCheck(needle map[string]string) (output *validReportCenter, err error) {
+func (v *validate) UninterruptedCheck(needle map[string]interface{}) (output *validReportCenter, err error) {
 	output = new(validReportCenter)
 	if len(v.rules) < 1 {
 		err = errors.New("未指定校验规则")
