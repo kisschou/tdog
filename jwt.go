@@ -72,7 +72,7 @@ func walk(input string) *Jwt {
 
 // valid 使用 iv 作为秘钥, 校验 input 字符串.
 // 跳过过期时间校验.
-func (jwt *Jwt) valid(input string, iv string) bool {
+func (jwt *Jwt) valid(input, iv string) bool {
 	jwt = walk(input)
 	if jwt == nil {
 		return false
@@ -94,7 +94,7 @@ func (jwt *Jwt) valid(input string, iv string) bool {
 }
 
 // Valid 使用 iv 作为秘钥, 校验 input 字符串.
-func (jwt *Jwt) Valid(input string, iv string) bool {
+func (jwt *Jwt) Valid(input, iv string) bool {
 	jwt = walk(input)
 	if jwt == nil {
 		return false
@@ -124,7 +124,7 @@ func (jwt *Jwt) Valid(input string, iv string) bool {
 }
 
 // Get 使用 iv 作为秘钥, 解析 input 字符串, 并从其中的数据集合中获取下标为 key .
-func (jwt *Jwt) Get(input string, key string, iv string) (value interface{}) {
+func (jwt *Jwt) Get(input, key, iv string) (value interface{}) {
 	if jwt.valid(input, iv) {
 		jwt = walk(input)
 
@@ -146,7 +146,7 @@ func (jwt *Jwt) Get(input string, key string, iv string) (value interface{}) {
 }
 
 // GetData 使用 iv 作为秘钥, 解析 input 字符串, 取出其中的数据集合 .
-func (jwt *Jwt) GetData(input string, iv string) (data map[string]interface{}) {
+func (jwt *Jwt) GetData(input, iv string) (data map[string]interface{}) {
 	if jwt.valid(input, iv) {
 		jwt = walk(input)
 
@@ -161,7 +161,7 @@ func (jwt *Jwt) GetData(input string, iv string) (data map[string]interface{}) {
 }
 
 // Refresh .
-func (jwt *Jwt) Refresh(input string, iv string) string {
+func (jwt *Jwt) Refresh(input, iv string) string {
 	// header
 	jsonData, _ := json.Marshal(new(JwtHeader).New())
 	jwt.header = NewCrypt(string(jsonData)).Base64Encode()
