@@ -181,14 +181,16 @@ func (group *RouterGroup) combineHandlers(handlers []HandlerFunc) []HandlerFunc 
 
 // Next .
 func (c *Context) Next() {
-	ResponseTdog := new(Response)
-
 	c.index++
 	s := int8(len(c.handlers))
 	for ; c.index < s; c.index++ {
+		req := ReqHelper.New(c.Req)
+		for _, v := range c.Params {
+			req.Extra[v.Key] = v.Value
+		}
 		c.handlers[c.index](&HttpUtil{
-			ReqHelper.New(c.Req),
-			ResponseTdog.New(c),
+			Req: req,
+			Res: new(Response).New(c),
 		})
 	}
 }
