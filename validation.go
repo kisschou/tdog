@@ -245,7 +245,7 @@ func checkIn(rule *Rule, needle map[string]interface{}) (err error) {
 		for _, ruleName := range rule.Rule {
 			switch ruleName {
 			case "empty": // 非空
-				if UtilTdog.Empty(rule.Name, needle) {
+				if !tc.New(needle[rule.Name]).Bool {
 					err = errors.New("数据为空")
 					return
 				}

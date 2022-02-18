@@ -197,7 +197,7 @@ func (u *util) Isset(input, needle interface{}) bool {
 			return true
 		}
 	}
-	return true
+	return false
 }
 
 // Empty 判断数组指定key的值是否为空, 数字则大于0
