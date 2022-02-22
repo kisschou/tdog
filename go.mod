@@ -8,6 +8,8 @@ require (
 	github.com/go-xorm/xorm v0.7.9
 	github.com/gorilla/websocket v1.4.2
 	github.com/julienschmidt/httprouter v1.3.0
+	github.com/kisschou/ReqHelper v1.0.4
+	github.com/kisschou/TypeConverter v1.0.1
 	github.com/magiconair/properties v1.8.5
 	github.com/pelletier/go-toml v1.9.4
 	github.com/tealeg/xlsx v1.0.5
