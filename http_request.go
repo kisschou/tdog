@@ -103,9 +103,9 @@ func (hp *httpRequest) Send() *httpResponse {
 	response.ElapsedTime = time.Now().UnixNano() - startTime
 
 	// 写入log
-	data, _ := json.Marshal(response)
-	logInfo += "成功， 返回数据: " + string(data)
-	go NewLogger().Info(logInfo)
+	// data, _ := json.Marshal(response)
+	// logInfo += "成功， 返回数据: " + string(data)
+	// go NewLogger().Info(logInfo)
 
 	return response
 }
