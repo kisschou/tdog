@@ -58,23 +58,25 @@ func sendRequest(hp *httpRequest) (response *httpResponse, err error) {
 	defer res.Body.Close()
 
 	// 处理内容编码
-	if v, ok := hp.Header["Content-Encoding"]; ok {
-		// GZip
-		if v == "gzip" {
-			if r, err := gzip.NewReader(res.Body); err == nil {
-				s, _ := ioutil.ReadAll(r)
+	if v, ok := res.Header["Content-Encoding"]; ok {
+		for _, vv := range v {
+			// GZip
+			if vv == "gzip" {
+				if r, err := gzip.NewReader(res.Body); err == nil {
+					s, _ := ioutil.ReadAll(r)
 
-				// 数据处理
-				response = new(httpResponse)
-				response.Code = res.StatusCode
-				response.Data = string(s)
-				formatted := make(map[string]interface{}, 0)
-				_ = json.Unmarshal(s, &formatted)
-				response.Formatted = formatted
-			} else {
-				err = errors.New("Gzip转码失败")
+					// 数据处理
+					response = new(httpResponse)
+					response.Code = res.StatusCode
+					response.Data = string(s)
+					formatted := make(map[string]interface{}, 0)
+					_ = json.Unmarshal(s, &formatted)
+					response.Formatted = formatted
+				} else {
+					err = errors.New("Gzip转码失败")
+				}
+				return
 			}
-			return
 		}
 	}
 
