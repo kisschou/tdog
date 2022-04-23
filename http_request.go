@@ -125,7 +125,14 @@ func (hp *httpRequest) Send() *httpResponse {
 			ElapsedTime: time.Now().UnixNano() - startTime,
 		}
 	}
-	response.ElapsedTime = time.Now().UnixNano() - startTime
+
+	response.ElapsedTime = 5 * 60 * 1000 * 1000 * 1000
+	// 5分钟超时判定
+	if time.Now().UnixNano()-startTime > response.ElapsedTime {
+		response.Code = http.StatusRequestTimeout
+	} else {
+		response.ElapsedTime = time.Now().UnixNano() - startTime
+	}
 
 	// 写入log
 	// data, _ := json.Marshal(response)
