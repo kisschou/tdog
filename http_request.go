@@ -126,12 +126,12 @@ func (hp *httpRequest) Send() *httpResponse {
 		}
 	}
 
-	response.ElapsedTime = 5 * 60 * 1000 * 1000 * 1000
-	// 5分钟超时判定
-	if time.Now().UnixNano()-startTime > response.ElapsedTime {
-		response.Code = http.StatusRequestTimeout
-	} else {
-		response.ElapsedTime = time.Now().UnixNano() - startTime
+	// 超时判定
+	if response == nil {
+		response = &httpResponse{
+			Code:        http.StatusRequestTimeout,
+			ElapsedTime: time.Now().UnixNano() - startTime,
+		}
 	}
 
 	// 写入log
