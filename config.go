@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	tc "github.com/kisschou/TypeConverter"
-	"github.com/pelletier/go-toml"
+	tc "ateshit.icu/kisschou/TypeConverter"
+	"ateshit.icu/pelletier/go-toml"
 )
 
 /**

@@ -153,11 +153,11 @@ To install Tdog package, you need to install Go and set your Go workspace first.
 
   1. Got it by go command:
   ```
-    $ go get -u github.com/kisschou/tdog
+    $ go get -u ateshit.icu/kisschou/tdog
   ```
   2. Import it in your code:
   ```
-    import "github.com/kisschou/tdog"
+    import "ateshit.icu/kisschou/tdog"
   ```
 
 <br />
@@ -176,7 +176,7 @@ package main
 import (
     "net/http"
 
-    "github.com/kisschou/tdog"
+    "ateshit.icu/kisschou/tdog"
 )
 
 func main() {
@@ -198,7 +198,7 @@ func main() {
 package main
 
 import (
-    "github.com/kisschou/tdog"
+    "ateshit.icu/kisschou/tdog"
 )
 
 func main() {
@@ -339,7 +339,7 @@ You can use this function to generate an engine through a custom configuration f
 ##### 1.5 Example
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 engine := tdog.NewMySQL().Engine // init a mysql engine use default configuation.
 
@@ -443,7 +443,7 @@ Accept an index to switch the libraries used by the current engine.
 ##### 2.3 Example
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 engine := tdog.NewRedis().Engine // init a redis engine use default configuation.
 result, err := engine.SetNX(tdog.Ctx, "test:key", "Hello World", time.Duration(60)*time.Second).Result() // Set key
@@ -766,7 +766,7 @@ It is common to run through the script where it was started to make sure that th
 All functions are available directly after NewUtil.
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 util := tdog.NewUtil()
 res := util.RandomStr(10, 1, 2)
@@ -913,7 +913,7 @@ Receive the incoming public key and use it to RSA decrypt the data.
 ##### 4.3 Example
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 // md5
 encrypt := tdog.NewCrypt("inputStr").Md5()
@@ -1004,7 +1004,7 @@ app_port = "8002"
 First, have to specify the configuration of the configuration file to env at the intersection. This can use the `SetEnv` function under the `Util` module:
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 tdog.NewUtil().SetEnv("CONFIG_PATH", "/path/to/config/")
 ```
@@ -1137,7 +1137,7 @@ Get the result of int64 type.
 ##### 6.3 Example
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 tdog.NewUtil().SetEnv("CONFIG_PATH", "/path/to/config/")
 
@@ -1225,7 +1225,7 @@ Writes a message to the log list.
 ##### 7.3 Example
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 tdog.NewLogger().Error("This is a error message!")
 tdog.NewLogger().Warn("This is a warn message!")

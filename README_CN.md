@@ -154,11 +154,11 @@
 
   1. 通过go的命令获取它:
   ```
-    $ go get -u github.com/kisschou/tdog
+    $ go get -u ateshit.icu/kisschou/tdog
   ```
   2. 在你的项目中导入它:
   ```
-    import "github.com/kisschou/tdog"
+    import "ateshit.icu/kisschou/tdog"
   ```
 
 <br />
@@ -177,7 +177,7 @@ package main
 import (
     "net/http"
 
-    "github.com/kisschou/tdog"
+    "ateshit.icu/kisschou/tdog"
 )
 
 func main() {
@@ -199,7 +199,7 @@ func main() {
 package main
 
 import (
-    "github.com/kisschou/tdog"
+    "ateshit.icu/kisschou/tdog"
 )
 
 func main() {
@@ -342,7 +342,7 @@ prefix = "" # 表前缀
 ##### 1.5 Example
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 engine := tdog.NewMySQL().Engine // 使用默认配置初始化mysql引擎。
 
@@ -446,7 +446,7 @@ pool_size = 10 # 连接数
 ##### 1.3 示例
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 engine := tdog.NewRedis().Engine // 初始化redis引擎使用默认配置
 result, err := engine.SetNX(tdog.Ctx, "test:key", "Hello World", time.Duration(60)*time.Second).Result() // 设置键
@@ -769,7 +769,7 @@ Url拼接。
 所有函数都可以在NewUtil之后直接使用。
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 util := tdog.NewUtil()
 res := util.RandomStr(10, 1, 2)
@@ -916,7 +916,7 @@ res := util.RandomStr(10, 1, 2)
 ##### 4.3 示例
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 // md5
 encrypt := tdog.NewCrypt("inputStr").Md5()
@@ -1007,7 +1007,7 @@ app_port = "8002"
 首先，必须将配置文件的配置指定到env的交叉点。这可以使用 `Util` 模块下的 `SetEnv` 函数:
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 tdog.NewUtil().SetEnv("CONFIG_PATH", "/path/to/config/")
 ```
@@ -1140,7 +1140,7 @@ graph TB
 ##### 6.3 示例
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 tdog.NewUtil().SetEnv("CONFIG_PATH", "/path/to/config/")
 
@@ -1228,7 +1228,7 @@ for _, resultImpl := range resultImpls {
 ##### 7.3 示例
 
 ```go
-import "github.com/kisschou/tdog"
+import "ateshit.icu/kisschou/tdog"
 
 tdog.NewLogger().Error("This is a error message!")
 tdog.NewLogger().Warn("This is a warn message!")
