@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	tc "github.com/kisschou/TypeConverter"
+	tc "ateshit.icu/kisschou/TypeConverter"
 )
 
 type (
