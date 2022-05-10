@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"path"
 
+	"ateshit.icu/kisschou/ReqHelper"
 	"github.com/julienschmidt/httprouter"
-	"github.com/kisschou/ReqHelper"
 )
 
 const (
